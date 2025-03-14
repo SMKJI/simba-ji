@@ -1,12 +1,12 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, UserCheck } from 'lucide-react';
+import { Loader2, UserCheck, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useRegistrations } from '@/hooks/useRegistrations';
+import { useRegistrations, DEMO_ACCOUNTS } from '@/hooks/useRegistrations';
 
 import {
   Form,
@@ -18,7 +18,13 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Email tidak valid' }),
@@ -27,7 +33,11 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const LoginForm = () => {
+interface LoginFormProps {
+  prefilledEmail?: string;
+}
+
+const LoginForm = ({ prefilledEmail }: LoginFormProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { login } = useRegistrations();
@@ -36,10 +46,18 @@ const LoginForm = () => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
+      email: prefilledEmail || '',
       password: '',
     },
   });
+
+  // Update form values when prefilledEmail changes
+  useEffect(() => {
+    if (prefilledEmail) {
+      form.setValue('email', prefilledEmail);
+      form.setValue('password', 'password123');
+    }
+  }, [prefilledEmail, form]);
 
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
@@ -83,6 +101,11 @@ const LoginForm = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const fillDemoAccount = (email: string) => {
+    form.setValue('email', email);
+    form.setValue('password', 'password123');
   };
 
   return (
@@ -144,6 +167,38 @@ const LoginForm = () => {
           </form>
         </Form>
       </CardContent>
+      
+      <CardFooter className="bg-muted/50 p-6 block">
+        <Accordion type="single" collapsible className="w-full">
+          <AccordionItem value="demo-accounts">
+            <AccordionTrigger className="text-sm">
+              <div className="flex items-center text-primary">
+                <Info className="w-4 h-4 mr-2" />
+                Akun Demo untuk Testing
+              </div>
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="space-y-3 text-sm mt-2">
+                <p className="font-medium text-muted-foreground mb-2">
+                  Klik pada akun untuk mengisi form otomatis (password: password123)
+                </p>
+                
+                {DEMO_ACCOUNTS.map((account) => (
+                  <div 
+                    key={account.id}
+                    className="p-2 border rounded-md hover:bg-muted cursor-pointer"
+                    onClick={() => fillDemoAccount(account.email)}
+                  >
+                    <p className="font-semibold">{account.name}</p>
+                    <p className="text-xs text-muted-foreground">Email: {account.email}</p>
+                    <p className="text-xs text-muted-foreground">Role: {account.role}</p>
+                  </div>
+                ))}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </CardFooter>
     </Card>
   );
 };

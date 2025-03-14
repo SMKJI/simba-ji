@@ -1,41 +1,33 @@
 
 import { useEffect } from 'react';
-import { useRegistrations } from '@/hooks/useRegistrations';
-import Dashboard from '@/components/Dashboard';
 import PageLayout from '@/components/PageLayout';
 import HeroSection from '@/components/home/HeroSection';
 import FeatureSection from '@/components/home/FeatureSection';
+import FAQSection from '@/components/FAQSection';
+import DemoAccounts from '@/components/DemoAccounts';
+import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
-  const { stats, loading } = useRegistrations();
+  const navigate = useNavigate();
   
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-  
+
+  const navigateToLogin = (email: string) => {
+    navigate('/login', { state: { prefilledEmail: email } });
+  };
+
   return (
-    <PageLayout className="p-0">
-      {/* Hero Section */}
+    <PageLayout>
       <HeroSection />
-
-      {/* Dashboard Section */}
-      <section className="py-12 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-              Status Pendaftaran
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Pantau jumlah pendaftar dan ketersediaan grup WhatsApp secara real-time
-            </p>
-          </div>
-          
-          <Dashboard stats={stats} loading={loading} />
-        </div>
-      </section>
-
-      {/* Features Section */}
+      
+      <div className="mx-auto max-w-4xl px-4 py-8">
+        <DemoAccounts onSelectAccount={navigateToLogin} />
+      </div>
+      
       <FeatureSection />
+      <FAQSection />
     </PageLayout>
   );
 };

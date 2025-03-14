@@ -5,12 +5,19 @@ import PageLayout from '@/components/PageLayout';
 import LoginForm from '@/components/LoginForm';
 import { useRegistrations } from '@/hooks/useRegistrations';
 
+interface LocationState {
+  from?: string;
+  prefilledEmail?: string;
+}
+
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { authenticated, currentUser } = useRegistrations();
   
-  const from = location.state?.from || '/';
+  const state = location.state as LocationState;
+  const from = state?.from || '/';
+  const prefilledEmail = state?.prefilledEmail;
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -39,7 +46,7 @@ const Login = () => {
   return (
     <PageLayout>
       <div className="max-w-md mx-auto">
-        <LoginForm />
+        <LoginForm prefilledEmail={prefilledEmail} />
       </div>
     </PageLayout>
   );

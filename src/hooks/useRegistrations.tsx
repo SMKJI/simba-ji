@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 
 // Define the registration result type
@@ -12,8 +11,16 @@ export interface RegistrationResult {
   };
 }
 
+// Define group interface
+export interface Group {
+  id: number;
+  name: string;
+  count: number;
+  isFull: boolean;
+}
+
 // This would be replaced with a real API call in a production app
-const MOCK_DATA = {
+export const MOCK_DATA = {
   total: 1327,
   groups: [
     { id: 1, name: 'Grup 1', count: 1000, isFull: true },
@@ -22,14 +29,10 @@ const MOCK_DATA = {
   ]
 };
 
-export interface RegistrationStats {
+// Define stats data interface
+export interface StatsData {
   total: number;
-  groups: {
-    id: number;
-    name: string;
-    count: number;
-    isFull: boolean;
-  }[];
+  groups: Group[];
 }
 
 // Define user roles
@@ -45,7 +48,7 @@ export interface User {
 }
 
 // Mock users for development
-const MOCK_USERS: User[] = [
+export const DEMO_ACCOUNTS: User[] = [
   { id: '1', name: 'Calon Murid', email: 'calon@example.com', role: 'applicant' },
   { id: '2', name: 'Operator Helpdesk', email: 'helpdesk@smkn1kendal.sch.id', role: 'helpdesk' },
   { id: '3', name: 'Administrator', email: 'admin@smkn1kendal.sch.id', role: 'admin' },
@@ -54,7 +57,7 @@ const MOCK_USERS: User[] = [
 
 export const useRegistrations = () => {
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<RegistrationStats>(MOCK_DATA);
+  const [stats, setStats] = useState<StatsData>(MOCK_DATA);
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [authenticated, setAuthenticated] = useState(false);
@@ -161,9 +164,9 @@ export const useRegistrations = () => {
       // For demo, we'll simulate authentication with mock users
       return new Promise((resolve) => {
         setTimeout(() => {
-          const user = MOCK_USERS.find(u => u.email === email);
+          const user = DEMO_ACCOUNTS.find(u => u.email === email);
           
-          if (user && password === 'password') { // Simple password check for demo
+          if (user && password === 'password123') { // Simple password check for demo
             setCurrentUser(user);
             setAuthenticated(true);
             sessionStorage.setItem('currentUser', JSON.stringify(user));
@@ -171,13 +174,13 @@ export const useRegistrations = () => {
             resolve({ success: true, user });
           } else {
             setLoading(false);
-            resolve({ success: false, error: 'Invalid email or password' });
+            resolve({ success: false, error: 'Email atau password salah' });
           }
         }, 1000);
       });
     } catch (err) {
       setLoading(false);
-      return { success: false, error: 'Login failed' };
+      return { success: false, error: 'Login gagal' };
     }
   };
 
