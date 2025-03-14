@@ -1,6 +1,17 @@
 
 import { useState, useEffect } from 'react';
 
+// Define the registration result type
+export interface RegistrationResult {
+  success: boolean;
+  data: {
+    registrationId: number;
+    assignedGroup: string;
+    groupLink: string;
+    timestamp: string;
+  };
+}
+
 // This would be replaced with a real API call in a production app
 const MOCK_DATA = {
   total: 1327,
@@ -50,7 +61,7 @@ export const useRegistrations = () => {
   }, []);
 
   // Function to simulate submitting a registration form
-  const submitRegistration = async (formData: any) => {
+  const submitRegistration = async (formData: any): Promise<RegistrationResult> => {
     setLoading(true);
     
     try {

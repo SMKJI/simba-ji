@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useRegistrations } from '@/hooks/useRegistrations';
+import { useRegistrations, RegistrationResult } from '@/hooks/useRegistrations';
 
 import {
   Form,
@@ -72,7 +72,7 @@ const RegisterForm = () => {
       const result = await submitRegistration(data);
       
       // Store the registration result in sessionStorage for use on the success page
-      if (result) {
+      if (result && result.success) {
         sessionStorage.setItem('registrationResult', JSON.stringify(result.data));
         
         toast({
