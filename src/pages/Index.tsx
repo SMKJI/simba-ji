@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, BookOpen, Users, HelpCircle } from 'lucide-react';
@@ -7,16 +6,15 @@ import { useRegistrations } from '@/hooks/useRegistrations';
 import Dashboard from '@/components/Dashboard';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-
 const Index = () => {
-  const { stats, loading } = useRegistrations();
-
+  const {
+    stats,
+    loading
+  } = useRegistrations();
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-
-  return (
-    <div className="min-h-screen flex flex-col">
+  return <div className="min-h-screen flex flex-col">
       <Header />
 
       {/* Hero Section */}
@@ -50,11 +48,7 @@ const Index = () => {
               <div className="relative w-64 h-64 md:w-80 md:h-80 animate-float">
                 <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl opacity-20"></div>
                 <div className="relative h-full w-full overflow-hidden rounded-xl border p-2 bg-white shadow-lg">
-                  <img
-                    src="/lovable-uploads/3d2a0d2f-58fe-40dd-84d7-7e4ea3f565b8.png"
-                    alt="SMKN 1 Kendal Logo"
-                    className="h-full w-full object-contain rounded-xl"
-                  />
+                  <img alt="SMKN 1 Kendal Logo" className="h-full w-full object-contain rounded-xl" src="/lovable-uploads/113dca04-6a33-4058-a2ba-d238187a8d97.jpg" />
                 </div>
               </div>
             </div>
@@ -133,8 +127,6 @@ const Index = () => {
       </section>
 
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
