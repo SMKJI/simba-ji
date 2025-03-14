@@ -1,0 +1,104 @@
+
+import { Link } from 'react-router-dom';
+import { UserCircle, LogOut, Settings, User, Users, HelpCircle, FileText } from 'lucide-react';
+import { useRegistrations, UserRole } from '@/hooks/useRegistrations';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+
+const getRoleMenuItems = (role: UserRole) => {
+  switch (role) {
+    case 'admin':
+      return [
+        { icon: <Users className="mr-2 h-4 w-4" />, label: 'Dashboard Admin', link: '/admin' },
+        { icon: <FileText className="mr-2 h-4 w-4" />, label: 'Kelola Konten', link: '/content' },
+        { icon: <HelpCircle className="mr-2 h-4 w-4" />, label: 'Helpdesk', link: '/helpdesk' },
+      ];
+    case 'helpdesk':
+      return [
+        { icon: <HelpCircle className="mr-2 h-4 w-4" />, label: 'Dashboard Helpdesk', link: '/helpdesk' },
+      ];
+    case 'content':
+      return [
+        { icon: <FileText className="mr-2 h-4 w-4" />, label: 'Kelola Konten', link: '/content' },
+      ];
+    default:
+      return [];
+  }
+};
+
+const UserMenu = () => {
+  const { currentUser, authenticated, logout } = useRegistrations();
+  
+  if (!authenticated || !currentUser) {
+    return (
+      <div className="flex gap-2">
+        <Button asChild variant="outline" size="sm">
+          <Link to="/login">
+            <User className="mr-2 h-4 w-4" />
+            Masuk
+          </Link>
+        </Button>
+      </div>
+    );
+  }
+  
+  const roleMenuItems = getRoleMenuItems(currentUser.role);
+  const initials = currentUser.name
+    .split(' ')
+    .map(name => name[0])
+    .join('')
+    .toUpperCase()
+    .substring(0, 2);
+  
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+          <Avatar>
+            <AvatarFallback className="bg-primary text-primary-foreground">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel>
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm font-medium leading-none">{currentUser.name}</p>
+            <p className="text-xs leading-none text-muted-foreground">{currentUser.email}</p>
+          </div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        
+        {roleMenuItems.length > 0 && (
+          <>
+            {roleMenuItems.map((item, index) => (
+              <DropdownMenuItem key={index} asChild>
+                <Link to={item.link} className="flex items-center cursor-pointer">
+                  {item.icon}
+                  {item.label}
+                </Link>
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator />
+          </>
+        )}
+        
+        <DropdownMenuItem onClick={logout} className="text-red-600 cursor-pointer">
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Keluar</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+
+export default UserMenu;

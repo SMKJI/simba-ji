@@ -1,10 +1,11 @@
 
 import { useEffect, useState } from 'react';
-import { MessageSquare, Send } from 'lucide-react';
+import { MessageSquare, Send, User, UserCheck, Clock, Check } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { useToast } from '@/hooks/use-toast';
+import { useRegistrations } from '@/hooks/useRegistrations';
 
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -15,6 +16,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
 
 const formSchema = z.object({
   name: z.string().min(3, { message: 'Nama lengkap harus minimal 3 karakter' }),
@@ -25,14 +29,88 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+// Mock data for helpdesk tickets
+const MOCK_TICKETS = [
+  {
+    id: 'T1001',
+    name: 'Ahmad Fauzi',
+    email: 'ahmad@example.com',
+    subject: 'Kesulitan mengisi formulir pendaftaran',
+    message: 'Saya tidak bisa mengisi field tanggal lahir, selalu muncul error.',
+    status: 'open',
+    createdAt: '2023-06-10T09:30:00Z',
+    replies: []
+  },
+  {
+    id: 'T1002',
+    name: 'Siti Nurhaliza',
+    email: 'siti@example.com',
+    subject: 'Link grup WhatsApp tidak aktif',
+    message: 'Link grup WhatsApp yang saya terima tidak bisa diakses. Mohon bantuan.',
+    status: 'inProgress',
+    createdAt: '2023-06-11T14:15:00Z',
+    replies: [
+      {
+        id: 'R1',
+        message: 'Kami akan segera memeriksa link tersebut dan mengirimkan link baru. Mohon tunggu sebentar.',
+        sender: 'operator',
+        createdAt: '2023-06-11T15:20:00Z',
+      }
+    ]
+  },
+  {
+    id: 'T1003',
+    name: 'Budi Santoso',
+    email: 'budi@example.com',
+    subject: 'Pertanyaan tentang program keahlian',
+    message: 'Saya ingin mengetahui lebih detail tentang program keahlian Teknik Komputer dan Jaringan.',
+    status: 'closed',
+    createdAt: '2023-06-09T11:45:00Z',
+    replies: [
+      {
+        id: 'R2',
+        message: 'Terima kasih atas pertanyaannya. Program keahlian TKJ fokus pada pengembangan jaringan komputer dan troubleshooting. Kurikulum meliputi Cisco Networking, server management, dan keamanan jaringan.',
+        sender: 'operator',
+        createdAt: '2023-06-09T13:10:00Z',
+      },
+      {
+        id: 'R3',
+        message: 'Terima kasih atas penjelasannya. Saya sudah mengerti.',
+        sender: 'user',
+        createdAt: '2023-06-09T14:05:00Z',
+      }
+    ]
+  }
+];
+
+const getStatusBadge = (status: string) => {
+  switch (status) {
+    case 'open':
+      return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Baru</Badge>;
+    case 'inProgress':
+      return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Diproses</Badge>;
+    case 'closed':
+      return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Selesai</Badge>;
+    default:
+      return <Badge variant="outline">Unknown</Badge>;
+  }
+};
+
 const Helpdesk = () => {
   const { toast } = useToast();
+  const { hasRole, authenticated } = useRegistrations();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [tickets, setTickets] = useState(MOCK_TICKETS);
+  const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
+
+  const isOperator = authenticated && hasRole('helpdesk');
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
+  // Form for user message submission
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -50,6 +128,22 @@ const Helpdesk = () => {
     setTimeout(() => {
       setIsSubmitting(false);
       
+      // Add new ticket to the list (for demo)
+      if (isOperator) {
+        const newTicket = {
+          id: `T${1000 + tickets.length + 1}`,
+          name: data.name,
+          email: data.email,
+          subject: data.subject,
+          message: data.message,
+          status: 'open',
+          createdAt: new Date().toISOString(),
+          replies: []
+        };
+        
+        setTickets([newTicket, ...tickets]);
+      }
+      
       toast({
         title: 'Pesan Terkirim',
         description: 'Kami akan segera menghubungi Anda melalui email yang diberikan.',
@@ -59,6 +153,235 @@ const Helpdesk = () => {
     }, 1500);
   };
 
+  const handleReply = (ticketId: string) => {
+    if (!replyText.trim()) return;
+    
+    const updatedTickets = tickets.map(ticket => {
+      if (ticket.id === ticketId) {
+        return {
+          ...ticket,
+          status: ticket.status === 'open' ? 'inProgress' : ticket.status,
+          replies: [
+            ...ticket.replies,
+            {
+              id: `R${Math.floor(Math.random() * 1000)}`,
+              message: replyText,
+              sender: 'operator',
+              createdAt: new Date().toISOString(),
+            }
+          ]
+        };
+      }
+      return ticket;
+    });
+    
+    setTickets(updatedTickets);
+    setReplyText('');
+    
+    toast({
+      title: 'Balasan Terkirim',
+      description: 'Balasan Anda telah dikirim ke pengguna.',
+    });
+  };
+
+  const handleStatusChange = (ticketId: string, newStatus: string) => {
+    const updatedTickets = tickets.map(ticket => {
+      if (ticket.id === ticketId) {
+        return {
+          ...ticket,
+          status: newStatus
+        };
+      }
+      return ticket;
+    });
+    
+    setTickets(updatedTickets);
+    
+    toast({
+      title: 'Status Diperbarui',
+      description: `Tiket #${ticketId} telah diperbarui.`,
+    });
+  };
+
+  // Render operator helpdesk view
+  if (isOperator) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        
+        <main className="flex-1 pt-24 pb-16">
+          <div className="container mx-auto px-4">
+            <div className="max-w-6xl mx-auto">
+              <h1 className="text-3xl font-bold text-gray-900 mb-8">
+                Helpdesk Operator Dashboard
+              </h1>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-1">
+                  <Card className="border-0 shadow-lg rounded-xl overflow-hidden sticky top-24">
+                    <CardHeader className="bg-primary/5 border-b p-4">
+                      <CardTitle className="text-lg font-semibold text-primary">
+                        Daftar Tiket
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0 max-h-[60vh] overflow-y-auto">
+                      <div className="space-y-0 divide-y">
+                        {tickets.map((ticket) => (
+                          <div 
+                            key={ticket.id}
+                            className={`p-4 hover:bg-muted/30 cursor-pointer transition-colors ${selectedTicket === ticket.id ? 'bg-muted/50' : ''}`}
+                            onClick={() => setSelectedTicket(ticket.id)}
+                          >
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h3 className="font-medium text-sm line-clamp-1">{ticket.subject}</h3>
+                                <p className="text-xs text-muted-foreground">{ticket.name}</p>
+                              </div>
+                              {getStatusBadge(ticket.status)}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {new Date(ticket.createdAt).toLocaleDateString('id-ID')}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+                
+                <div className="lg:col-span-2">
+                  {selectedTicket ? (
+                    (() => {
+                      const ticket = tickets.find(t => t.id === selectedTicket);
+                      if (!ticket) return null;
+                      
+                      return (
+                        <Card className="border-0 shadow-lg rounded-xl overflow-hidden">
+                          <CardHeader className="bg-primary/5 border-b p-4">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <CardTitle className="text-lg font-semibold text-primary">
+                                    {ticket.subject}
+                                  </CardTitle>
+                                  {getStatusBadge(ticket.status)}
+                                </div>
+                                <CardDescription>
+                                  Dari: {ticket.name} ({ticket.email})
+                                </CardDescription>
+                              </div>
+                              <div className="flex gap-2">
+                                {ticket.status !== 'closed' && (
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => handleStatusChange(ticket.id, 'closed')}
+                                  >
+                                    <Check className="mr-2 h-4 w-4" />
+                                    Tutup Tiket
+                                  </Button>
+                                )}
+                                {ticket.status === 'open' && (
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => handleStatusChange(ticket.id, 'inProgress')}
+                                  >
+                                    <Clock className="mr-2 h-4 w-4" />
+                                    Proses Tiket
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="p-4">
+                            <div className="space-y-4">
+                              <div className="flex gap-4 items-start">
+                                <Avatar>
+                                  <AvatarFallback className="bg-primary/10 text-primary">
+                                    {ticket.name.charAt(0)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="bg-muted/30 p-3 rounded-lg w-full">
+                                  <div className="flex justify-between items-center mb-1">
+                                    <span className="font-medium text-sm">{ticket.name}</span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {new Date(ticket.createdAt).toLocaleString('id-ID')}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm">{ticket.message}</p>
+                                </div>
+                              </div>
+                              
+                              {ticket.replies.map((reply) => (
+                                <div key={reply.id} className="flex gap-4 items-start">
+                                  <Avatar>
+                                    <AvatarFallback className={`${reply.sender === 'operator' ? 'bg-secondary/10 text-secondary' : 'bg-primary/10 text-primary'}`}>
+                                      {reply.sender === 'operator' ? 'OP' : ticket.name.charAt(0)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className={`p-3 rounded-lg w-full ${reply.sender === 'operator' ? 'bg-secondary/10' : 'bg-muted/30'}`}>
+                                    <div className="flex justify-between items-center mb-1">
+                                      <span className="font-medium text-sm">
+                                        {reply.sender === 'operator' ? 'Operator Helpdesk' : ticket.name}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {new Date(reply.createdAt).toLocaleString('id-ID')}
+                                      </span>
+                                    </div>
+                                    <p className="text-sm">{reply.message}</p>
+                                  </div>
+                                </div>
+                              ))}
+                              
+                              {ticket.status !== 'closed' && (
+                                <div className="mt-6">
+                                  <Textarea 
+                                    placeholder="Tulis balasan..." 
+                                    className="w-full min-h-[120px]"
+                                    value={replyText}
+                                    onChange={(e) => setReplyText(e.target.value)}
+                                  />
+                                  <div className="flex justify-end mt-3">
+                                    <Button 
+                                      type="button" 
+                                      onClick={() => handleReply(ticket.id)}
+                                      disabled={!replyText.trim()}
+                                    >
+                                      <Send className="mr-2 h-4 w-4" />
+                                      Kirim Balasan
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })()
+                  ) : (
+                    <div className="h-full flex items-center justify-center p-12 bg-muted/10 rounded-xl">
+                      <div className="text-center">
+                        <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold mb-2">Pilih Tiket</h3>
+                        <p className="text-muted-foreground">
+                          Pilih tiket dari daftar untuk melihat detailnya.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+        
+        <Footer />
+      </div>
+    );
+  }
+
+  // Regular user helpdesk view
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
