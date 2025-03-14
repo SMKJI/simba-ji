@@ -23,11 +23,13 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<Index />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/helpdesk" element={<Helpdesk />} />
           <Route path="/success" element={<Success />} />
           <Route path="/login" element={<Login />} />
+          
+          {/* Protected Routes */}
           <Route path="/admin" element={
             <ProtectedRoute allowedRoles={['admin']}>
               <Admin />
@@ -38,6 +40,13 @@ const App = () => (
               <Content />
             </ProtectedRoute>
           } />
+          <Route path="/helpdesk" element={
+            <ProtectedRoute allowedRoles={['admin', 'helpdesk']}>
+              <Helpdesk />
+            </ProtectedRoute>
+          } />
+          
+          {/* 404 Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

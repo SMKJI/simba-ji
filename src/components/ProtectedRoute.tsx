@@ -24,13 +24,26 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
     }
   }, [authenticated, currentUser, hasRole, allowedRoles, toast]);
 
+  // If not authenticated, redirect to login and save the intended location
   if (!authenticated) {
-    // Redirect to login if not authenticated
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
+  // If authenticated but doesn't have required role
   if (!hasRole(allowedRoles)) {
-    // Redirect to home if authenticated but doesn't have required role
+    // Redirect to appropriate page based on user role
+    if (currentUser) {
+      switch (currentUser.role) {
+        case 'admin':
+          return <Navigate to="/admin" replace />;
+        case 'helpdesk':
+          return <Navigate to="/helpdesk" replace />;
+        case 'content':
+          return <Navigate to="/content" replace />;
+        default:
+          return <Navigate to="/" replace />;
+      }
+    }
     return <Navigate to="/" replace />;
   }
 
