@@ -1,12 +1,12 @@
-
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, UserCheck, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useRegistrations, DEMO_ACCOUNTS } from '@/hooks/useRegistrations';
+import { DEMO_ACCOUNTS } from '@/hooks/useRegistrations';
+import { supabase } from '@/integrations/supabase/client';
 
 import {
   Form,
@@ -40,7 +40,6 @@ interface LoginFormProps {
 const LoginForm = ({ prefilledEmail }: LoginFormProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { login } = useRegistrations();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
@@ -51,19 +50,57 @@ const LoginForm = ({ prefilledEmail }: LoginFormProps) => {
     },
   });
 
-  // Update form values when prefilledEmail changes
-  useEffect(() => {
-    if (prefilledEmail) {
-      form.setValue('email', prefilledEmail);
-      form.setValue('password', 'password123');
+  const loginWithSupabase = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      if (error.message.includes('Email not confirmed') || error.message.includes('Invalid login credentials')) {
+        return tryDemoLogin(email, password);
+      }
+      return { success: false, error: error.message };
     }
-  }, [prefilledEmail, form]);
+    
+    if (data.user) {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('name, role, avatar_url')
+        .eq('id', data.user.id)
+        .single();
+        
+      return { 
+        success: true, 
+        user: {
+          id: data.user.id,
+          name: profileData?.name || data.user.email?.split('@')[0] || 'User',
+          email: data.user.email || '',
+          role: profileData?.role || 'applicant',
+          avatarUrl: profileData?.avatar_url
+        }
+      };
+    }
+    
+    return { success: false, error: 'Unknown error occurred' };
+  };
+
+  const tryDemoLogin = (email: string, password: string) => {
+    const demoUser = DEMO_ACCOUNTS.find(u => u.email === email);
+    
+    if (demoUser && password === 'password123') {
+      sessionStorage.setItem('currentUser', JSON.stringify(demoUser));
+      return { success: true, user: demoUser };
+    }
+    
+    return { success: false, error: 'Email atau password salah' };
+  };
 
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
     
     try {
-      const result = await login(data.email, data.password);
+      const result = await loginWithSupabase(data.email, data.password);
       
       if (result.success) {
         toast({
@@ -71,7 +108,6 @@ const LoginForm = ({ prefilledEmail }: LoginFormProps) => {
           description: `Selamat datang, ${result.user?.name}`,
         });
         
-        // Navigate based on user role
         switch (result.user?.role) {
           case 'admin':
             navigate('/admin');
@@ -83,7 +119,7 @@ const LoginForm = ({ prefilledEmail }: LoginFormProps) => {
             navigate('/content');
             break;
           default:
-            navigate('/');
+            navigate('/dashboard');
         }
       } else {
         toast({

@@ -1,54 +1,47 @@
 
-import { ReactNode, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useRegistrations, UserRole } from '@/hooks/useRegistrations';
-import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
-  children: ReactNode;
+  children: React.ReactNode;
   allowedRoles: UserRole[];
 }
 
 const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
-  const { authenticated, currentUser, hasRole } = useRegistrations();
-  const { toast } = useToast();
   const location = useLocation();
+  const { authenticated, currentUser, loading } = useRegistrations();
 
-  useEffect(() => {
-    if (authenticated && currentUser && !hasRole(allowedRoles)) {
-      toast({
-        title: 'Akses Ditolak',
-        description: 'Anda tidak memiliki akses ke halaman ini',
-        variant: 'destructive',
-      });
-    }
-  }, [authenticated, currentUser, hasRole, allowedRoles, toast]);
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
-  // If not authenticated, redirect to login and save the intended location
-  if (!authenticated) {
+  // Check if user is authenticated
+  if (!authenticated || !currentUser) {
+    // Redirect to login page with a state parameter containing the current path
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
-  // If authenticated but doesn't have required role
-  if (!hasRole(allowedRoles)) {
-    // Redirect to appropriate page based on user role
-    if (currentUser) {
-      switch (currentUser.role) {
-        case 'admin':
-          return <Navigate to="/admin" replace />;
-        case 'helpdesk':
-          return <Navigate to="/helpdesk" replace />;
-        case 'content':
-          return <Navigate to="/content" replace />;
-        case 'applicant':
-          return <Navigate to="/dashboard" replace />;
-        default:
-          return <Navigate to="/" replace />;
-      }
+  // Check if user has the required role
+  if (!allowedRoles.includes(currentUser.role)) {
+    // If not authorized, redirect to appropriate page based on role
+    switch (currentUser.role) {
+      case 'admin':
+        return <Navigate to="/admin" replace />;
+      case 'helpdesk':
+        return <Navigate to="/helpdesk" replace />;
+      case 'content':
+        return <Navigate to="/content" replace />;
+      default:
+        return <Navigate to="/dashboard" replace />;
     }
-    return <Navigate to="/" replace />;
   }
 
+  // If authenticated and authorized, render the protected content
   return <>{children}</>;
 };
 

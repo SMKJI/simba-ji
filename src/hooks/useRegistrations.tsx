@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 // Define the registration result type
 export interface RegistrationResult {
@@ -19,6 +20,7 @@ export interface Group {
   count: number;
   capacity: number;
   isFull: boolean;
+  link?: string;
 }
 
 // This would be replaced with a real API call in a production app
@@ -64,34 +66,83 @@ export const useRegistrations = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [authenticated, setAuthenticated] = useState(false);
 
-  // In a real app, this would fetch from an API endpoint
+  // Check for Supabase session and user on mount
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchUserAndSession = async () => {
       try {
-        // In a real app, you would fetch from an API endpoint
-        // const response = await fetch('/api/registration-stats');
-        // const data = await response.json();
-        // setStats(data);
+        // Check for existing session
+        const { data: { session } } = await supabase.auth.getSession();
         
-        // For demo, we'll just simulate a loading delay and use mock data
+        if (session) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('name, role, avatar_url')
+            .eq('id', session.user.id)
+            .single();
+            
+          const user: User = {
+            id: session.user.id,
+            email: session.user.email || '',
+            name: profileData?.name || session.user.email?.split('@')[0] || 'User',
+            role: profileData?.role || 'applicant',
+            avatarUrl: profileData?.avatar_url
+          };
+          
+          setCurrentUser(user);
+          setAuthenticated(true);
+        } else {
+          // Fall back to session storage for demo mode
+          const savedUser = sessionStorage.getItem('currentUser');
+          if (savedUser) {
+            setCurrentUser(JSON.parse(savedUser));
+            setAuthenticated(true);
+          }
+        }
+        
+        // For demo, we'll just simulate a loading delay and use mock data for stats
         setTimeout(() => {
           setStats(MOCK_DATA);
           setLoading(false);
-        }, 1000);
-        
-        // Check if user is logged in (in real app, this would use proper auth)
-        const savedUser = sessionStorage.getItem('currentUser');
-        if (savedUser) {
-          setCurrentUser(JSON.parse(savedUser));
-          setAuthenticated(true);
-        }
+        }, 500);
       } catch (err) {
-        setError('Failed to load registration data');
+        setError('Failed to load user data');
         setLoading(false);
       }
     };
 
-    fetchData();
+    fetchUserAndSession();
+    
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('name, role, avatar_url')
+            .eq('id', session.user.id)
+            .single();
+            
+          const user: User = {
+            id: session.user.id,
+            email: session.user.email || '',
+            name: profileData?.name || session.user.email?.split('@')[0] || 'User',
+            role: profileData?.role || 'applicant',
+            avatarUrl: profileData?.avatar_url
+          };
+          
+          setCurrentUser(user);
+          setAuthenticated(true);
+        } else if (event === 'SIGNED_OUT') {
+          setCurrentUser(null);
+          setAuthenticated(false);
+          sessionStorage.removeItem('currentUser');
+        }
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Function to simulate submitting a registration form
@@ -99,13 +150,8 @@ export const useRegistrations = () => {
     setLoading(true);
     
     try {
-      // In a real app, you would post to an API endpoint
-      // const response = await fetch('/api/register', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(formData)
-      // });
-      // const data = await response.json();
+      // In a real app with Supabase, we'd insert the registration data
+      // Here we're still using the mock data for demo purposes
       
       // For demo, we'll simulate a successful registration after a delay
       return new Promise((resolve) => {
@@ -158,29 +204,61 @@ export const useRegistrations = () => {
     }
   };
 
-  // Function to simulate user login
-  const login = async (email: string, password: string): Promise<{ success: boolean; user?: User; error?: string }> => {
+  // Function for Supabase login
+  const login = async (email: string, password: string) => {
     setLoading(true);
     
     try {
-      // In a real app, you would authenticate against a server
-      // For demo, we'll simulate authentication with mock users
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          const user = DEMO_ACCOUNTS.find(u => u.email === email);
-          
-          if (user && password === 'password123') { // Simple password check for demo
-            setCurrentUser(user);
-            setAuthenticated(true);
-            sessionStorage.setItem('currentUser', JSON.stringify(user));
-            setLoading(false);
-            resolve({ success: true, user });
-          } else {
-            setLoading(false);
-            resolve({ success: false, error: 'Email atau password salah' });
-          }
-        }, 1000);
+      // Try to sign in with Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
+
+      if (error) {
+        // If we get an auth error, try demo login as fallback
+        if (error.message.includes('Email not confirmed') || 
+            error.message.includes('Invalid login credentials')) {
+          // Try demo login
+          const demoUser = DEMO_ACCOUNTS.find(u => u.email === email);
+          
+          if (demoUser && password === 'password123') {
+            sessionStorage.setItem('currentUser', JSON.stringify(demoUser));
+            setCurrentUser(demoUser);
+            setAuthenticated(true);
+            setLoading(false);
+            return { success: true, user: demoUser };
+          }
+        }
+        
+        setLoading(false);
+        return { success: false, error: error.message };
+      }
+      
+      // Successfully logged in with Supabase
+      if (data.user) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('name, role, avatar_url')
+          .eq('id', data.user.id)
+          .single();
+          
+        const user: User = {
+          id: data.user.id,
+          email: data.user.email || '',
+          name: profileData?.name || data.user.email?.split('@')[0] || 'User',
+          role: profileData?.role || 'applicant',
+          avatarUrl: profileData?.avatar_url
+        };
+        
+        setCurrentUser(user);
+        setAuthenticated(true);
+        setLoading(false);
+        return { success: true, user };
+      }
+      
+      setLoading(false);
+      return { success: false, error: 'Unknown error occurred' };
     } catch (err) {
       setLoading(false);
       return { success: false, error: 'Login gagal' };
@@ -188,10 +266,14 @@ export const useRegistrations = () => {
   };
 
   // Function to logout
-  const logout = () => {
-    setCurrentUser(null);
-    setAuthenticated(false);
-    sessionStorage.removeItem('currentUser');
+  const logout = async () => {
+    const { error } = await supabase.auth.signOut();
+    
+    if (!error) {
+      setCurrentUser(null);
+      setAuthenticated(false);
+      sessionStorage.removeItem('currentUser');
+    }
   };
 
   // Function to check if user has a specific role

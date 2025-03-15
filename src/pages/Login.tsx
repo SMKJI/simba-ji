@@ -4,11 +4,12 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import PageLayout from '@/components/PageLayout';
 import LoginForm from '@/components/LoginForm';
 import { useRegistrations } from '@/hooks/useRegistrations';
+import { Loader2 } from 'lucide-react';
 
 const Login = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { authenticated, currentUser } = useRegistrations();
+  const { authenticated, currentUser, loading } = useRegistrations();
   
   // Get the intended destination from state or default to dashboard
   const from = location.state?.from || '/dashboard';
@@ -36,9 +37,19 @@ const Login = () => {
     }
   }, [authenticated, currentUser, navigate, from]);
 
+  if (loading) {
+    return (
+      <PageLayout>
+        <div className="flex justify-center items-center min-h-[50vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </PageLayout>
+    );
+  }
+
   return (
     <PageLayout>
-      <div className="max-w-md mx-auto">
+      <div className="max-w-md mx-auto px-4 py-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
             Masuk Akun
