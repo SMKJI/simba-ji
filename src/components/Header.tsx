@@ -4,14 +4,14 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRegistrations } from '@/hooks/useRegistrations';
-import { useMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import UserMenu from './UserMenu';
 
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { authenticated, currentUser } = useRegistrations();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -87,11 +87,7 @@ const Header = () => {
           {/* Authentication Buttons */}
           <div className="flex items-center">
             {authenticated && currentUser ? (
-              <UserMenu 
-                user={currentUser} 
-                showRole={true} 
-                showMobile={isMobile && isMenuOpen}
-              />
+              <UserMenu />
             ) : (
               <div className="hidden md:flex items-center space-x-4">
                 <Button 

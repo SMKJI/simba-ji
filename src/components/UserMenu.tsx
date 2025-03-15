@@ -1,6 +1,6 @@
 
 import { Link } from 'react-router-dom';
-import { UserCircle, LogOut, Settings, User, Users, HelpCircle, FileText } from 'lucide-react';
+import { LogOut, Settings, User, Users, HelpCircle, FileText } from 'lucide-react';
 import { useRegistrations, UserRole } from '@/hooks/useRegistrations';
 import { 
   DropdownMenu, 
