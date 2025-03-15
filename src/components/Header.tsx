@@ -37,14 +37,21 @@ const Header = () => {
     >
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-24">
-          <Link to="/" className="flex items-center">
-            <span className="text-2xl font-bold text-primary">PPDB</span>
-            <span className="text-2xl font-bold ml-1">SMKN 1</span>
+          <Link to="/" className="flex items-center space-x-2">
+            <img 
+              src="/logo-smkn1.png" 
+              alt="Logo SMKN 1 Kendal" 
+              className="h-12 w-auto" 
+            />
+            <div className="flex flex-col">
+              <span className="text-xl font-bold text-primary leading-tight">SMKN 1 Kendal</span>
+              <span className="text-xs text-gray-600 leading-tight">Pendaftaran Awal Calon Siswa</span>
+            </div>
           </Link>
 
           {/* Desktop Navigation */}
           {!isMobile && (
-            <nav className="hidden md:flex items-center space-x-8">
+            <nav className="hidden md:flex items-center space-x-6">
               <Link 
                 to="/"
                 className={`text-gray-700 hover:text-primary transition-colors ${
@@ -67,15 +74,7 @@ const Header = () => {
                   location.pathname === '/programs' ? 'font-medium text-primary' : ''
                 }`}
               >
-                Program Keahlian
-              </Link>
-              <Link 
-                to="/register"
-                className={`text-gray-700 hover:text-primary transition-colors ${
-                  location.pathname === '/register' ? 'font-medium text-primary' : ''
-                }`}
-              >
-                Pendaftaran
+                Program
               </Link>
               <Link 
                 to="/faq"
@@ -161,15 +160,7 @@ const Header = () => {
                   location.pathname === '/programs' ? 'bg-primary/10 text-primary font-medium' : ''
                 }`}
               >
-                Program Keahlian
-              </Link>
-              <Link 
-                to="/register"
-                className={`py-2 px-4 rounded ${
-                  location.pathname === '/register' ? 'bg-primary/10 text-primary font-medium' : ''
-                }`}
-              >
-                Pendaftaran
+                Program
               </Link>
               <Link 
                 to="/faq"
