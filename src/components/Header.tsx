@@ -1,114 +1,192 @@
 
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useRegistrations } from '@/hooks/useRegistrations';
+import { useMobile } from '@/hooks/use-mobile';
+import UserMenu from './UserMenu';
 
 const Header = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { authenticated, currentUser } = useRegistrations();
+  const isMobile = useMobile();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 10) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
+      setIsScrolled(window.scrollY > 10);
     };
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const navLinks = [
-    { name: 'Beranda', path: '/' },
-    { name: 'Daftar', path: '/register' },
-    { name: 'Bantuan', path: '/helpdesk' },
-  ];
+  useEffect(() => {
+    // Close mobile menu when route changes
+    setIsMenuOpen(false);
+  }, [location.pathname]);
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? 'bg-white/90 backdrop-blur-md py-3 shadow-sm'
-          : 'bg-transparent py-5'
+    <header 
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
+        isScrolled ? 'bg-white shadow-md' : 'bg-transparent'
       }`}
     >
-      <div className="container mx-auto px-4 flex justify-between items-center">
-        <Link to="/" className="flex items-center space-x-2">
-          <div className="relative h-10 w-10 overflow-hidden">
-            <img
-              src="/lovable-uploads/3d2a0d2f-58fe-40dd-84d7-7e4ea3f565b8.png"
-              alt="SMKN 1 Kendal"
-              className="object-contain h-full w-full"
-            />
-          </div>
-          <div className="font-semibold text-primary text-xl tracking-tight">
-            SMKN 1 Kendal
-          </div>
-        </Link>
+      <div className="container mx-auto px-4">
+        <div className="flex justify-between items-center h-24">
+          <Link to="/" className="flex items-center">
+            <span className="text-2xl font-bold text-primary">PPDB</span>
+            <span className="text-2xl font-bold ml-1">SMKN 1</span>
+          </Link>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-8">
-          {navLinks.map((link) => (
-            <Link
-              key={link.path}
-              to={link.path}
-              className={`transition-colors duration-200 text-base font-medium ${
-                location.pathname === link.path
-                  ? 'text-primary'
-                  : 'text-gray-600 hover:text-primary'
-              }`}
-            >
-              {link.name}
-            </Link>
-          ))}
-          <Button asChild className="bg-primary hover:bg-primary/90">
-            <Link to="/register">Daftar Sekarang</Link>
-          </Button>
-        </nav>
-
-        {/* Mobile Menu Button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="md:hidden"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </Button>
-      </div>
-
-      {/* Mobile Navigation */}
-      {mobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-white shadow-md animate-fade-in">
-          <div className="container mx-auto px-4 py-4 flex flex-col space-y-4">
-            {navLinks.map((link, index) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`transition-colors duration-200 text-base font-medium py-2 ${
-                  location.pathname === link.path
-                    ? 'text-primary'
-                    : 'text-gray-600 hover:text-primary'
-                } animate-fade-in stagger-${index + 1}`}
-                onClick={() => setMobileMenuOpen(false)}
+          {/* Desktop Navigation */}
+          {!isMobile && (
+            <nav className="hidden md:flex items-center space-x-8">
+              <Link 
+                to="/"
+                className={`text-gray-700 hover:text-primary transition-colors ${
+                  location.pathname === '/' ? 'font-medium text-primary' : ''
+                }`}
               >
-                {link.name}
+                Beranda
               </Link>
-            ))}
-            <Button 
-              asChild 
-              className="bg-primary hover:bg-primary/90 w-full animate-fade-in stagger-4"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <Link to="/register">Daftar Sekarang</Link>
-            </Button>
+              <Link 
+                to="/register"
+                className={`text-gray-700 hover:text-primary transition-colors ${
+                  location.pathname === '/register' ? 'font-medium text-primary' : ''
+                }`}
+              >
+                Pendaftaran
+              </Link>
+              {authenticated && currentUser && (
+                <>
+                  <Link 
+                    to="/dashboard"
+                    className={`text-gray-700 hover:text-primary transition-colors ${
+                      location.pathname === '/dashboard' ? 'font-medium text-primary' : ''
+                    }`}
+                  >
+                    Dashboard
+                  </Link>
+                  <Link 
+                    to="/profile"
+                    className={`text-gray-700 hover:text-primary transition-colors ${
+                      location.pathname === '/profile' ? 'font-medium text-primary' : ''
+                    }`}
+                  >
+                    Profil
+                  </Link>
+                </>
+              )}
+            </nav>
+          )}
+
+          {/* Authentication Buttons */}
+          <div className="flex items-center">
+            {authenticated && currentUser ? (
+              <UserMenu 
+                user={currentUser} 
+                showRole={true} 
+                showMobile={isMobile && isMenuOpen}
+              />
+            ) : (
+              <div className="hidden md:flex items-center space-x-4">
+                <Button 
+                  variant="ghost"
+                  onClick={() => navigate('/login')}
+                >
+                  Masuk
+                </Button>
+                <Button onClick={() => navigate('/register')}>
+                  Daftar
+                </Button>
+              </div>
+            )}
+
+            {/* Mobile Menu Button */}
+            {isMobile && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="md:hidden"
+              >
+                {isMenuOpen ? (
+                  <X className="h-6 w-6" />
+                ) : (
+                  <Menu className="h-6 w-6" />
+                )}
+                <span className="sr-only">Toggle menu</span>
+              </Button>
+            )}
           </div>
         </div>
-      )}
+
+        {/* Mobile Navigation */}
+        {isMobile && isMenuOpen && (
+          <div className="md:hidden bg-white border-t p-4 animate-fade-in shadow-md">
+            <nav className="flex flex-col space-y-4">
+              <Link 
+                to="/"
+                className={`py-2 px-4 rounded ${
+                  location.pathname === '/' ? 'bg-primary/10 text-primary font-medium' : ''
+                }`}
+              >
+                Beranda
+              </Link>
+              <Link 
+                to="/register"
+                className={`py-2 px-4 rounded ${
+                  location.pathname === '/register' ? 'bg-primary/10 text-primary font-medium' : ''
+                }`}
+              >
+                Pendaftaran
+              </Link>
+              {authenticated && currentUser && (
+                <>
+                  <Link 
+                    to="/dashboard"
+                    className={`py-2 px-4 rounded ${
+                      location.pathname === '/dashboard' ? 'bg-primary/10 text-primary font-medium' : ''
+                    }`}
+                  >
+                    Dashboard
+                  </Link>
+                  <Link 
+                    to="/profile"
+                    className={`py-2 px-4 rounded ${
+                      location.pathname === '/profile' ? 'bg-primary/10 text-primary font-medium' : ''
+                    }`}
+                  >
+                    Profil
+                  </Link>
+                </>
+              )}
+              
+              {!authenticated && (
+                <div className="pt-2 flex flex-col space-y-2">
+                  <Button 
+                    variant="outline"
+                    onClick={() => navigate('/login')}
+                    className="w-full"
+                  >
+                    Masuk
+                  </Button>
+                  <Button 
+                    onClick={() => navigate('/register')}
+                    className="w-full"
+                  >
+                    Daftar
+                  </Button>
+                </div>
+              )}
+            </nav>
+          </div>
+        )}
+      </div>
     </header>
   );
 };

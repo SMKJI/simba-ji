@@ -12,6 +12,9 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Admin from "./pages/Admin";
 import Content from "./pages/Content";
+import Profile from "./pages/Profile";
+import Dashboard from "./pages/Dashboard";
+import GroupDetail from "./pages/GroupDetail";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -43,6 +46,21 @@ const App = () => (
           <Route path="/helpdesk" element={
             <ProtectedRoute allowedRoles={['admin', 'helpdesk']}>
               <Helpdesk />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard" element={
+            <ProtectedRoute allowedRoles={['admin', 'helpdesk', 'content', 'applicant']}>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute allowedRoles={['admin', 'helpdesk', 'content', 'applicant']}>
+              <Profile />
+            </ProtectedRoute>
+          } />
+          <Route path="/group-detail/:id" element={
+            <ProtectedRoute allowedRoles={['admin', 'helpdesk', 'content', 'applicant']}>
+              <GroupDetail />
             </ProtectedRoute>
           } />
           

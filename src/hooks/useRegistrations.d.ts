@@ -1,26 +1,26 @@
 
-export type UserRole = 'admin' | 'helpdesk' | 'content' | 'user';
+export type UserRole = 'admin' | 'helpdesk' | 'content' | 'applicant';
 
 export interface User {
   id: string;
   name: string;
   email: string;
   role: UserRole;
+  avatarUrl?: string;
 }
 
 export interface Group {
-  id: string;
+  id: number;
   name: string;
   count: number;
   capacity: number;
   isFull: boolean;
-  link: string;
+  link?: string;
 }
 
 export interface StatsData {
   total: number;
   groups: Group[];
-  loading: boolean;
 }
 
 export interface LoginResult {
@@ -41,7 +41,7 @@ export interface RegistrationsContextType {
   loading: boolean;
   authenticated: boolean;
   currentUser: User | null;
-  hasRole: (roles: UserRole[]) => boolean;
+  hasRole: (roles: UserRole | UserRole[]) => boolean;
   login: (email: string, password: string) => Promise<LoginResult>;
   logout: () => void;
   submitRegistration: (data: any) => Promise<{ success: boolean; data?: RegistrationResult; error?: string }>;
