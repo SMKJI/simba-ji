@@ -3,10 +3,10 @@ import { useEffect, useState } from 'react';
 import { ArrowRight, Users, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { RegistrationStats } from '@/hooks/useRegistrations';
+import { StatsData } from '@/hooks/useRegistrations';
 
 interface DashboardProps {
-  stats: RegistrationStats;
+  stats: StatsData;
   loading?: boolean;
 }
 
