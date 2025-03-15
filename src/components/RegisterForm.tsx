@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useRegistrations, RegistrationResult } from '@/hooks/useRegistrations';
+import { useRegistrations } from '@/hooks/useRegistrations';
 
 import {
   Form,
@@ -21,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 
 const formSchema = z.object({
   name: z.string().min(3, { message: 'Nama lengkap harus minimal 3 karakter' }),
@@ -35,7 +36,13 @@ const formSchema = z.object({
   gender: z.string().min(1, { message: 'Jenis kelamin harus dipilih' }),
   address: z.string().min(5, { message: 'Alamat harus minimal 5 karakter' }),
   previousSchool: z.string().min(3, { message: 'Nama sekolah sebelumnya harus diisi' }),
-  preferredProgram: z.string().optional(),
+  previousSchoolAddress: z.string().min(5, { message: 'Alamat sekolah sebelumnya harus diisi' }),
+  parentName: z.string().min(3, { message: 'Nama orang tua harus diisi' }),
+  parentPhone: z.string().regex(/^(\+62|62|0)8[1-9][0-9]{6,10}$/, {
+    message: 'Nomor telepon tidak valid (contoh: 08XXXXXXXXXX)',
+  }),
+  preferredProgram: z.string().min(1, { message: 'Program keahlian harus dipilih' }),
+  reason: z.string().optional(),
   agreement: z.boolean().refine((val) => val === true, {
     message: 'Anda harus menyetujui syarat dan ketentuan',
   }),
@@ -60,7 +67,11 @@ const RegisterForm = () => {
       gender: '',
       address: '',
       previousSchool: '',
+      previousSchoolAddress: '',
+      parentName: '',
+      parentPhone: '',
       preferredProgram: '',
+      reason: '',
       agreement: false,
     },
   });
@@ -77,7 +88,7 @@ const RegisterForm = () => {
         
         toast({
           title: 'Pendaftaran Berhasil',
-          description: 'Anda telah berhasil mendaftar.',
+          description: 'Anda telah berhasil mendaftar pada penjaringan awal.',
         });
         
         // Navigate to success page
@@ -97,24 +108,111 @@ const RegisterForm = () => {
   return (
     <Card className="w-full max-w-3xl mx-auto border-0 shadow-lg rounded-xl overflow-hidden animate-scale-in">
       <CardHeader className="bg-primary/5 border-b p-6">
-        <CardTitle className="text-2xl font-bold text-primary">Formulir Pendaftaran</CardTitle>
+        <CardTitle className="text-2xl font-bold text-primary">Formulir Penjaringan Awal</CardTitle>
         <CardDescription>
-          Isi data diri Anda dengan lengkap dan benar
+          Isi data diri Anda dengan lengkap dan benar untuk penjaringan awal PPDB
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <h3 className="text-lg font-medium text-gray-900">Data Diri Calon Siswa</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nama Lengkap</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Masukkan nama lengkap" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nomor Telepon (WhatsApp)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Contoh: 081234567890" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               <FormField
                 control={form.control}
-                name="name"
+                name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nama Lengkap</FormLabel>
+                    <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="Masukkan nama lengkap" {...field} />
+                      <Input type="email" placeholder="Masukkan email" {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="birthDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tanggal Lahir</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="birthPlace"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tempat Lahir</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Tempat lahir" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Jenis Kelamin</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih jenis kelamin" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="male">Laki-laki</SelectItem>
+                        <SelectItem value="female">Perempuan</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -122,12 +220,16 @@ const RegisterForm = () => {
 
               <FormField
                 control={form.control}
-                name="phone"
+                name="address"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nomor Telepon (WhatsApp)</FormLabel>
+                    <FormLabel>Alamat Lengkap</FormLabel>
                     <FormControl>
-                      <Input placeholder="Contoh: 081234567890" {...field} />
+                      <Textarea 
+                        placeholder="Masukkan alamat lengkap" 
+                        className="resize-none min-h-[100px]" 
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -135,131 +237,126 @@ const RegisterForm = () => {
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" placeholder="Masukkan email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3 pt-4 border-t">
+              <h3 className="text-lg font-medium text-gray-900">Data Asal Sekolah</h3>
+              
               <FormField
                 control={form.control}
-                name="birthDate"
+                name="previousSchool"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tanggal Lahir</FormLabel>
+                    <FormLabel>Sekolah Asal</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input placeholder="Nama sekolah asal" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
+              
               <FormField
                 control={form.control}
-                name="birthPlace"
+                name="previousSchoolAddress"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tempat Lahir</FormLabel>
+                    <FormLabel>Alamat Sekolah Asal</FormLabel>
                     <FormControl>
-                      <Input placeholder="Tempat lahir" {...field} />
+                      <Textarea 
+                        placeholder="Masukkan alamat sekolah asal" 
+                        className="resize-none min-h-[80px]" 
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-
-            <FormField
-              control={form.control}
-              name="gender"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Jenis Kelamin</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+            
+            <div className="space-y-3 pt-4 border-t">
+              <h3 className="text-lg font-medium text-gray-900">Data Orang Tua/Wali</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="parentName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nama Orang Tua/Wali</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Nama orang tua/wali" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="parentPhone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nomor Telepon Orang Tua/Wali</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Contoh: 081234567890" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-3 pt-4 border-t">
+              <h3 className="text-lg font-medium text-gray-900">Program Keahlian</h3>
+              
+              <FormField
+                control={form.control}
+                name="preferredProgram"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Program Keahlian yang Diminati</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih program keahlian" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="tkj">Teknik Komputer dan Jaringan</SelectItem>
+                        <SelectItem value="rpl">Rekayasa Perangkat Lunak</SelectItem>
+                        <SelectItem value="mm">Multimedia</SelectItem>
+                        <SelectItem value="akl">Akuntansi dan Keuangan Lembaga</SelectItem>
+                        <SelectItem value="otkp">Otomatisasi dan Tata Kelola Perkantoran</SelectItem>
+                        <SelectItem value="bdp">Bisnis Daring dan Pemasaran</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="reason"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Alasan Memilih Program Keahlian Tersebut</FormLabel>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih jenis kelamin" />
-                      </SelectTrigger>
+                      <Textarea 
+                        placeholder="Jelaskan alasan Anda memilih program keahlian tersebut" 
+                        className="resize-none min-h-[100px]" 
+                        {...field} 
+                      />
                     </FormControl>
-                    <SelectContent>
-                      <SelectItem value="male">Laki-laki</SelectItem>
-                      <SelectItem value="female">Perempuan</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Alamat Lengkap</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Masukkan alamat lengkap" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="previousSchool"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Sekolah Asal</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nama sekolah asal" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="preferredProgram"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Program Keahlian yang Diminati</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih program keahlian" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="tkj">Teknik Komputer dan Jaringan</SelectItem>
-                      <SelectItem value="rpl">Rekayasa Perangkat Lunak</SelectItem>
-                      <SelectItem value="mm">Multimedia</SelectItem>
-                      <SelectItem value="akl">Akuntansi dan Keuangan Lembaga</SelectItem>
-                      <SelectItem value="otkp">Otomatisasi dan Tata Kelola Perkantoran</SelectItem>
-                      <SelectItem value="bdp">Bisnis Daring dan Pemasaran</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}
@@ -274,7 +371,7 @@ const RegisterForm = () => {
                   </FormControl>
                   <div className="space-y-1 leading-none">
                     <FormLabel>
-                      Saya menyetujui semua syarat dan ketentuan yang berlaku
+                      Saya menyetujui semua syarat dan ketentuan yang berlaku pada penjaringan awal PPDB SMKN 1 Kendal
                     </FormLabel>
                     <FormMessage />
                   </div>

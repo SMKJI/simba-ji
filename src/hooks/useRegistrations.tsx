@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 
 // Define the registration result type
@@ -16,6 +17,7 @@ export interface Group {
   id: number;
   name: string;
   count: number;
+  capacity: number;
   isFull: boolean;
 }
 
@@ -23,9 +25,9 @@ export interface Group {
 export const MOCK_DATA = {
   total: 1327,
   groups: [
-    { id: 1, name: 'Grup 1', count: 1000, isFull: true },
-    { id: 2, name: 'Grup 2', count: 327, isFull: false },
-    { id: 3, name: 'Grup 3', count: 0, isFull: false },
+    { id: 1, name: 'Grup 1', count: 1000, capacity: 1000, isFull: true },
+    { id: 2, name: 'Grup 2', count: 327, capacity: 1000, isFull: false },
+    { id: 3, name: 'Grup 3', count: 0, capacity: 1000, isFull: false },
   ]
 };
 
@@ -116,6 +118,7 @@ export const useRegistrations = () => {
               id: stats.groups.length + 1,
               name: `Grup ${stats.groups.length + 1}`,
               count: 0,
+              capacity: 1000,
               isFull: false
             };
           }
@@ -129,7 +132,7 @@ export const useRegistrations = () => {
             updatedStats.groups[groupIndex].count += 1;
             
             // Check if group is now full
-            if (updatedStats.groups[groupIndex].count >= 1000) {
+            if (updatedStats.groups[groupIndex].count >= updatedStats.groups[groupIndex].capacity) {
               updatedStats.groups[groupIndex].isFull = true;
             }
           }

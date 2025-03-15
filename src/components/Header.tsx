@@ -54,6 +54,22 @@ const Header = () => {
                 Beranda
               </Link>
               <Link 
+                to="/about"
+                className={`text-gray-700 hover:text-primary transition-colors ${
+                  location.pathname === '/about' ? 'font-medium text-primary' : ''
+                }`}
+              >
+                Tentang
+              </Link>
+              <Link 
+                to="/programs"
+                className={`text-gray-700 hover:text-primary transition-colors ${
+                  location.pathname === '/programs' ? 'font-medium text-primary' : ''
+                }`}
+              >
+                Program Keahlian
+              </Link>
+              <Link 
                 to="/register"
                 className={`text-gray-700 hover:text-primary transition-colors ${
                   location.pathname === '/register' ? 'font-medium text-primary' : ''
@@ -61,25 +77,23 @@ const Header = () => {
               >
                 Pendaftaran
               </Link>
+              <Link 
+                to="/faq"
+                className={`text-gray-700 hover:text-primary transition-colors ${
+                  location.pathname === '/faq' ? 'font-medium text-primary' : ''
+                }`}
+              >
+                FAQ
+              </Link>
               {authenticated && currentUser && (
-                <>
-                  <Link 
-                    to="/dashboard"
-                    className={`text-gray-700 hover:text-primary transition-colors ${
-                      location.pathname === '/dashboard' ? 'font-medium text-primary' : ''
-                    }`}
-                  >
-                    Dashboard
-                  </Link>
-                  <Link 
-                    to="/profile"
-                    className={`text-gray-700 hover:text-primary transition-colors ${
-                      location.pathname === '/profile' ? 'font-medium text-primary' : ''
-                    }`}
-                  >
-                    Profil
-                  </Link>
-                </>
+                <Link 
+                  to="/dashboard"
+                  className={`text-gray-700 hover:text-primary transition-colors ${
+                    location.pathname === '/dashboard' ? 'font-medium text-primary' : ''
+                  }`}
+                >
+                  Dashboard
+                </Link>
               )}
             </nav>
           )}
@@ -134,6 +148,22 @@ const Header = () => {
                 Beranda
               </Link>
               <Link 
+                to="/about"
+                className={`py-2 px-4 rounded ${
+                  location.pathname === '/about' ? 'bg-primary/10 text-primary font-medium' : ''
+                }`}
+              >
+                Tentang
+              </Link>
+              <Link 
+                to="/programs"
+                className={`py-2 px-4 rounded ${
+                  location.pathname === '/programs' ? 'bg-primary/10 text-primary font-medium' : ''
+                }`}
+              >
+                Program Keahlian
+              </Link>
+              <Link 
                 to="/register"
                 className={`py-2 px-4 rounded ${
                   location.pathname === '/register' ? 'bg-primary/10 text-primary font-medium' : ''
@@ -141,25 +171,23 @@ const Header = () => {
               >
                 Pendaftaran
               </Link>
+              <Link 
+                to="/faq"
+                className={`py-2 px-4 rounded ${
+                  location.pathname === '/faq' ? 'bg-primary/10 text-primary font-medium' : ''
+                }`}
+              >
+                FAQ
+              </Link>
               {authenticated && currentUser && (
-                <>
-                  <Link 
-                    to="/dashboard"
-                    className={`py-2 px-4 rounded ${
-                      location.pathname === '/dashboard' ? 'bg-primary/10 text-primary font-medium' : ''
-                    }`}
-                  >
-                    Dashboard
-                  </Link>
-                  <Link 
-                    to="/profile"
-                    className={`py-2 px-4 rounded ${
-                      location.pathname === '/profile' ? 'bg-primary/10 text-primary font-medium' : ''
-                    }`}
-                  >
-                    Profil
-                  </Link>
-                </>
+                <Link 
+                  to="/dashboard"
+                  className={`py-2 px-4 rounded ${
+                    location.pathname === '/dashboard' ? 'bg-primary/10 text-primary font-medium' : ''
+                  }`}
+                >
+                  Dashboard
+                </Link>
               )}
               
               {!authenticated && (

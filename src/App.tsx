@@ -15,6 +15,9 @@ import Content from "./pages/Content";
 import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
 import GroupDetail from "./pages/GroupDetail";
+import FAQ from "./pages/FAQ";
+import Programs from "./pages/Programs"; 
+import About from "./pages/About";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -31,6 +34,9 @@ const App = () => (
           <Route path="/register" element={<Register />} />
           <Route path="/success" element={<Success />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/programs" element={<Programs />} />
+          <Route path="/about" element={<About />} />
           
           {/* Protected Routes */}
           <Route path="/admin" element={

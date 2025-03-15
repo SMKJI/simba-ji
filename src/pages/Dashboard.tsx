@@ -6,7 +6,7 @@ import Dashboard from '@/components/Dashboard';
 import { Button } from '@/components/ui/button';
 import { useRegistrations } from '@/hooks/useRegistrations';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { UserCircle, FileText, Bell, Users } from 'lucide-react';
+import { UserCircle, Bell, Users, Info } from 'lucide-react';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
@@ -33,7 +33,7 @@ const DashboardPage = () => {
             Selamat Datang, {currentUser.name}
           </h1>
           <p className="text-gray-600 mt-2">
-            Panel dashboard penerimaan murid baru SMKN 1 Kendal
+            Panel dashboard penjaringan awal calon murid baru SMKN 1 Kendal
           </p>
         </div>
 
@@ -56,12 +56,12 @@ const DashboardPage = () => {
                     Informasi Umum
                   </Button>
                   <Button 
-                    variant={activeTab === 'documents' ? 'secondary' : 'ghost'} 
+                    variant={activeTab === 'info' ? 'secondary' : 'ghost'} 
                     className="justify-start rounded-none h-12 px-6"
-                    onClick={() => setActiveTab('documents')}
+                    onClick={() => setActiveTab('info')}
                   >
-                    <FileText className="mr-2 h-5 w-5" />
-                    Dokumen
+                    <Info className="mr-2 h-5 w-5" />
+                    Informasi PPDB
                   </Button>
                   <Button 
                     variant={activeTab === 'announcements' ? 'secondary' : 'ghost'} 
@@ -89,40 +89,54 @@ const DashboardPage = () => {
               <Dashboard stats={stats} loading={loading} />
             )}
             
-            {activeTab === 'documents' && (
+            {activeTab === 'info' && (
               <Card className="border-0 shadow-lg rounded-xl overflow-hidden">
                 <CardHeader className="bg-primary/5 border-b p-6">
                   <CardTitle className="text-xl font-semibold text-primary">
-                    Dokumen Pendaftaran
+                    Informasi PPDB
                   </CardTitle>
                   <CardDescription>
-                    Dokumen yang perlu disiapkan untuk pendaftaran
+                    Penerimaan Peserta Didik Baru SMKN 1 Kendal
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-6">
-                  <ul className="space-y-4">
-                    <li className="p-4 border rounded-lg flex justify-between items-center">
-                      <div>
-                        <h3 className="font-medium">Formulir Pendaftaran</h3>
-                        <p className="text-sm text-muted-foreground">Format PDF (Max 2MB)</p>
-                      </div>
-                      <Button variant="outline" size="sm">Unggah</Button>
-                    </li>
-                    <li className="p-4 border rounded-lg flex justify-between items-center">
-                      <div>
-                        <h3 className="font-medium">Ijazah SMP/MTs</h3>
-                        <p className="text-sm text-muted-foreground">Format PDF/JPG (Max 2MB)</p>
-                      </div>
-                      <Button variant="outline" size="sm">Unggah</Button>
-                    </li>
-                    <li className="p-4 border rounded-lg flex justify-between items-center">
-                      <div>
-                        <h3 className="font-medium">Kartu Keluarga</h3>
-                        <p className="text-sm text-muted-foreground">Format PDF/JPG (Max 2MB)</p>
-                      </div>
-                      <Button variant="outline" size="sm">Unggah</Button>
-                    </li>
-                  </ul>
+                  <div className="space-y-4">
+                    <div className="p-4 border rounded-lg">
+                      <h3 className="font-medium mb-2">Tahapan Penjaringan Awal</h3>
+                      <p className="text-sm text-gray-600">
+                        Penjaringan awal ini bertujuan untuk mengumpulkan data calon peserta didik yang berminat mendaftar di SMKN 1 Kendal. Data ini akan digunakan untuk persiapan PPDB resmi yang akan dilaksanakan melalui sistem terpisah.
+                      </p>
+                    </div>
+                    
+                    <div className="p-4 border rounded-lg">
+                      <h3 className="font-medium mb-2">Jadwal Penting</h3>
+                      <ul className="text-sm text-gray-600 space-y-2">
+                        <li className="flex justify-between">
+                          <span>Pembukaan Penjaringan Awal</span>
+                          <span className="font-medium">1 Januari 2024</span>
+                        </li>
+                        <li className="flex justify-between">
+                          <span>Penutupan Penjaringan Awal</span>
+                          <span className="font-medium">31 Maret 2024</span>
+                        </li>
+                        <li className="flex justify-between">
+                          <span>Pembukaan PPDB Resmi</span>
+                          <span className="font-medium">1 Juni 2024</span>
+                        </li>
+                      </ul>
+                    </div>
+                    
+                    <div className="p-4 border rounded-lg">
+                      <h3 className="font-medium mb-2">Informasi Kontak</h3>
+                      <p className="text-sm text-gray-600">
+                        Untuk informasi lebih lanjut, silakan hubungi panitia PPDB SMKN 1 Kendal melalui:
+                      </p>
+                      <ul className="text-sm text-gray-600 mt-2">
+                        <li>Email: ppdb@smkn1kendal.sch.id</li>
+                        <li>WhatsApp: 081234567890</li>
+                      </ul>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             )}
@@ -134,29 +148,29 @@ const DashboardPage = () => {
                     Pengumuman Terbaru
                   </CardTitle>
                   <CardDescription>
-                    Informasi terbaru tentang proses penerimaan murid baru
+                    Informasi terbaru tentang proses penjaringan awal calon murid baru
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="space-y-4">
                     <div className="p-4 border rounded-lg">
                       <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-medium">Jadwal Tes Seleksi</h3>
+                        <h3 className="font-medium">Pembukaan Penjaringan Awal PPDB</h3>
                         <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">Baru</span>
                       </div>
                       <p className="text-sm text-gray-600 mb-2">
-                        Tes seleksi akan dilaksanakan pada tanggal 15 Juli 2023 di SMKN 1 Kendal. Harap membawa kartu peserta dan alat tulis.
+                        SMKN 1 Kendal telah membuka penjaringan awal calon peserta didik baru untuk tahun ajaran 2024/2025. Penjaringan ini bertujuan untuk mempersiapkan data calon siswa sebelum PPDB resmi dibuka.
                       </p>
-                      <p className="text-xs text-gray-500">Diposting: 1 Juli 2023</p>
+                      <p className="text-xs text-gray-500">Diposting: 1 Januari 2024</p>
                     </div>
                     <div className="p-4 border rounded-lg">
                       <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-medium">Pengumuman Hasil Seleksi</h3>
+                        <h3 className="font-medium">Informasi Program Keahlian</h3>
                       </div>
                       <p className="text-sm text-gray-600 mb-2">
-                        Hasil seleksi akan diumumkan pada tanggal 20 Juli 2023 melalui website dan grup WhatsApp.
+                        SMKN 1 Kendal menawarkan berbagai program keahlian yang dapat dipilih oleh calon peserta didik baru. Silakan lihat detail program keahlian pada halaman Informasi PPDB.
                       </p>
-                      <p className="text-xs text-gray-500">Diposting: 25 Juni 2023</p>
+                      <p className="text-xs text-gray-500">Diposting: 5 Januari 2024</p>
                     </div>
                   </div>
                 </CardContent>
@@ -170,7 +184,7 @@ const DashboardPage = () => {
                     Grup WhatsApp
                   </CardTitle>
                   <CardDescription>
-                    Grup WhatsApp untuk informasi penerimaan murid baru
+                    Grup WhatsApp untuk informasi penjaringan awal calon murid baru
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-6">
@@ -181,7 +195,7 @@ const DashboardPage = () => {
                           <div>
                             <h3 className="text-lg font-semibold">{group.name}</h3>
                             <p className="text-sm text-muted-foreground">
-                              {group.count} pendaftar dari 1000 kapasitas
+                              {group.count} pendaftar dari {group.capacity || 1000} kapasitas
                             </p>
                           </div>
                           <div>
