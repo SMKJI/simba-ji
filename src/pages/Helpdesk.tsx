@@ -43,65 +43,67 @@ const Helpdesk = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 px-4 sm:px-0">
         <div className="flex flex-col">
-          <h1 className="text-3xl font-bold">Helpdesk</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold">Helpdesk</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Kelola tiket bantuan dari pendaftar
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-between mb-6">
+        <div className="flex flex-col sm:flex-row gap-4 justify-between mb-4 sm:mb-6">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="text"
               placeholder="Cari tiket..."
-              className="pl-8"
+              className="pl-8 text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
         </div>
 
-        <Tabs defaultValue="all" onValueChange={(value) => setFilter(value as any)}>
-          <TabsList className="mb-4">
-            <TabsTrigger value="all">
-              Semua
-              <Badge variant="secondary" className="ml-2">{tickets.length}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="open">
-              Terbuka
-              <Badge variant="secondary" className="ml-2">{getStatusCount('open')}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="in-progress">
-              Dalam Proses
-              <Badge variant="secondary" className="ml-2">{getStatusCount('in-progress')}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="closed">
-              Selesai
-              <Badge variant="secondary" className="ml-2">{getStatusCount('closed')}</Badge>
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value={filter}>
-            <div className="space-y-4">
-              {filteredTickets.length === 0 ? (
-                <Card className="p-8 text-center">
-                  <p className="text-muted-foreground">Tidak ada tiket yang ditemukan</p>
-                </Card>
-              ) : (
-                filteredTickets.map(ticket => (
-                  <HelpdeskTicketComponent 
-                    key={ticket.id} 
-                    ticket={ticket}
-                    onClose={handleTicketClose}
-                  />
-                ))
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
+        <div className="overflow-x-auto">
+          <Tabs defaultValue="all" onValueChange={(value) => setFilter(value as any)}>
+            <TabsList className="mb-4 flex flex-wrap">
+              <TabsTrigger value="all" className="text-xs sm:text-sm">
+                Semua
+                <Badge variant="secondary" className="ml-1 sm:ml-2 text-xs">{tickets.length}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="open" className="text-xs sm:text-sm">
+                Terbuka
+                <Badge variant="secondary" className="ml-1 sm:ml-2 text-xs">{getStatusCount('open')}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="in-progress" className="text-xs sm:text-sm">
+                Dalam Proses
+                <Badge variant="secondary" className="ml-1 sm:ml-2 text-xs">{getStatusCount('in-progress')}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="closed" className="text-xs sm:text-sm">
+                Selesai
+                <Badge variant="secondary" className="ml-1 sm:ml-2 text-xs">{getStatusCount('closed')}</Badge>
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value={filter}>
+              <div className="space-y-4">
+                {filteredTickets.length === 0 ? (
+                  <Card className="p-6 sm:p-8 text-center">
+                    <p className="text-muted-foreground text-sm sm:text-base">Tidak ada tiket yang ditemukan</p>
+                  </Card>
+                ) : (
+                  filteredTickets.map(ticket => (
+                    <HelpdeskTicketComponent 
+                      key={ticket.id} 
+                      ticket={ticket}
+                      onClose={handleTicketClose}
+                    />
+                  ))
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </DashboardLayout>
   );

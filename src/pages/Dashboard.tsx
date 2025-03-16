@@ -30,8 +30,8 @@ const DashboardPage = () => {
   // Don't render anything while checking authentication
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[50vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex justify-center items-center min-h-[40vh] sm:min-h-[50vh]">
+        <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -43,7 +43,7 @@ const DashboardPage = () => {
 
   return (
     <DashboardLayout>
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto px-4 sm:px-0">
         <PageTitle 
           title={`Selamat Datang, ${currentUser.name}`}
           description="Panel dashboard penjaringan awal calon murid baru SMKN 1 Kendal"
@@ -52,7 +52,7 @@ const DashboardPage = () => {
         {/* Mobile tab selector - visible on small screens */}
         <div className="md:hidden mb-6">
           <select 
-            className="w-full p-2 border rounded-md bg-white"
+            className="w-full p-2 border rounded-md bg-white text-sm"
             value={activeTab}
             onChange={(e) => setActiveTab(e.target.value)}
           >
@@ -64,7 +64,7 @@ const DashboardPage = () => {
           </select>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
           {/* Sidebar - hidden on mobile, now using the global sidebar instead */}
           <div className="hidden">
             {/* Old sidebar code removed since we now use the global sidebar */}

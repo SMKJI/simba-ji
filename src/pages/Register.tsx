@@ -11,14 +11,16 @@ const Register = () => {
 
   return (
     <MainLayout>
-      <div className="max-w-3xl mx-auto text-center mb-10">
+      <div className="max-w-3xl mx-auto text-center mb-6 sm:mb-10 px-4">
         <PageTitle 
           title="Pendaftaran Calon Murid Baru"
           description="Isi formulir di bawah ini dengan data yang benar dan lengkap. Setelah mendaftar, Anda akan diarahkan ke grup WhatsApp sesuai urutan pendaftaran."
         />
       </div>
       
-      <RegisterForm />
+      <div className="px-4 sm:px-6 md:px-0">
+        <RegisterForm />
+      </div>
     </MainLayout>
   );
 };

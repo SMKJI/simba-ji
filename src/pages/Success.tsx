@@ -67,15 +67,15 @@ const Success = () => {
 
   return (
     <MainLayout>
-      <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4 animate-fade-in">
-            <Check className="h-8 w-8 text-green-600" />
+      <div className="max-w-3xl mx-auto px-4">
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="inline-flex items-center justify-center w-12 sm:w-16 h-12 sm:h-16 bg-green-100 rounded-full mb-3 sm:mb-4 animate-fade-in">
+            <Check className="h-6 sm:h-8 w-6 sm:w-8 text-green-600" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-4 animate-fade-in stagger-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4 animate-fade-in stagger-1">
             Pendaftaran Berhasil!
           </h1>
-          <p className="text-gray-600 animate-fade-in stagger-2">
+          <p className="text-sm sm:text-base text-gray-600 animate-fade-in stagger-2">
             Selamat! Anda telah berhasil mendaftar sebagai calon murid baru SMKN 1 Kendal.
           </p>
         </div>
@@ -83,32 +83,32 @@ const Success = () => {
         <RegistrationCard data={registrationData} />
         
         {registrationData.email && (
-          <div className="bg-primary/5 border border-primary/10 rounded-xl p-6 mt-8 animate-fade-in stagger-3">
-            <h2 className="text-xl font-bold text-primary mb-3">Akun Anda Telah Dibuat</h2>
-            <p className="text-gray-600 mb-4">
+          <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 sm:p-6 mt-6 sm:mt-8 animate-fade-in stagger-3">
+            <h2 className="text-lg sm:text-xl font-bold text-primary mb-2 sm:mb-3">Akun Anda Telah Dibuat</h2>
+            <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">
               Akun Anda telah berhasil dibuat. Silakan login menggunakan email dan password yang Anda daftarkan untuk melanjutkan ke dashboard calon murid.
             </p>
-            <div className="bg-white p-4 rounded-lg border border-gray-200 mb-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white p-3 sm:p-4 rounded-lg border border-gray-200 mb-4 sm:mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Email:</p>
-                  <p className="font-medium">{registrationData.email}</p>
+                  <p className="text-xs sm:text-sm text-gray-500 mb-1">Email:</p>
+                  <p className="text-sm sm:text-base font-medium">{registrationData.email}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Password:</p>
-                  <p className="font-medium">Password yang Anda masukkan saat pendaftaran</p>
+                  <p className="text-xs sm:text-sm text-gray-500 mb-1">Password:</p>
+                  <p className="text-sm sm:text-base font-medium">Password yang Anda masukkan saat pendaftaran</p>
                 </div>
               </div>
             </div>
-            <Button onClick={handleGoToLogin} className="w-full">
+            <Button onClick={handleGoToLogin} className="w-full text-sm sm:text-base">
               <LogIn className="mr-2 h-4 w-4" /> 
               Login ke Dashboard
             </Button>
           </div>
         )}
         
-        <div className="mt-10 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-          <Button variant="ghost" asChild>
+        <div className="mt-6 sm:mt-10 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 pb-4 sm:pb-0">
+          <Button variant="ghost" asChild className="text-sm sm:text-base">
             <Link to="/" className="flex items-center">
               <ArrowLeft className="mr-2 h-4 w-4" /> 
               Kembali ke Beranda

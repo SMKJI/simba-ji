@@ -144,6 +144,7 @@
   }
 }
 
+/* Animations */
 .animate-float {
   animation: float 4s ease-in-out infinite;
 }
@@ -164,6 +165,7 @@
   animation: pulse 2s infinite;
 }
 
+/* Animation delays */
 .stagger-1 {
   animation-delay: 0.1s;
 }
@@ -180,6 +182,7 @@
   animation-delay: 0.4s;
 }
 
+/* Special effects */
 .glass-morphism {
   background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
@@ -194,4 +197,39 @@
 .card-hover:hover {
   transform: translateY(-5px);
   box-shadow: 0 12px 20px -10px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive spacing utility classes */
+.section-padding {
+  @apply px-4 sm:px-6 md:px-8 py-6 sm:py-8 md:py-12;
+}
+
+.section-margin {
+  @apply my-6 sm:my-8 md:my-12;
+}
+
+/* Text size responsive utilities */
+.text-responsive {
+  @apply text-sm sm:text-base md:text-lg;
+}
+
+.heading-responsive {
+  @apply text-xl sm:text-2xl md:text-3xl font-bold;
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .hide-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
+  }
+}
+
+/* Touch-optimized buttons for mobile */
+.touch-target {
+  @apply min-h-[44px] min-w-[44px];
 }

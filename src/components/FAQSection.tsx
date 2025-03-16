@@ -1,4 +1,6 @@
+
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+
 const FAQSection = () => {
   const faqs = [{
     question: "Bagaimana cara mendaftar di SMKN 1 Kendal?",
@@ -22,19 +24,30 @@ const FAQSection = () => {
     question: "Bagaimana jika saya mengalami kendala teknis saat mendaftar?",
     answer: "Jika mengalami kendala teknis, Anda dapat menghubungi helpdesk melalui fitur chat atau ticket system di halaman Helpdesk. Tim kami akan membantu Anda menyelesaikan masalah tersebut."
   }];
-  return <div className="w-full">
+  
+  return (
+    <div className="w-full max-w-3xl mx-auto px-4">
       <Accordion type="single" collapsible className="w-full">
-        {faqs.map((faq, index) => <AccordionItem key={index} value={`item-${index}`} className="animate-fade-in" style={{
-        animationDelay: `${index * 100}ms`
-      }}>
-            <AccordionTrigger className="font-medium px-[15px] mx-0 text-left">
+        {faqs.map((faq, index) => (
+          <AccordionItem 
+            key={index} 
+            value={`item-${index}`} 
+            className="animate-fade-in" 
+            style={{
+              animationDelay: `${index * 100}ms`
+            }}
+          >
+            <AccordionTrigger className="font-medium px-2 sm:px-4 mx-0 text-left text-sm sm:text-base">
               {faq.question}
             </AccordionTrigger>
-            <AccordionContent className="text-muted-foreground mx-[14px]">
+            <AccordionContent className="text-muted-foreground mx-2 sm:mx-4 text-xs sm:text-sm">
               {faq.answer}
             </AccordionContent>
-          </AccordionItem>)}
+          </AccordionItem>
+        ))}
       </Accordion>
-    </div>;
+    </div>
+  );
 };
+
 export default FAQSection;

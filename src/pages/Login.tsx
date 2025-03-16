@@ -42,8 +42,8 @@ const Login = () => {
   if (loading) {
     return (
       <MainLayout>
-        <div className="flex justify-center items-center min-h-[50vh]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="flex justify-center items-center min-h-[40vh] sm:min-h-[50vh]">
+          <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin text-primary" />
         </div>
       </MainLayout>
     );
@@ -51,9 +51,12 @@ const Login = () => {
 
   return (
     <MainLayout>
-      <div className="max-w-md mx-auto px-4 py-8">
-        <div className="text-center mb-8">
-          <PageTitle title="Masuk Akun" description="Silakan masuk untuk melanjutkan ke sistem pendaftaran" />
+      <div className="max-w-md mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div className="text-center mb-6 sm:mb-8">
+          <PageTitle 
+            title="Masuk Akun" 
+            description="Silakan masuk untuk melanjutkan ke sistem pendaftaran" 
+          />
         </div>
         
         <LoginForm prefilledEmail={prefilledEmail} />

@@ -23,41 +23,42 @@ const Admin = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 px-4 sm:px-0">
         <div className="flex flex-col">
-          <h1 className="text-3xl font-bold">Panel Admin</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold">Panel Admin</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Kelola pendaftaran, grup WhatsApp, dan data pendaftar
           </p>
         </div>
 
         <StatCards stats={stats} />
 
-        <Tabs defaultValue="applicants">
-          <TabsList className="mb-4">
-            <TabsTrigger value="applicants">Pendaftar</TabsTrigger>
-            <TabsTrigger value="groups">Grup WhatsApp</TabsTrigger>
-            <TabsTrigger value="stats">Statistik</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="applicants">
-            <ApplicantsTable 
-              applicants={applicants} 
-              onPromoteToHelpdesk={handlePromoteToHelpdesk}
-            />
-          </TabsContent>
-          
-          <TabsContent value="groups">
-            <GroupsManager groups={stats.groups} />
-          </TabsContent>
-          
-          <TabsContent value="stats">
-            {/* Let's assume StatsPanel accepts both stats and applicants */}
-            <div className="grid gap-4">
-              <StatsPanel />
-            </div>
-          </TabsContent>
-        </Tabs>
+        <div className="overflow-x-auto">
+          <Tabs defaultValue="applicants" className="w-full">
+            <TabsList className="mb-4 flex flex-wrap">
+              <TabsTrigger value="applicants" className="text-xs sm:text-sm">Pendaftar</TabsTrigger>
+              <TabsTrigger value="groups" className="text-xs sm:text-sm">Grup WhatsApp</TabsTrigger>
+              <TabsTrigger value="stats" className="text-xs sm:text-sm">Statistik</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="applicants">
+              <ApplicantsTable 
+                applicants={applicants} 
+                onPromoteToHelpdesk={handlePromoteToHelpdesk}
+              />
+            </TabsContent>
+            
+            <TabsContent value="groups">
+              <GroupsManager groups={stats.groups} />
+            </TabsContent>
+            
+            <TabsContent value="stats">
+              <div className="grid gap-4">
+                <StatsPanel />
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </DashboardLayout>
   );
