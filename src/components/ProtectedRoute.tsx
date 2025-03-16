@@ -12,6 +12,7 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
   const location = useLocation();
   const { authenticated, currentUser, loading } = useRegistrations();
 
+  // Don't render anything while loading to prevent flashing
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">

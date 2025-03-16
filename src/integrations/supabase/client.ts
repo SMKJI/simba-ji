@@ -16,6 +16,9 @@ export type Profile = {
   avatar_url: string | null;
 };
 
+// Create Supabase client
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
 // Sign up dengan email dan password
 export const signUp = async (email: string, password: string, userData: any) => {
   const { data, error } = await supabase.auth.signUp({
@@ -51,4 +54,14 @@ export const getSession = async () => {
   return { data, error };
 };
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+// Get user profile
+export const getUserProfile = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single();
+  
+  return { data, error };
+};
+

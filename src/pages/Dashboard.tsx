@@ -6,27 +6,42 @@ import Dashboard from '@/components/Dashboard';
 import { Button } from '@/components/ui/button';
 import { useRegistrations } from '@/hooks/useRegistrations';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { UserCircle, Bell, Users, Info } from 'lucide-react';
+import { UserCircle, Bell, Users, Info, Loader2 } from 'lucide-react';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
-  const { stats, loading, currentUser, authenticated } = useRegistrations();
+  const { stats, loading, currentUser, authenticated, hasRole } = useRegistrations();
   const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
     window.scrollTo(0, 0);
     
+    // Make sure the session is stable before checking authentication
+    if (loading) return;
+    
     if (!authenticated) {
-      navigate('/login');
+      navigate('/login', { state: { from: '/dashboard' } });
     }
-  }, [authenticated, navigate]);
+  }, [authenticated, navigate, loading]);
 
+  // Don't render anything while checking authentication
+  if (loading) {
+    return (
+      <PageLayout>
+        <div className="flex justify-center items-center min-h-[50vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </PageLayout>
+    );
+  }
+
+  // Also don't render if not authenticated
   if (!authenticated || !currentUser) {
     return null;
   }
 
   return (
-    <PageLayout className="bg-gray-50">
+    <PageLayout>
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">

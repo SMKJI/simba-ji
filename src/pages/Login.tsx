@@ -13,6 +13,7 @@ const Login = () => {
   
   // Get prefilled email from state if available
   const prefilledEmail = location.state?.email || '';
+  const redirectPath = location.state?.from || '/dashboard';
   
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -31,11 +32,11 @@ const Login = () => {
           navigate('/content');
           break;
         default:
-          navigate('/dashboard');
+          navigate(redirectPath);
           break;
       }
     }
-  }, [authenticated, currentUser, navigate]);
+  }, [authenticated, currentUser, navigate, redirectPath]);
 
   if (loading) {
     return (
