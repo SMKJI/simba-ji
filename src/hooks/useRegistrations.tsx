@@ -889,6 +889,56 @@ export const useRegistrations = () => {
     }
   };
 
+  // Function to reset an operator's password
+  const resetOperatorPassword = (operatorId: string, newPassword: string): { success: boolean; password?: string } => {
+    try {
+      if (!newPassword || newPassword.length < 8) {
+        return { success: false };
+      }
+
+      // In a real app, this would hash the password and update it in the database
+      // For demo purposes, we'll just return success with the new password
+      const operatorIndex = operators.findIndex(op => op.id === operatorId);
+      if (operatorIndex < 0) {
+        return { success: false };
+      }
+
+      // Update last active timestamp to indicate activity
+      const updatedOperators = [...operators];
+      updatedOperators[operatorIndex] = {
+        ...updatedOperators[operatorIndex],
+        lastActive: new Date().toISOString()
+      };
+      setOperators(updatedOperators);
+
+      return { 
+        success: true,
+        password: newPassword 
+      };
+    } catch (err) {
+      return { success: false };
+    }
+  };
+
+  // Function to send operator credentials via email
+  const sendOperatorCredentials = (operatorId: string): boolean => {
+    try {
+      const operator = operators.find(op => op.id === operatorId);
+      if (!operator) return false;
+
+      // In a real app, this would send an email with login credentials
+      // For demo purposes, just show a toast message
+      toast({
+        title: "Kredensial terkirim",
+        description: `Email dengan informasi login telah dikirim ke ${operator.email}`
+      });
+
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
+
   return { 
     stats, 
     loading, 
@@ -922,6 +972,8 @@ export const useRegistrations = () => {
     removeHelpdeskOperator,
     balanceTickets,
     assignTicket,
-    operators
+    operators,
+    resetOperatorPassword,
+    sendOperatorCredentials
   };
 };
