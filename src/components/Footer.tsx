@@ -25,7 +25,7 @@ const Footer = () => {
             </p>
             <div className="flex space-x-4">
               <a 
-                href="https://facebook.com" 
+                href="https://www.facebook.com/SMKN1KendalJateng/" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="hover:text-accent transition-colors"
@@ -33,7 +33,7 @@ const Footer = () => {
                 <Facebook size={20} />
               </a>
               <a 
-                href="https://instagram.com" 
+                href="https://www.instagram.com/smkn1kendaljateng/?hl=en" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="hover:text-accent transition-colors"

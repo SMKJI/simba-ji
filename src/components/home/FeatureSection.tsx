@@ -12,7 +12,7 @@ const FeatureSection = () => {
             Alur Pendaftaran
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Proses pendaftaran yang mudah dan efisien untuk calon murid baru
+            Proses pendaftaran yang mudah dan efisien untuk penjaringan calon murid baru
           </p>
         </div>
 

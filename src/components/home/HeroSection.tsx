@@ -13,10 +13,10 @@ const HeroSection = () => {
               Pendaftaran Awal Tahun Ajaran 2024/2025
             </div>
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 animate-fade-in">
-              Sistem Penerimaan <span className="text-primary">Murid Baru</span>
+              Sistem Penjaringan <span className="text-primary">Murid Baru</span>
             </h1>
             <p className="text-lg text-gray-600 mb-8 animate-fade-in stagger-1">
-              Selamat datang di sistem penerimaan murid baru SMKN 1 Kendal. Daftar sekarang untuk mendapatkan akses ke grup WhatsApp dan informasi terkini seputar penerimaan murid baru.
+              Selamat datang di sistem penjaringan murid baru SMKN 1 Kendal. Daftar sekarang untuk mendapatkan akses ke grup WhatsApp dan informasi terkini seputar penerimaan murid baru.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start space-y-4 sm:space-y-0 sm:space-x-4 animate-fade-in stagger-2">
               <Button asChild size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90">

@@ -26,7 +26,7 @@ const About = () => {
           <div className="bg-primary/5 rounded-xl p-8 mb-8">
             <h2 className="text-2xl font-bold text-primary mb-4">Profil Sekolah</h2>
             <p className="text-gray-600 mb-6">
-              SMKN 1 Kendal didirikan pada tahun 1969 dan menjadi salah satu sekolah kejuruan tertua dan terkemuka di Kabupaten Kendal.
+              SMKN 1 Kendal didirikan pada tahun 1977 dan menjadi salah satu sekolah kejuruan tertua dan terkemuka di Kabupaten Kendal.
               Dengan komitmen untuk memberikan pendidikan berkualitas, SMKN 1 Kendal telah menghasilkan ribuan lulusan yang bekerja di berbagai sektor industri atau melanjutkan pendidikan ke jenjang yang lebih tinggi.
             </p>
             <p className="text-gray-600">
