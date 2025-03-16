@@ -4,11 +4,13 @@ import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, ArrowRight } from 'lucide-react';
 import PageLayout from '@/components/PageLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 const About = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+  
   return <PageLayout>
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-12">
@@ -151,4 +153,5 @@ Jujur, Inovatif, berdaya saing tinggi di dunia kerja dan wirausaha.&quot;</p>
       </div>
     </PageLayout>;
 };
+
 export default About;

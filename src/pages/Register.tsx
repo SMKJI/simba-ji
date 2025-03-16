@@ -1,13 +1,31 @@
 
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layouts/MainLayout';
 import RegisterForm from '@/components/RegisterForm';
 import PageTitle from '@/components/ui/PageTitle';
+import { useToast } from '@/hooks/use-toast';
 
 const Register = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  // This function will be passed to RegisterForm component
+  const handleRegistrationSuccess = () => {
+    toast({
+      title: "Pendaftaran Berhasil",
+      description: "Anda akan diarahkan ke halaman sukses.",
+    });
+    
+    // Delay navigation to allow toast to be seen
+    setTimeout(() => {
+      navigate('/success');
+    }, 1500);
+  };
 
   return (
     <MainLayout>
@@ -19,7 +37,7 @@ const Register = () => {
       </div>
       
       <div className="px-4 sm:px-6 md:px-0">
-        <RegisterForm />
+        <RegisterForm onRegistrationSuccess={handleRegistrationSuccess} />
       </div>
     </MainLayout>
   );

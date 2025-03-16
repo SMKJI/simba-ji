@@ -2,6 +2,7 @@
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import MainLayout from '@/components/layouts/MainLayout';
 import LoginForm from '@/components/LoginForm';
 import { useRegistrations } from '@/hooks/useRegistrations';
@@ -10,6 +11,7 @@ import PageTitle from '@/components/ui/PageTitle';
 const Login = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { authenticated, currentUser, loading } = useRegistrations();
   
   // Get prefilled email from state if available
@@ -21,23 +23,37 @@ const Login = () => {
     
     // If already authenticated, redirect
     if (authenticated && currentUser) {
+      toast({
+        title: "Anda sudah masuk",
+        description: "Mengarahkan ke dashboard Anda",
+      });
+      
       // Redirect based on role
-      switch (currentUser.role) {
-        case 'admin':
-          navigate('/admin');
-          break;
-        case 'helpdesk':
-          navigate('/helpdesk');
-          break;
-        case 'content':
-          navigate('/content');
-          break;
-        default:
-          navigate(redirectPath);
-          break;
-      }
+      setTimeout(() => {
+        switch (currentUser.role) {
+          case 'admin':
+            navigate('/admin');
+            break;
+          case 'helpdesk':
+            navigate('/helpdesk');
+            break;
+          case 'content':
+            navigate('/content');
+            break;
+          default:
+            navigate(redirectPath);
+            break;
+        }
+      }, 1000);
     }
-  }, [authenticated, currentUser, navigate, redirectPath]);
+  }, [authenticated, currentUser, navigate, redirectPath, toast]);
+
+  const handleLoginSuccess = (role: string) => {
+    toast({
+      title: "Login Berhasil",
+      description: `Selamat datang kembali! Anda masuk sebagai ${role}`,
+    });
+  };
 
   if (loading) {
     return (
@@ -59,7 +75,10 @@ const Login = () => {
           />
         </div>
         
-        <LoginForm prefilledEmail={prefilledEmail} />
+        <LoginForm 
+          prefilledEmail={prefilledEmail}
+          onLoginSuccess={handleLoginSuccess} 
+        />
       </div>
     </MainLayout>
   );

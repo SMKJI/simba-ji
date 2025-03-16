@@ -6,6 +6,7 @@ import PageTitle from '@/components/ui/PageTitle';
 import Dashboard from '@/components/Dashboard';
 import { Loader2 } from 'lucide-react';
 import { useRegistrations } from '@/hooks/useRegistrations';
+import { useToast } from '@/hooks/use-toast';
 import GroupJoinConfirmation from '@/components/GroupJoinConfirmation';
 import TicketList from '@/components/TicketList';
 import DashboardInfoPanel from '@/components/dashboard/DashboardInfoPanel';
@@ -13,6 +14,7 @@ import DashboardAnnouncements from '@/components/dashboard/DashboardAnnouncement
 
 const DashboardPage = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { stats, loading, currentUser, authenticated } = useRegistrations();
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -23,9 +25,20 @@ const DashboardPage = () => {
     if (loading) return;
     
     if (!authenticated) {
+      toast({
+        title: "Akses Ditolak",
+        description: "Anda perlu masuk untuk mengakses halaman ini",
+        variant: "destructive"
+      });
       navigate('/login', { state: { from: '/dashboard' } });
+    } else {
+      // Welcome message
+      toast({
+        title: `Selamat Datang, ${currentUser?.name}`,
+        description: "Selamat datang di dashboard Anda"
+      });
     }
-  }, [authenticated, navigate, loading]);
+  }, [authenticated, navigate, loading, currentUser, toast]);
 
   // Don't render anything while checking authentication
   if (loading) {

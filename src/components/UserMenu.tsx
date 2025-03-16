@@ -2,6 +2,7 @@
 import { Link } from 'react-router-dom';
 import { LogOut, Settings, User, Users, HelpCircle } from 'lucide-react';
 import { useRegistrations, UserRole } from '@/hooks/useRegistrations';
+import { useToast } from '@/hooks/use-toast';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -31,6 +32,15 @@ const getRoleMenuItems = (role: UserRole) => {
 
 const UserMenu = () => {
   const { currentUser, authenticated, logout } = useRegistrations();
+  const { toast } = useToast();
+  
+  const handleLogout = () => {
+    logout();
+    toast({
+      title: "Berhasil Keluar",
+      description: "Anda telah keluar dari akun Anda",
+    });
+  };
   
   if (!authenticated || !currentUser) {
     return (
@@ -87,7 +97,7 @@ const UserMenu = () => {
           </>
         )}
         
-        <DropdownMenuItem onClick={logout} className="text-red-600 cursor-pointer">
+        <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
           <LogOut className="mr-2 h-4 w-4" />
           <span>Keluar</span>
         </DropdownMenuItem>

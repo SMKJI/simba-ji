@@ -7,9 +7,10 @@ import { Program } from '@/data/programData';
 
 interface ProgramCardProps {
   program: Program;
+  onRegisterClick?: () => void;
 }
 
-const ProgramCard = ({ program }: ProgramCardProps) => {
+const ProgramCard = ({ program, onRegisterClick }: ProgramCardProps) => {
   return (
     <Card className="border-0 shadow-lg rounded-xl overflow-hidden hover:shadow-xl transition-shadow h-full flex flex-col">
       <CardHeader className="bg-primary/5 border-b">
@@ -44,7 +45,11 @@ const ProgramCard = ({ program }: ProgramCardProps) => {
         </div>
       </CardContent>
       <CardFooter className="bg-gray-50 border-t p-3 sm:p-4">
-        <Button asChild className="w-full text-xs sm:text-sm">
+        <Button 
+          asChild 
+          className="w-full text-xs sm:text-sm"
+          onClick={onRegisterClick}
+        >
           <Link to="/register">
             Daftar Sekarang <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
           </Link>

@@ -1,5 +1,6 @@
 
 import { useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StatCards from '@/components/admin/StatCards';
@@ -9,16 +10,36 @@ import GroupsManager from '@/components/admin/GroupsManager';
 import { useRegistrations } from '@/hooks/useRegistrations';
 
 const Admin = () => {
+  const { toast } = useToast();
   const { stats, getApplicants, updateApplicant, deleteApplicant, resetUserPassword, updateUserRole } = useRegistrations();
   const applicants = getApplicants();
 
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, []);
+    
+    // Welcome message for admin
+    toast({
+      title: "Panel Admin",
+      description: "Selamat datang di panel administrasi"
+    });
+  }, [toast]);
 
   // Create a wrapper function to match the expected signature
   const handlePromoteToHelpdesk = (userId: string) => {
-    updateUserRole(userId, 'helpdesk');
+    const success = updateUserRole(userId, 'helpdesk');
+    
+    if (success) {
+      toast({
+        title: "Berhasil",
+        description: "Pengguna telah dipromosikan menjadi Helpdesk"
+      });
+    } else {
+      toast({
+        title: "Gagal",
+        description: "Tidak dapat mempromosikan pengguna",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -53,9 +74,7 @@ const Admin = () => {
             </TabsContent>
             
             <TabsContent value="stats">
-              <div className="grid gap-4">
-                <StatsPanel />
-              </div>
+              <StatsPanel />
             </TabsContent>
           </Tabs>
         </div>
