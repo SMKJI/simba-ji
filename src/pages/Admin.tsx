@@ -19,16 +19,6 @@ import { Faq } from '@/components/content/FaqItem';
 import ContentPreview from '@/components/content/ContentPreview';
 import PageTitle from '@/components/ui/PageTitle';
 
-// Mock data for the applicants list
-const MOCK_APPLICANTS = Array.from({ length: 25 }).map((_, i) => ({
-  id: (i + 1000000).toString(),
-  name: `Calon Murid ${i + 1}`,
-  email: `calon${i + 1}@example.com`,
-  phone: `08123456${i.toString().padStart(4, '0')}`,
-  group: `Grup ${Math.floor(i / 10) + 1}`,
-  registeredAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-}));
-
 // Mock content data
 const MOCK_ANNOUNCEMENTS = [
   {
@@ -82,9 +72,8 @@ const MOCK_FAQ = [
 ];
 
 const Admin = () => {
-  const { stats, loading } = useRegistrations();
+  const { stats, loading, getApplicants, applicants } = useRegistrations();
   const { toast } = useToast();
-  const [applicants, setApplicants] = useState(MOCK_APPLICANTS);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [announcements, setAnnouncements] = useState<Announcement[]>(MOCK_ANNOUNCEMENTS);
   const [faqs, setFaqs] = useState<Faq[]>(MOCK_FAQ);
@@ -98,6 +87,10 @@ const Admin = () => {
     setIsRefreshing(true);
     setTimeout(() => {
       setIsRefreshing(false);
+      toast({
+        title: "Data Diperbarui",
+        description: "Data telah berhasil diperbarui"
+      });
     }, 1000);
   };
 
@@ -210,6 +203,7 @@ const Admin = () => {
         <div className="flex justify-between items-center mb-8">
           <PageTitle 
             title="Admin Dashboard"
+            description="Sistem Penerimaan Murid Baru (SPMB) SMKN 1 Kendal"
             className="mb-0" 
           />
           <Button 

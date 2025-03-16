@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
@@ -6,6 +7,7 @@ import { useRegistrations } from '@/hooks/useRegistrations';
 import { useIsMobile } from '@/hooks/use-mobile';
 import UserMenu from './UserMenu';
 import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuLink, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
+
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -16,6 +18,7 @@ const Header = () => {
   const isMobile = useIsMobile();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
@@ -23,10 +26,12 @@ const Header = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
   useEffect(() => {
     // Close mobile menu when route changes
     setIsMenuOpen(false);
   }, [location.pathname]);
+
   const navigation = [{
     name: 'Beranda',
     path: '/'
@@ -40,6 +45,7 @@ const Header = () => {
     name: 'FAQ',
     path: '/faq'
   }];
+
   return <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${isScrolled ? 'bg-white shadow-md' : 'bg-white/95 shadow-sm'}`}>
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-24">
@@ -47,7 +53,7 @@ const Header = () => {
             <img src="/lovable-uploads/f5ba977f-fb10-430c-b426-68c3389cee2c.png" alt="Logo SMKN 1 Kendal" className="h-14 w-auto" />
             <div className="flex flex-col">
               <span className="text-lg font-bold text-primary leading-tight">SMKN 1 Kendal</span>
-              <span className="text-xs text-gray-600 leading-tight">Pendaftaran Awal Calon Murid</span>
+              <span className="text-xs text-gray-600 leading-tight">Sistem Penerimaan Murid Baru</span>
             </div>
           </Link>
 
@@ -55,18 +61,18 @@ const Header = () => {
           {!isMobile && <NavigationMenu className="hidden md:flex">
               <NavigationMenuList>
                 {navigation.map(item => <NavigationMenuItem key={item.name}>
-                    <Link to={item.path}>
-                      <NavigationMenuLink className={navigationMenuTriggerStyle() + ` ${location.pathname === item.path ? 'bg-primary/10 text-primary font-medium' : ''}`}>
+                    <NavigationMenuLink asChild className={navigationMenuTriggerStyle() + ` ${location.pathname === item.path ? 'bg-primary/10 text-primary font-medium' : ''}`}>
+                      <Link to={item.path}>
                         {item.name}
-                      </NavigationMenuLink>
-                    </Link>
+                      </Link>
+                    </NavigationMenuLink>
                   </NavigationMenuItem>)}
                 {authenticated && currentUser && <NavigationMenuItem>
-                    <Link to="/dashboard">
-                      <NavigationMenuLink className={navigationMenuTriggerStyle() + ` ${location.pathname === '/dashboard' ? 'bg-primary/10 text-primary font-medium' : ''}`}>
+                    <NavigationMenuLink asChild className={navigationMenuTriggerStyle() + ` ${location.pathname === '/dashboard' ? 'bg-primary/10 text-primary font-medium' : ''}`}>
+                      <Link to="/dashboard">
                         Dashboard
-                      </NavigationMenuLink>
-                    </Link>
+                      </Link>
+                    </NavigationMenuLink>
                   </NavigationMenuItem>}
               </NavigationMenuList>
             </NavigationMenu>}
@@ -128,4 +134,5 @@ const Header = () => {
       </div>
     </header>;
 };
+
 export default Header;

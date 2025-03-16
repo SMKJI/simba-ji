@@ -1,5 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 // Define the registration result type
 export interface RegistrationResult {
@@ -52,6 +54,19 @@ export interface User {
   joinConfirmed?: boolean;
 }
 
+// Define applicant interface
+export interface Applicant {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  parentName?: string;
+  parentPhone?: string;
+  previousSchool?: string;
+  group: string;
+  registeredAt: string;
+}
+
 // Define helpdesk ticket interface
 export interface HelpdeskTicket {
   id: string;
@@ -84,8 +99,20 @@ export const DEMO_ACCOUNTS: User[] = [
   },
   { id: '2', name: 'Operator Helpdesk', email: 'helpdesk@smkn1kendal.sch.id', role: 'helpdesk' },
   { id: '3', name: 'Administrator', email: 'admin@smkn1kendal.sch.id', role: 'admin' },
-  { id: '4', name: 'Content Admin', email: 'content@smkn1kendal.sch.id', role: 'content' },
 ];
+
+// Mock applicants for development
+const MOCK_APPLICANTS: Applicant[] = Array.from({ length: 25 }).map((_, i) => ({
+  id: (i + 1000000).toString(),
+  name: `Calon Murid ${i + 1}`,
+  email: `calon${i + 1}@example.com`,
+  phone: `08123456${i.toString().padStart(4, '0')}`,
+  parentName: `Orang Tua ${i + 1}`,
+  parentPhone: `08765432${i.toString().padStart(4, '0')}`,
+  previousSchool: `SMP Negeri ${Math.floor(Math.random() * 10) + 1} ${['Jakarta', 'Bandung', 'Surabaya', 'Semarang', 'Yogyakarta'][Math.floor(Math.random() * 5)]}`,
+  group: `Grup ${Math.floor(i / 10) + 1}`,
+  registeredAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+}));
 
 // Mock tickets
 const MOCK_TICKETS: HelpdeskTicket[] = [
@@ -110,12 +137,14 @@ const MOCK_TICKETS: HelpdeskTicket[] = [
 ];
 
 export const useRegistrations = () => {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<StatsData>(MOCK_DATA);
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [authenticated, setAuthenticated] = useState(false);
   const [tickets, setTickets] = useState<HelpdeskTicket[]>(MOCK_TICKETS);
+  const [applicants, setApplicants] = useState<Applicant[]>(MOCK_APPLICANTS);
 
   // Check for Supabase session and user on mount
   useEffect(() => {
@@ -236,6 +265,20 @@ export const useRegistrations = () => {
             }
           }
           
+          // Create a new applicant record
+          const newApplicant: Applicant = {
+            id: (1000000 + applicants.length + 1).toString(),
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            parentName: formData.parentName,
+            parentPhone: formData.parentPhone,
+            previousSchool: formData.previousSchool,
+            group: assignedGroup!.name,
+            registeredAt: new Date().toISOString()
+          };
+          
+          setApplicants(prev => [...prev, newApplicant]);
           setStats(updatedStats);
           setLoading(false);
           
@@ -244,7 +287,7 @@ export const useRegistrations = () => {
             data: {
               registrationId: Math.floor(1000000 + Math.random() * 9000000),
               assignedGroup: assignedGroup!.name,
-              groupLink: "https://chat.whatsapp.com/example",
+              groupLink: assignedGroup!.link || "https://chat.whatsapp.com/example",
               timestamp: new Date().toISOString()
             }
           });
@@ -460,6 +503,125 @@ export const useRegistrations = () => {
     return true;
   };
 
+  // Function to get all applicants
+  const getApplicants = (): Applicant[] => {
+    return applicants;
+  };
+
+  // Function to update applicant data
+  const updateApplicant = (id: string, data: Partial<Applicant>): boolean => {
+    try {
+      setApplicants(prev => prev.map(applicant => 
+        applicant.id === id ? { ...applicant, ...data } : applicant
+      ));
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
+
+  // Function to delete applicant
+  const deleteApplicant = (id: string): boolean => {
+    try {
+      setApplicants(prev => prev.filter(applicant => applicant.id !== id));
+      // Also delete any associated tickets
+      setTickets(prev => prev.filter(ticket => 
+        !prev.find(applicant => applicant.id === ticket.userId && applicant.id === id)
+      ));
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
+
+  // Function to reset a user's password
+  const resetUserPassword = (id: string): boolean => {
+    try {
+      // In a real app, this would trigger a password reset
+      // For demo purposes just show a toast
+      toast({
+        title: "Password Reset",
+        description: "Demo mode: Password would be reset to 'newpassword123' and sent to user's email",
+      });
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
+
+  // Function to create a new WhatsApp group
+  const createGroup = (groupData: { name: string; capacity: number; link: string }): boolean => {
+    try {
+      const newId = Math.max(...stats.groups.map(g => g.id)) + 1;
+      const newGroup: Group = {
+        id: newId,
+        name: groupData.name,
+        count: 0,
+        capacity: groupData.capacity,
+        isFull: false,
+        link: groupData.link
+      };
+      
+      setStats(prev => ({
+        ...prev,
+        groups: [...prev.groups, newGroup]
+      }));
+      
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
+
+  // Function to update a WhatsApp group
+  const updateGroup = (id: number, groupData: { name?: string; capacity?: number; link?: string }): boolean => {
+    try {
+      setStats(prev => {
+        const groupIndex = prev.groups.findIndex(g => g.id === id);
+        if (groupIndex < 0) return prev;
+        
+        const updatedGroups = [...prev.groups];
+        updatedGroups[groupIndex] = {
+          ...updatedGroups[groupIndex],
+          ...groupData,
+          // Check if group is full based on new capacity
+          isFull: groupData.capacity 
+            ? updatedGroups[groupIndex].count >= groupData.capacity
+            : updatedGroups[groupIndex].isFull
+        };
+        
+        return {
+          ...prev,
+          groups: updatedGroups
+        };
+      });
+      
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
+
+  // Function to delete a WhatsApp group
+  const deleteGroup = (id: number): boolean => {
+    try {
+      // Check if there are applicants in this group
+      const group = stats.groups.find(g => g.id === id);
+      if (!group || group.count > 0) {
+        return false; // Cannot delete group with members
+      }
+      
+      setStats(prev => ({
+        ...prev,
+        groups: prev.groups.filter(g => g.id !== id)
+      }));
+      
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
+
   return { 
     stats, 
     loading, 
@@ -476,6 +638,14 @@ export const useRegistrations = () => {
     addTicketMessage,
     getUserTickets,
     updateTicketStatus,
-    tickets
+    tickets,
+    getApplicants,
+    updateApplicant,
+    deleteApplicant,
+    resetUserPassword,
+    createGroup,
+    updateGroup,
+    deleteGroup,
+    applicants
   };
 };
