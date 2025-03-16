@@ -30,7 +30,7 @@ const FAQSection = () => {
             <AccordionTrigger className="font-medium px-[15px] mx-0 text-left">
               {faq.question}
             </AccordionTrigger>
-            <AccordionContent className="text-muted-foreground">
+            <AccordionContent className="text-muted-foreground mx-[14px]">
               {faq.answer}
             </AccordionContent>
           </AccordionItem>)}
