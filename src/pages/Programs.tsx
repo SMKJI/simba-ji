@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import PageLayout from '@/components/PageLayout';
 import ProgramCard from '@/components/programs/ProgramCard';
-import { programData } from '@/data/programData';
+import { programs } from '@/data/programData';
 
 const Programs = () => {
   const navigate = useNavigate();
@@ -39,7 +39,7 @@ const Programs = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {programData.map((program, index) => (
+          {programs.map((program, index) => (
             <ProgramCard 
               key={index} 
               program={program} 

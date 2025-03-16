@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -55,7 +56,11 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const RegisterForm = () => {
+interface RegisterFormProps {
+  onRegistrationSuccess?: () => void;
+}
+
+const RegisterForm = ({ onRegistrationSuccess }: RegisterFormProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { submitRegistration } = useRegistrations();
@@ -122,7 +127,11 @@ const RegisterForm = () => {
             description: 'Akun Anda telah dibuat. Silakan login untuk melanjutkan.',
           });
           
-          navigate('/success');
+          if (onRegistrationSuccess) {
+            onRegistrationSuccess();
+          } else {
+            navigate('/success');
+          }
         }
       }
     } catch (error) {

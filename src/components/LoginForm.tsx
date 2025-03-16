@@ -36,9 +36,10 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface LoginFormProps {
   prefilledEmail?: string;
+  onLoginSuccess?: (role: string) => void;
 }
 
-const LoginForm = ({ prefilledEmail }: LoginFormProps) => {
+const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -111,6 +112,10 @@ const LoginForm = ({ prefilledEmail }: LoginFormProps) => {
           title: 'Login Berhasil',
           description: `Selamat datang, ${result.user?.name}`,
         });
+        
+        if (onLoginSuccess && result.user?.role) {
+          onLoginSuccess(result.user.role);
+        }
         
         switch (result.user?.role) {
           case 'admin':
