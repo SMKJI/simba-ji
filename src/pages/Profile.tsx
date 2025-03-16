@@ -1,40 +1,32 @@
 
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import MainLayout from '@/components/layouts/MainLayout';
-import PageTitle from '@/components/ui/PageTitle';
-import { useRegistrations } from '@/hooks/useRegistrations';
+import DashboardLayout from '@/components/layouts/DashboardLayout';
 import ProfileForm from '@/components/profile/ProfileForm';
 import RegistrationStatus from '@/components/profile/RegistrationStatus';
+import { useRegistrations } from '@/hooks/useRegistrations';
 
 const Profile = () => {
-  const navigate = useNavigate();
-  const { currentUser, authenticated } = useRegistrations();
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-    
-    if (!authenticated) {
-      navigate('/login');
-    }
-  }, [authenticated, navigate]);
-
-  if (!authenticated || !currentUser) {
-    return null;
-  }
+  const { currentUser } = useRegistrations();
 
   return (
-    <MainLayout>
-      <div className="max-w-3xl mx-auto">
-        <PageTitle 
-          title="Profil Pengguna"
-          description="Informasi profil dan data pendaftaran Anda"
-        />
-        
-        <ProfileForm currentUser={currentUser} />
-        <RegistrationStatus />
+    <DashboardLayout>
+      <div className="max-w-4xl mx-auto space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold">Profil Pengguna</h1>
+          <p className="text-muted-foreground">
+            Kelola informasi akun Anda
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8">
+          <div className="col-span-2">
+            <ProfileForm user={currentUser} />
+          </div>
+          <div>
+            <RegistrationStatus />
+          </div>
+        </div>
       </div>
-    </MainLayout>
+    </DashboardLayout>
   );
 };
 

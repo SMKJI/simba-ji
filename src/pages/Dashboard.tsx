@@ -1,15 +1,13 @@
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import MainLayout from '@/components/layouts/MainLayout';
+import DashboardLayout from '@/components/layouts/DashboardLayout';
 import PageTitle from '@/components/ui/PageTitle';
 import Dashboard from '@/components/Dashboard';
-import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 import { useRegistrations } from '@/hooks/useRegistrations';
-import { UserCircle, Bell, Users, Info, Loader2, HelpCircle, TicketCheck } from 'lucide-react';
 import GroupJoinConfirmation from '@/components/GroupJoinConfirmation';
 import TicketList from '@/components/TicketList';
-import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import DashboardInfoPanel from '@/components/dashboard/DashboardInfoPanel';
 import DashboardAnnouncements from '@/components/dashboard/DashboardAnnouncements';
 
@@ -32,11 +30,9 @@ const DashboardPage = () => {
   // Don't render anything while checking authentication
   if (loading) {
     return (
-      <MainLayout>
-        <div className="flex justify-center items-center min-h-[50vh]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </MainLayout>
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
@@ -46,7 +42,7 @@ const DashboardPage = () => {
   }
 
   return (
-    <MainLayout>
+    <DashboardLayout>
       <div className="max-w-6xl mx-auto">
         <PageTitle 
           title={`Selamat Datang, ${currentUser.name}`}
@@ -69,10 +65,12 @@ const DashboardPage = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          {/* Sidebar - hidden on mobile */}
-          <DashboardSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+          {/* Sidebar - hidden on mobile, now using the global sidebar instead */}
+          <div className="hidden">
+            {/* Old sidebar code removed since we now use the global sidebar */}
+          </div>
 
-          <div className="md:col-span-3">
+          <div className="md:col-span-4">
             {activeTab === 'overview' && (
               <Dashboard stats={stats} loading={loading} />
             )}
@@ -95,7 +93,7 @@ const DashboardPage = () => {
           </div>
         </div>
       </div>
-    </MainLayout>
+    </DashboardLayout>
   );
 };
 

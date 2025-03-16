@@ -1,70 +1,68 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
-import MainLayout from '@/components/layouts/MainLayout';
-import PageTitle from '@/components/ui/PageTitle';
-import { Button } from '@/components/ui/button';
-import { useRegistrations, Group } from '@/hooks/useRegistrations';
+import DashboardLayout from '@/components/layouts/DashboardLayout';
 import GroupDetailCard from '@/components/groups/GroupDetailCard';
 import GroupInfoCard from '@/components/groups/GroupInfoCard';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
+import { useRegistrations } from '@/hooks/useRegistrations';
 
 const GroupDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { stats, authenticated } = useRegistrations();
-  const [group, setGroup] = useState<Group | null>(null);
+  const { stats } = useRegistrations();
+  const [group, setGroup] = useState(null);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-    
-    if (!authenticated) {
-      navigate('/login');
+    if (id && stats.groups) {
+      const groupId = parseInt(id);
+      const foundGroup = stats.groups.find(g => g.id === groupId);
+      setGroup(foundGroup || null);
     }
-    
-    if (id && stats.groups.length > 0) {
-      const foundGroup = stats.groups.find(g => g.id.toString() === id);
-      if (foundGroup) {
-        setGroup(foundGroup);
-      } else {
-        navigate('/dashboard');
-      }
-    }
-  }, [id, stats.groups, authenticated, navigate]);
-
-  if (!group) {
-    return (
-      <MainLayout>
-        <div className="max-w-3xl mx-auto mt-8 animate-pulse px-4">
-          <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-          <div className="h-64 bg-gray-200 rounded"></div>
-        </div>
-      </MainLayout>
-    );
-  }
+  }, [id, stats.groups]);
 
   return (
-    <MainLayout>
-      <div className="max-w-3xl mx-auto px-4">
-        <div className="mb-8">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/dashboard')} 
-            className="mb-4"
+    <DashboardLayout>
+      <div className="max-w-4xl mx-auto space-y-8">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => navigate(-1)}
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Kembali ke Dashboard
+            <ArrowLeft className="h-4 w-4" />
           </Button>
-          
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-            Detail Grup {group.name}
-          </h1>
+          <div>
+            <h1 className="text-3xl font-bold">Detail Grup</h1>
+            <p className="text-muted-foreground">
+              Informasi dan statistik grup WhatsApp
+            </p>
+          </div>
         </div>
-        
-        <GroupDetailCard group={group} />
-        <GroupInfoCard />
+
+        <div className="grid md:grid-cols-3 gap-8">
+          <div className="md:col-span-2">
+            {group ? (
+              <GroupDetailCard group={group} />
+            ) : (
+              <div className="p-8 text-center border rounded-lg">
+                <p>Grup tidak ditemukan</p>
+                <Button 
+                  className="mt-4" 
+                  onClick={() => navigate('/dashboard')}
+                >
+                  Kembali ke Dashboard
+                </Button>
+              </div>
+            )}
+          </div>
+          <div>
+            {group && <GroupInfoCard group={group} />}
+          </div>
+        </div>
       </div>
-    </MainLayout>
+    </DashboardLayout>
   );
 };
 
