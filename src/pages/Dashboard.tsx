@@ -47,7 +47,7 @@ const DashboardPage = () => {
 
   return (
     <MainLayout>
-      <div className="max-w-6xl mx-auto px-4">
+      <div className="max-w-6xl mx-auto">
         <PageTitle 
           title={`Selamat Datang, ${currentUser.name}`}
           description="Panel dashboard penjaringan awal calon murid baru SMKN 1 Kendal"
