@@ -31,12 +31,12 @@ const FAQ = () => {
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="item-1">
                 <AccordionTrigger className="text-left font-medium">
-                  Apa perbedaan penjaringan awal dengan PPDB resmi?
+                  Apa perbedaan penjaringan awal dengan SPMB resmi?
                 </AccordionTrigger>
                 <AccordionContent className="text-gray-600">
-                  Penjaringan awal adalah tahap pengumpulan data calon peserta didik yang berminat mendaftar di SMKN 1 Kendal. 
-                  Data ini akan digunakan untuk persiapan PPDB resmi yang akan dilaksanakan melalui sistem terpisah. 
-                  Penjaringan awal tidak menentukan penerimaan siswa, melainkan hanya untuk pendataan dan pemberian informasi awal.
+                  Penjaringan awal adalah tahap pengumpulan data calon murid yang berminat mendaftar di SMKN 1 Kendal. 
+                  Data ini akan digunakan untuk persiapan SPMB resmi yang akan dilaksanakan melalui sistem terpisah. 
+                  Penjaringan awal tidak menentukan penerimaan murid, melainkan hanya untuk pendataan dan pemberian informasi awal.
                 </AccordionContent>
               </AccordionItem>
               
@@ -47,7 +47,7 @@ const FAQ = () => {
                 <AccordionContent className="text-gray-600">
                   Tidak, pada tahap penjaringan awal ini Anda tidak perlu mengunggah dokumen apapun. 
                   Anda hanya perlu mengisi formulir data diri secara lengkap. Dokumen-dokumen pendukung 
-                  akan diminta saat PPDB resmi dibuka.
+                  akan diminta saat SPMB resmi dibuka.
                 </AccordionContent>
               </AccordionItem>
               
@@ -64,10 +64,10 @@ const FAQ = () => {
               
               <AccordionItem value="item-4">
                 <AccordionTrigger className="text-left font-medium">
-                  Kapan PPDB resmi akan dibuka?
+                  Kapan SPMB resmi akan dibuka?
                 </AccordionTrigger>
                 <AccordionContent className="text-gray-600">
-                  PPDB resmi SMKN 1 Kendal untuk tahun ajaran 2024/2025 akan dibuka pada tanggal 1 Juni 2024. 
+                  SPMB resmi SMKN 1 Kendal untuk tahun ajaran 2024/2025 akan dibuka pada tanggal 1 Juni 2024. 
                   Informasi lebih lanjut akan diumumkan melalui website resmi sekolah dan grup WhatsApp.
                 </AccordionContent>
               </AccordionItem>
@@ -96,7 +96,7 @@ const FAQ = () => {
                 <AccordionContent className="text-gray-600">
                   Setelah mengisi formulir penjaringan awal, Anda perlu bergabung dengan grup WhatsApp yang 
                   telah ditentukan. Melalui grup tersebut, Anda akan mendapatkan informasi terbaru seputar 
-                  PPDB SMKN 1 Kendal dan langkah-langkah selanjutnya yang perlu Anda lakukan.
+                  SPMB SMKN 1 Kendal dan langkah-langkah selanjutnya yang perlu Anda lakukan.
                 </AccordionContent>
               </AccordionItem>
             </Accordion>

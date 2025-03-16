@@ -10,7 +10,9 @@ interface PageLayoutProps {
 const PageLayout = ({ children, className = '' }: PageLayoutProps) => {
   return (
     <MainLayout className={className}>
-      {children}
+      <div className="px-4 sm:px-6 md:px-8">
+        {children}
+      </div>
     </MainLayout>
   );
 };

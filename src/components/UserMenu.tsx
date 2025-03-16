@@ -1,6 +1,6 @@
 
 import { Link } from 'react-router-dom';
-import { LogOut, Settings, User, Users, HelpCircle, FileText } from 'lucide-react';
+import { LogOut, Settings, User, Users, HelpCircle } from 'lucide-react';
 import { useRegistrations, UserRole } from '@/hooks/useRegistrations';
 import { 
   DropdownMenu, 
@@ -18,16 +18,11 @@ const getRoleMenuItems = (role: UserRole) => {
     case 'admin':
       return [
         { icon: <Users className="mr-2 h-4 w-4" />, label: 'Dashboard Admin', link: '/admin' },
-        { icon: <FileText className="mr-2 h-4 w-4" />, label: 'Kelola Konten', link: '/content' },
         { icon: <HelpCircle className="mr-2 h-4 w-4" />, label: 'Helpdesk', link: '/helpdesk' },
       ];
     case 'helpdesk':
       return [
         { icon: <HelpCircle className="mr-2 h-4 w-4" />, label: 'Dashboard Helpdesk', link: '/helpdesk' },
-      ];
-    case 'content':
-      return [
-        { icon: <FileText className="mr-2 h-4 w-4" />, label: 'Kelola Konten', link: '/content' },
       ];
     default:
       return [];

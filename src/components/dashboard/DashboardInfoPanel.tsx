@@ -7,10 +7,10 @@ const DashboardInfoPanel = () => {
     <Card className="border-0 shadow-lg rounded-xl overflow-hidden">
       <CardHeader className="bg-primary/5 border-b p-6">
         <CardTitle className="text-xl font-semibold text-primary">
-          Informasi PPDB
+          Informasi SPMB
         </CardTitle>
         <CardDescription>
-          Penerimaan Peserta Didik Baru SMKN 1 Kendal
+          Sistem Penerimaan Murid Baru SMKN 1 Kendal
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6">
@@ -18,7 +18,7 @@ const DashboardInfoPanel = () => {
           <div className="p-4 border rounded-lg">
             <h3 className="font-medium mb-2">Tahapan Penjaringan Awal</h3>
             <p className="text-sm text-gray-600">
-              Penjaringan awal ini bertujuan untuk mengumpulkan data calon peserta didik yang berminat mendaftar di SMKN 1 Kendal. Data ini akan digunakan untuk persiapan PPDB resmi yang akan dilaksanakan melalui sistem terpisah.
+              Penjaringan awal ini bertujuan untuk mengumpulkan data calon murid yang berminat mendaftar di SMKN 1 Kendal. Data ini akan digunakan untuk persiapan SPMB resmi yang akan dilaksanakan melalui sistem terpisah.
             </p>
           </div>
           
@@ -34,7 +34,7 @@ const DashboardInfoPanel = () => {
                 <span className="font-medium">31 Maret 2024</span>
               </li>
               <li className="flex justify-between">
-                <span>Pembukaan PPDB Resmi</span>
+                <span>Pembukaan SPMB Resmi</span>
                 <span className="font-medium">1 Juni 2024</span>
               </li>
             </ul>
@@ -43,10 +43,10 @@ const DashboardInfoPanel = () => {
           <div className="p-4 border rounded-lg">
             <h3 className="font-medium mb-2">Informasi Kontak</h3>
             <p className="text-sm text-gray-600">
-              Untuk informasi lebih lanjut, silakan hubungi panitia PPDB SMKN 1 Kendal melalui:
+              Untuk informasi lebih lanjut, silakan hubungi panitia SPMB SMKN 1 Kendal melalui:
             </p>
             <ul className="text-sm text-gray-600 mt-2">
-              <li>Email: ppdb@smkn1kendal.sch.id</li>
+              <li>Email: spmb@smkn1kendal.sch.id</li>
               <li>WhatsApp: 081234567890</li>
             </ul>
           </div>

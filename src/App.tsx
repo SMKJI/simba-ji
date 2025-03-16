@@ -11,7 +11,6 @@ import Success from "./pages/Success";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Admin from "./pages/Admin";
-import Content from "./pages/Content";
 import Profile from "./pages/Profile";
 import Dashboard from "./pages/Dashboard";
 import GroupDetail from "./pages/GroupDetail";
@@ -44,28 +43,23 @@ const App = () => (
               <Admin />
             </ProtectedRoute>
           } />
-          <Route path="/content" element={
-            <ProtectedRoute allowedRoles={['admin', 'content']}>
-              <Content />
-            </ProtectedRoute>
-          } />
           <Route path="/helpdesk" element={
             <ProtectedRoute allowedRoles={['admin', 'helpdesk']}>
               <Helpdesk />
             </ProtectedRoute>
           } />
           <Route path="/dashboard" element={
-            <ProtectedRoute allowedRoles={['admin', 'helpdesk', 'content', 'applicant']}>
+            <ProtectedRoute allowedRoles={['admin', 'helpdesk', 'applicant']}>
               <Dashboard />
             </ProtectedRoute>
           } />
           <Route path="/profile" element={
-            <ProtectedRoute allowedRoles={['admin', 'helpdesk', 'content', 'applicant']}>
+            <ProtectedRoute allowedRoles={['admin', 'helpdesk', 'applicant']}>
               <Profile />
             </ProtectedRoute>
           } />
           <Route path="/group-detail/:id" element={
-            <ProtectedRoute allowedRoles={['admin', 'helpdesk', 'content', 'applicant']}>
+            <ProtectedRoute allowedRoles={['admin', 'helpdesk', 'applicant']}>
               <GroupDetail />
             </ProtectedRoute>
           } />
