@@ -1,11 +1,8 @@
-
 import { Phone, MapPin, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-
 const ContactSection = () => {
-  return (
-    <section className="py-16 bg-muted">
+  return <section className="py-16 bg-muted">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-primary mb-4">Hubungi Kami</h2>
@@ -22,7 +19,7 @@ const ContactSection = () => {
               </div>
               <div>
                 <h3 className="font-medium text-lg">Telepon</h3>
-                <p className="text-muted-foreground">+62 291 123456</p>
+                <p className="text-muted-foreground">(0294) 381137</p>
                 <p className="text-muted-foreground">Senin - Jumat: 08.00 - 15.00 WIB</p>
               </div>
             </div>
@@ -54,39 +51,22 @@ const ContactSection = () => {
             <h3 className="text-xl font-medium mb-4">Kirim Pesan</h3>
             <form className="space-y-4">
               <div>
-                <input 
-                  type="text" 
-                  placeholder="Nama Lengkap" 
-                  className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
-                />
+                <input type="text" placeholder="Nama Lengkap" className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50" />
               </div>
               <div>
-                <input 
-                  type="email" 
-                  placeholder="Email" 
-                  className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
-                />
+                <input type="email" placeholder="Email" className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50" />
               </div>
               <div>
-                <input 
-                  type="text" 
-                  placeholder="Subjek" 
-                  className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
-                />
+                <input type="text" placeholder="Subjek" className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50" />
               </div>
               <div>
-                <Textarea 
-                  placeholder="Pesan Anda" 
-                  className="w-full min-h-[120px] resize-none focus:ring-2 focus:ring-primary/50"
-                />
+                <Textarea placeholder="Pesan Anda" className="w-full min-h-[120px] resize-none focus:ring-2 focus:ring-primary/50" />
               </div>
               <Button className="w-full">Kirim Pesan</Button>
             </form>
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default ContactSection;
