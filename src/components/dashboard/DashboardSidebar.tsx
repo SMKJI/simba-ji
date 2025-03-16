@@ -1,69 +1,122 @@
+import { NavLink } from 'react-router-dom';
+import { useRegistrations } from '@/hooks/useRegistrations';
+import { 
+  UserCircle, 
+  Home, 
+  FileText, 
+  Users, 
+  Settings, 
+  Bell, 
+  HelpCircle, 
+  MessageCircle,
+  Ticket
+} from 'lucide-react';
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { UserCircle, Bell, Users, Info, TicketCheck } from 'lucide-react';
-
-interface DashboardSidebarProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
-}
-
-const DashboardSidebar = ({ activeTab, setActiveTab }: DashboardSidebarProps) => {
+const DashboardSidebar = () => {
+  const { hasRole } = useRegistrations();
+  
   return (
-    <div className="hidden md:block md:col-span-1">
-      <Card className="border-0 shadow-lg rounded-xl overflow-hidden h-full sticky top-4">
-        <CardHeader className="bg-primary/5 border-b p-6">
-          <CardTitle className="text-xl font-semibold text-primary">
-            Menu Aplikasi
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <nav className="flex flex-col">
-            <Button 
-              variant={activeTab === 'overview' ? 'secondary' : 'ghost'} 
-              className="justify-start rounded-none h-12 px-6"
-              onClick={() => setActiveTab('overview')}
+    <aside className="w-full md:w-64 bg-white border-r border-gray-200">
+      <div className="p-4">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">Menu</h2>
+        <nav className="space-y-1">
+          <NavLink 
+            to="/dashboard" 
+            className={({ isActive }) => 
+              `flex items-center px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                isActive 
+                  ? 'bg-primary text-white' 
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`
+            }
+            end
+          >
+            <Home className="h-5 w-5 mr-3" />
+            Dashboard
+          </NavLink>
+          
+          <NavLink 
+            to="/profile" 
+            className={({ isActive }) => 
+              `flex items-center px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                isActive 
+                  ? 'bg-primary text-white' 
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`
+            }
+          >
+            <UserCircle className="h-5 w-5 mr-3" />
+            Profil
+          </NavLink>
+          
+          {hasRole('applicant') && (
+            <NavLink 
+              to="/helpdesk-siswa" 
+              className={({ isActive }) => 
+                `flex items-center px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                  isActive 
+                    ? 'bg-primary text-white' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`
+              }
             >
-              <UserCircle className="mr-2 h-5 w-5" />
-              Informasi Umum
-            </Button>
-            <Button 
-              variant={activeTab === 'group' ? 'secondary' : 'ghost'} 
-              className="justify-start rounded-none h-12 px-6"
-              onClick={() => setActiveTab('group')}
-            >
-              <Users className="mr-2 h-5 w-5" />
-              Grup WhatsApp
-            </Button>
-            <Button 
-              variant={activeTab === 'helpdesk' ? 'secondary' : 'ghost'} 
-              className="justify-start rounded-none h-12 px-6"
-              onClick={() => setActiveTab('helpdesk')}
-            >
-              <TicketCheck className="mr-2 h-5 w-5" />
+              <MessageCircle className="h-5 w-5 mr-3" />
               Bantuan Helpdesk
-            </Button>
-            <Button 
-              variant={activeTab === 'info' ? 'secondary' : 'ghost'} 
-              className="justify-start rounded-none h-12 px-6"
-              onClick={() => setActiveTab('info')}
+            </NavLink>
+          )}
+
+          
+          
+          {hasRole('admin') && (
+            <NavLink 
+              to="/admin" 
+              className={({ isActive }) => 
+                `flex items-center px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                  isActive 
+                    ? 'bg-primary text-white' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`
+              }
             >
-              <Info className="mr-2 h-5 w-5" />
-              Informasi PPDB
-            </Button>
-            <Button 
-              variant={activeTab === 'announcements' ? 'secondary' : 'ghost'} 
-              className="justify-start rounded-none h-12 px-6"
-              onClick={() => setActiveTab('announcements')}
+              <Settings className="h-5 w-5 mr-3" />
+              Admin
+            </NavLink>
+          )}
+          
+          {hasRole(['helpdesk', 'admin']) && (
+            <NavLink 
+              to="/helpdesk" 
+              className={({ isActive }) => 
+                `flex items-center px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                  isActive 
+                    ? 'bg-primary text-white' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`
+              }
             >
-              <Bell className="mr-2 h-5 w-5" />
-              Pengumuman
-            </Button>
-          </nav>
-        </CardContent>
-      </Card>
-    </div>
+              <Ticket className="h-5 w-5 mr-3" />
+              Operator Helpdesk
+            </NavLink>
+          )}
+          
+          {hasRole(['content', 'admin']) && (
+            <NavLink 
+              to="/content" 
+              className={({ isActive }) => 
+                `flex items-center px-4 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                  isActive 
+                    ? 'bg-primary text-white' 
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`
+              }
+            >
+              <FileText className="h-5 w-5 mr-3" />
+              Konten
+            </NavLink>
+          )}
+        </nav>
+      </div>
+    </aside>
   );
 };
 

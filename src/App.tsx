@@ -1,75 +1,67 @@
+import { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Toaster } from '@/components/ui/toaster';
+import Index from '@/pages/Index';
+import About from '@/pages/About';
+import Programs from '@/pages/Programs';
+import FAQ from '@/pages/FAQ';
+import Login from '@/pages/Login';
+import Register from '@/pages/Register';
+import Dashboard from '@/pages/Dashboard';
+import Profile from '@/pages/Profile';
+import Admin from '@/pages/Admin';
+import Content from '@/pages/Content';
+import Helpdesk from '@/pages/Helpdesk';
+import StudentHelpdesk from '@/pages/StudentHelpdesk';
+import GroupDetail from '@/pages/GroupDetail';
+import Success from '@/pages/Success';
+import NotFound from '@/pages/NotFound';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import Register from "./pages/Register";
-import Helpdesk from "./pages/Helpdesk";
-import Success from "./pages/Success";
-import NotFound from "./pages/NotFound";
-import Login from "./pages/Login";
-import Admin from "./pages/Admin";
-import Profile from "./pages/Profile";
-import Dashboard from "./pages/Dashboard";
-import GroupDetail from "./pages/GroupDetail";
-import FAQ from "./pages/FAQ";
-import Programs from "./pages/Programs"; 
-import About from "./pages/About";
-import ProtectedRoute from "./components/ProtectedRoute";
+const App = () => {
+  // You can add any global state or context here if needed
+  // For example, authentication context, theme context, etc.
 
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Router>
         <Routes>
-          {/* Public Routes */}
+          {/* Public routes */}
           <Route path="/" element={<Index />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/success" element={<Success />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/about" element={<About />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/programs" element={<Programs />} />
-          <Route path="/about" element={<About />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           
-          {/* Protected Routes */}
-          <Route path="/admin" element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <Admin />
-            </ProtectedRoute>
-          } />
-          <Route path="/helpdesk" element={
-            <ProtectedRoute allowedRoles={['admin', 'helpdesk']}>
-              <Helpdesk />
-            </ProtectedRoute>
-          } />
-          <Route path="/dashboard" element={
-            <ProtectedRoute allowedRoles={['admin', 'helpdesk', 'applicant']}>
-              <Dashboard />
-            </ProtectedRoute>
-          } />
-          <Route path="/profile" element={
-            <ProtectedRoute allowedRoles={['admin', 'helpdesk', 'applicant']}>
-              <Profile />
-            </ProtectedRoute>
-          } />
-          <Route path="/group-detail/:id" element={
-            <ProtectedRoute allowedRoles={['admin', 'helpdesk', 'applicant']}>
-              <GroupDetail />
-            </ProtectedRoute>
-          } />
+          {/* Protected routes */}
+          <Route element={<ProtectedRoute allowedRoles={['applicant']} />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/group-detail/:id" element={<GroupDetail />} />
+            <Route path="/success" element={<Success />} />
+            <Route path="/helpdesk-siswa" element={<StudentHelpdesk />} />
+          </Route>
           
-          {/* 404 Route */}
+          <Route element={<ProtectedRoute allowedRoles={['helpdesk', 'admin']} />}>
+            <Route path="/helpdesk" element={<Helpdesk />} />
+          </Route>
+          
+          <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+            <Route path="/admin" element={<Admin />} />
+          </Route>
+          
+          <Route element={<ProtectedRoute allowedRoles={['content', 'admin']} />}>
+            <Route path="/content" element={<Content />} />
+          </Route>
+          
+          {/* 404 Not Found */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+        <Toaster />
+      </Router>
+    </div>
+  );
+};
 
 export default App;
