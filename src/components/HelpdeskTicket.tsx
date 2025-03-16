@@ -112,7 +112,7 @@ const HelpdeskTicketComponent = ({ ticket, onClose }: HelpdeskTicketProps) => {
         </div>
       </CardContent>
       
-      {/* Only render input and buttons if ticket is not closed */}
+      {/* Only render input if ticket is not closed */}
       {ticket.status !== 'closed' && (
         <CardFooter className="flex flex-col space-y-3 pt-0">
           <div className="w-full flex space-x-2">
