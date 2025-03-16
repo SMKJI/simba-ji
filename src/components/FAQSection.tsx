@@ -27,7 +27,7 @@ const FAQSection = () => {
         {faqs.map((faq, index) => <AccordionItem key={index} value={`item-${index}`} className="animate-fade-in" style={{
         animationDelay: `${index * 100}ms`
       }}>
-            <AccordionTrigger className="font-medium mx-[12px] text-center">
+            <AccordionTrigger className="font-medium px-[15px] mx-0 text-left">
               {faq.question}
             </AccordionTrigger>
             <AccordionContent className="text-muted-foreground">
