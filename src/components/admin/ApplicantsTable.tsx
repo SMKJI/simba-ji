@@ -1,10 +1,10 @@
 
 import { useState } from 'react';
-import { Download, Edit, Trash, KeyRound, Search } from 'lucide-react';
+import { Download, Edit, Trash, KeyRound, Search, UserCog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
@@ -25,14 +25,16 @@ export interface Applicant {
 
 interface ApplicantsTableProps {
   applicants: Applicant[];
+  onPromoteToHelpdesk?: (userId: string) => void;
 }
 
-const ApplicantsTable = ({ applicants }: ApplicantsTableProps) => {
+const ApplicantsTable = ({ applicants, onPromoteToHelpdesk }: ApplicantsTableProps) => {
   const { toast } = useToast();
   const { updateApplicant, deleteApplicant, resetUserPassword } = useRegistrations();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isResetPasswordDialogOpen, setIsResetPasswordDialogOpen] = useState(false);
+  const [isPromoteDialogOpen, setIsPromoteDialogOpen] = useState(false);
   const [currentApplicant, setCurrentApplicant] = useState<Applicant | null>(null);
   const [editFormData, setEditFormData] = useState({
     name: '',
@@ -49,7 +51,9 @@ const ApplicantsTable = ({ applicants }: ApplicantsTableProps) => {
     applicant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     applicant.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     applicant.phone.includes(searchTerm) ||
-    applicant.id.includes(searchTerm)
+    applicant.id.includes(searchTerm) ||
+    (applicant.previousSchool && applicant.previousSchool.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (applicant.parentName && applicant.parentName.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const handleExportToExcel = () => {
@@ -104,6 +108,11 @@ const ApplicantsTable = ({ applicants }: ApplicantsTableProps) => {
   const openResetPasswordDialog = (applicant: Applicant) => {
     setCurrentApplicant(applicant);
     setIsResetPasswordDialogOpen(true);
+  };
+
+  const openPromoteDialog = (applicant: Applicant) => {
+    setCurrentApplicant(applicant);
+    setIsPromoteDialogOpen(true);
   };
 
   const handleEditSubmit = () => {
@@ -166,6 +175,13 @@ const ApplicantsTable = ({ applicants }: ApplicantsTableProps) => {
     }
   };
 
+  const handlePromoteSubmit = () => {
+    if (!currentApplicant || !onPromoteToHelpdesk) return;
+    
+    onPromoteToHelpdesk(currentApplicant.id);
+    setIsPromoteDialogOpen(false);
+  };
+
   return (
     <Card className="border-0 shadow-lg rounded-xl overflow-hidden">
       <CardHeader className="bg-primary/5 border-b p-6">
@@ -185,7 +201,7 @@ const ApplicantsTable = ({ applicants }: ApplicantsTableProps) => {
         </div>
         <div className="mt-4 relative">
           <Input
-            placeholder="Cari berdasarkan nama, email, nomor telepon..."
+            placeholder="Cari berdasarkan nama, email, nomor telepon, asal sekolah, atau nama orang tua..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -245,6 +261,11 @@ const ApplicantsTable = ({ applicants }: ApplicantsTableProps) => {
                         <Button variant="ghost" size="icon" onClick={() => openResetPasswordDialog(applicant)} title="Reset Password">
                           <KeyRound className="h-4 w-4" />
                         </Button>
+                        {onPromoteToHelpdesk && (
+                          <Button variant="ghost" size="icon" onClick={() => openPromoteDialog(applicant)} title="Angkat sebagai Helpdesk">
+                            <UserCog className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -381,6 +402,37 @@ const ApplicantsTable = ({ applicants }: ApplicantsTableProps) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Promote to Helpdesk Dialog */}
+      {onPromoteToHelpdesk && (
+        <Dialog open={isPromoteDialogOpen} onOpenChange={setIsPromoteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Angkat sebagai Helpdesk</DialogTitle>
+              <DialogDescription>
+                Pengguna ini akan mendapatkan akses ke fitur helpdesk dan dapat membantu calon murid yang mengalami masalah.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <p>Apakah Anda yakin ingin mengangkat pengguna ini sebagai operator helpdesk?</p>
+              {currentApplicant && (
+                <div className="mt-2 p-3 bg-muted rounded-md">
+                  <p><strong>Nama:</strong> {currentApplicant.name}</p>
+                  <p><strong>Email:</strong> {currentApplicant.email}</p>
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsPromoteDialogOpen(false)}>
+                Batal
+              </Button>
+              <Button onClick={handlePromoteSubmit}>
+                Angkat sebagai Helpdesk
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </Card>
   );
 };

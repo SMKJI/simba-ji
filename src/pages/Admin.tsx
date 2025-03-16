@@ -72,12 +72,13 @@ const MOCK_FAQ = [
 ];
 
 const Admin = () => {
-  const { stats, loading, getApplicants, applicants } = useRegistrations();
+  const { stats, loading, getApplicants, applicants, updateUserRole } = useRegistrations();
   const { toast } = useToast();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [announcements, setAnnouncements] = useState<Announcement[]>(MOCK_ANNOUNCEMENTS);
   const [faqs, setFaqs] = useState<Faq[]>(MOCK_FAQ);
   const [previewContent, setPreviewContent] = useState<{ title: string; content: string } | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -114,12 +115,22 @@ const Admin = () => {
       },
       ...prev
     ]);
+    
+    toast({
+      title: "Pengumuman Ditambahkan",
+      description: "Pengumuman baru telah berhasil ditambahkan"
+    });
   };
 
   const handleUpdateAnnouncement = (id: string) => {
     setAnnouncements(prev => prev.map(a => 
       a.id === id ? { ...a, updatedAt: new Date().toISOString() } : a
     ));
+    
+    toast({
+      title: "Pengumuman Diperbarui",
+      description: "Pengumuman telah berhasil diperbarui"
+    });
   };
 
   const handleToggleAnnouncementStatus = (id: string) => {
@@ -163,6 +174,11 @@ const Admin = () => {
         order: maxOrder + 1,
       }
     ]);
+    
+    toast({
+      title: "FAQ Ditambahkan",
+      description: "FAQ baru telah berhasil ditambahkan"
+    });
   };
 
   const handleUpdateFaq = (id: string) => {
@@ -197,6 +213,23 @@ const Admin = () => {
     setPreviewContent({ title, content });
   };
 
+  // Function to promote a user to helpdesk
+  const promoteToHelpdesk = (userId: string) => {
+    const success = updateUserRole(userId, 'helpdesk');
+    if (success) {
+      toast({
+        title: "Peran Diperbarui",
+        description: "Pengguna telah dipromosikan ke peran Helpdesk"
+      });
+    } else {
+      toast({
+        title: "Gagal",
+        description: "Tidak dapat memperbarui peran pengguna",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <PageLayout>
       <div className="max-w-6xl mx-auto">
@@ -227,7 +260,10 @@ const Admin = () => {
           </TabsList>
           
           <TabsContent value="applicants" className="animate-fade-in">
-            <ApplicantsTable applicants={applicants} />
+            <ApplicantsTable 
+              applicants={applicants} 
+              onPromoteToHelpdesk={promoteToHelpdesk}
+            />
           </TabsContent>
           
           <TabsContent value="groups" className="animate-fade-in">

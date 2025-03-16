@@ -13,7 +13,8 @@ const Header = () => {
   const navigate = useNavigate();
   const {
     authenticated,
-    currentUser
+    currentUser,
+    hasRole
   } = useRegistrations();
   const isMobile = useIsMobile();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -67,13 +68,35 @@ const Header = () => {
                       </Link>
                     </NavigationMenuLink>
                   </NavigationMenuItem>)}
-                {authenticated && currentUser && <NavigationMenuItem>
-                    <NavigationMenuLink asChild className={navigationMenuTriggerStyle() + ` ${location.pathname === '/dashboard' ? 'bg-primary/10 text-primary font-medium' : ''}`}>
-                      <Link to="/dashboard">
-                        Dashboard
-                      </Link>
-                    </NavigationMenuLink>
-                  </NavigationMenuItem>}
+                {authenticated && currentUser && (
+                  <>
+                    <NavigationMenuItem>
+                      <NavigationMenuLink asChild className={navigationMenuTriggerStyle() + ` ${location.pathname === '/dashboard' ? 'bg-primary/10 text-primary font-medium' : ''}`}>
+                        <Link to="/dashboard">
+                          Dashboard
+                        </Link>
+                      </NavigationMenuLink>
+                    </NavigationMenuItem>
+                    {hasRole(['admin', 'helpdesk']) && (
+                      <NavigationMenuItem>
+                        <NavigationMenuLink asChild className={navigationMenuTriggerStyle() + ` ${location.pathname === '/helpdesk' ? 'bg-primary/10 text-primary font-medium' : ''}`}>
+                          <Link to="/helpdesk">
+                            Helpdesk
+                          </Link>
+                        </NavigationMenuLink>
+                      </NavigationMenuItem>
+                    )}
+                    {hasRole('admin') && (
+                      <NavigationMenuItem>
+                        <NavigationMenuLink asChild className={navigationMenuTriggerStyle() + ` ${location.pathname === '/admin' ? 'bg-primary/10 text-primary font-medium' : ''}`}>
+                          <Link to="/admin">
+                            Admin
+                          </Link>
+                        </NavigationMenuLink>
+                      </NavigationMenuItem>
+                    )}
+                  </>
+                )}
               </NavigationMenuList>
             </NavigationMenu>}
 
@@ -110,9 +133,23 @@ const Header = () => {
                 {navigation.map(item => <Link key={item.name} to={item.path} className={`py-2 px-4 rounded-md transition-colors ${location.pathname === item.path ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-gray-100'}`} onClick={() => setIsMenuOpen(false)}>
                     {item.name}
                   </Link>)}
-                {authenticated && currentUser && <Link to="/dashboard" className={`py-2 px-4 rounded-md transition-colors ${location.pathname === '/dashboard' ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-gray-100'}`} onClick={() => setIsMenuOpen(false)}>
-                    Dashboard
-                  </Link>}
+                {authenticated && currentUser && (
+                  <>
+                    <Link to="/dashboard" className={`py-2 px-4 rounded-md transition-colors ${location.pathname === '/dashboard' ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-gray-100'}`} onClick={() => setIsMenuOpen(false)}>
+                      Dashboard
+                    </Link>
+                    {hasRole(['admin', 'helpdesk']) && (
+                      <Link to="/helpdesk" className={`py-2 px-4 rounded-md transition-colors ${location.pathname === '/helpdesk' ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-gray-100'}`} onClick={() => setIsMenuOpen(false)}>
+                        Helpdesk
+                      </Link>
+                    )}
+                    {hasRole('admin') && (
+                      <Link to="/admin" className={`py-2 px-4 rounded-md transition-colors ${location.pathname === '/admin' ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-gray-100'}`} onClick={() => setIsMenuOpen(false)}>
+                        Admin
+                      </Link>
+                    )}
+                  </>
+                )}
               </nav>
               
               {!authenticated && <div className="mt-6 flex flex-col space-y-3">

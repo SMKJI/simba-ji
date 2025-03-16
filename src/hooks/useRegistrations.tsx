@@ -145,6 +145,7 @@ export const useRegistrations = () => {
   const [authenticated, setAuthenticated] = useState(false);
   const [tickets, setTickets] = useState<HelpdeskTicket[]>(MOCK_TICKETS);
   const [applicants, setApplicants] = useState<Applicant[]>(MOCK_APPLICANTS);
+  const [users, setUsers] = useState<User[]>(DEMO_ACCOUNTS);
 
   // Check for Supabase session and user on mount
   useEffect(() => {
@@ -622,6 +623,36 @@ export const useRegistrations = () => {
     }
   };
 
+  // Function to update a user's role
+  const updateUserRole = (userId: string, newRole: UserRole): boolean => {
+    try {
+      // In a real app with Supabase, this would update the user's role in the profiles table
+      // For demo purposes, we'll update the DEMO_ACCOUNTS array
+      const userIndex = users.findIndex(u => u.id === userId);
+      if (userIndex >= 0) {
+        const updatedUsers = [...users];
+        updatedUsers[userIndex] = {
+          ...updatedUsers[userIndex],
+          role: newRole
+        };
+        setUsers(updatedUsers);
+        
+        // If the current user's role is being updated, also update currentUser
+        if (currentUser && currentUser.id === userId) {
+          setCurrentUser({
+            ...currentUser,
+            role: newRole
+          });
+        }
+        
+        return true;
+      }
+      return false;
+    } catch (err) {
+      return false;
+    }
+  };
+
   return { 
     stats, 
     loading, 
@@ -646,6 +677,7 @@ export const useRegistrations = () => {
     createGroup,
     updateGroup,
     deleteGroup,
-    applicants
+    applicants,
+    updateUserRole
   };
 };
