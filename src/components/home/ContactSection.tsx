@@ -41,8 +41,8 @@ const ContactSection = () => {
               </div>
               <div>
                 <h3 className="font-medium text-lg">Alamat</h3>
-                <p className="text-muted-foreground">Jl. Soekarno-Hatta No. 25</p>
-                <p className="text-muted-foreground">Kendal, Jawa Tengah 51314</p>
+                <p className="text-muted-foreground">Jl. Soekarno-Hatta Barat Km 03</p>
+                <p className="text-muted-foreground">Kendal, Jawa Tengah 51351</p>
               </div>
             </div>
           </div>
