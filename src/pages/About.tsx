@@ -1,18 +1,14 @@
-
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, ArrowRight } from 'lucide-react';
 import PageLayout from '@/components/PageLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-
 const About = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-
-  return (
-    <PageLayout>
+  return <PageLayout>
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
@@ -40,9 +36,8 @@ const About = () => {
               <h2 className="text-xl font-bold text-gray-900 mb-4">Visi</h2>
               <Card className="border-0 shadow-md h-full">
                 <CardContent className="p-6">
-                  <p className="text-gray-600 italic">
-                    "Menjadi lembaga pendidikan kejuruan yang unggul dalam menghasilkan lulusan berkompeten, berkarakter, dan berdaya saing di era global."
-                  </p>
+                  <p className="text-gray-600 italic">&quot;Terwujudnya lulusan berakhlak mulia yang Kompeten, Energik, Nalar,
+Jujur, Inovatif, berdaya saing tinggi di dunia kerja dan wirausaha.&quot;</p>
                 </CardContent>
               </Card>
             </div>
@@ -150,8 +145,6 @@ const About = () => {
           </div>
         </div>
       </div>
-    </PageLayout>
-  );
+    </PageLayout>;
 };
-
 export default About;
