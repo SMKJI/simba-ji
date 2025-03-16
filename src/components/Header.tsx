@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
@@ -7,7 +6,6 @@ import { useRegistrations } from '@/hooks/useRegistrations';
 import { useIsMobile } from '@/hooks/use-mobile';
 import UserMenu from './UserMenu';
 import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuLink, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
-
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -19,7 +17,6 @@ const Header = () => {
   const isMobile = useIsMobile();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
@@ -27,12 +24,10 @@ const Header = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
   useEffect(() => {
     // Close mobile menu when route changes
     setIsMenuOpen(false);
   }, [location.pathname]);
-
   const navigation = [{
     name: 'Beranda',
     path: '/'
@@ -46,7 +41,6 @@ const Header = () => {
     name: 'FAQ',
     path: '/faq'
   }];
-
   return <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${isScrolled ? 'bg-white shadow-md' : 'bg-white/95 shadow-sm'}`}>
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-24">
@@ -54,7 +48,7 @@ const Header = () => {
             <img src="/lovable-uploads/f5ba977f-fb10-430c-b426-68c3389cee2c.png" alt="Logo SMKN 1 Kendal" className="h-14 w-auto" />
             <div className="flex flex-col">
               <span className="text-lg font-bold text-primary leading-tight">SMKN 1 Kendal</span>
-              <span className="text-xs text-gray-600 leading-tight">Sistem Penerimaan Murid Baru</span>
+              <span className="text-xs text-gray-600 leading-tight">Penjaringan Awal Calon Murid Baru</span>
             </div>
           </Link>
 
@@ -68,8 +62,7 @@ const Header = () => {
                       </Link>
                     </NavigationMenuLink>
                   </NavigationMenuItem>)}
-                {authenticated && currentUser && (
-                  <>
+                {authenticated && currentUser && <>
                     <NavigationMenuItem>
                       <NavigationMenuLink asChild className={navigationMenuTriggerStyle() + ` ${location.pathname === '/dashboard' ? 'bg-primary/10 text-primary font-medium' : ''}`}>
                         <Link to="/dashboard">
@@ -77,26 +70,21 @@ const Header = () => {
                         </Link>
                       </NavigationMenuLink>
                     </NavigationMenuItem>
-                    {hasRole(['admin', 'helpdesk']) && (
-                      <NavigationMenuItem>
+                    {hasRole(['admin', 'helpdesk']) && <NavigationMenuItem>
                         <NavigationMenuLink asChild className={navigationMenuTriggerStyle() + ` ${location.pathname === '/helpdesk' ? 'bg-primary/10 text-primary font-medium' : ''}`}>
                           <Link to="/helpdesk">
                             Helpdesk
                           </Link>
                         </NavigationMenuLink>
-                      </NavigationMenuItem>
-                    )}
-                    {hasRole('admin') && (
-                      <NavigationMenuItem>
+                      </NavigationMenuItem>}
+                    {hasRole('admin') && <NavigationMenuItem>
                         <NavigationMenuLink asChild className={navigationMenuTriggerStyle() + ` ${location.pathname === '/admin' ? 'bg-primary/10 text-primary font-medium' : ''}`}>
                           <Link to="/admin">
                             Admin
                           </Link>
                         </NavigationMenuLink>
-                      </NavigationMenuItem>
-                    )}
-                  </>
-                )}
+                      </NavigationMenuItem>}
+                  </>}
               </NavigationMenuList>
             </NavigationMenu>}
 
@@ -133,23 +121,17 @@ const Header = () => {
                 {navigation.map(item => <Link key={item.name} to={item.path} className={`py-2 px-4 rounded-md transition-colors ${location.pathname === item.path ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-gray-100'}`} onClick={() => setIsMenuOpen(false)}>
                     {item.name}
                   </Link>)}
-                {authenticated && currentUser && (
-                  <>
+                {authenticated && currentUser && <>
                     <Link to="/dashboard" className={`py-2 px-4 rounded-md transition-colors ${location.pathname === '/dashboard' ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-gray-100'}`} onClick={() => setIsMenuOpen(false)}>
                       Dashboard
                     </Link>
-                    {hasRole(['admin', 'helpdesk']) && (
-                      <Link to="/helpdesk" className={`py-2 px-4 rounded-md transition-colors ${location.pathname === '/helpdesk' ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-gray-100'}`} onClick={() => setIsMenuOpen(false)}>
+                    {hasRole(['admin', 'helpdesk']) && <Link to="/helpdesk" className={`py-2 px-4 rounded-md transition-colors ${location.pathname === '/helpdesk' ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-gray-100'}`} onClick={() => setIsMenuOpen(false)}>
                         Helpdesk
-                      </Link>
-                    )}
-                    {hasRole('admin') && (
-                      <Link to="/admin" className={`py-2 px-4 rounded-md transition-colors ${location.pathname === '/admin' ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-gray-100'}`} onClick={() => setIsMenuOpen(false)}>
+                      </Link>}
+                    {hasRole('admin') && <Link to="/admin" className={`py-2 px-4 rounded-md transition-colors ${location.pathname === '/admin' ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-gray-100'}`} onClick={() => setIsMenuOpen(false)}>
                         Admin
-                      </Link>
-                    )}
-                  </>
-                )}
+                      </Link>}
+                  </>}
               </nav>
               
               {!authenticated && <div className="mt-6 flex flex-col space-y-3">
@@ -171,5 +153,4 @@ const Header = () => {
       </div>
     </header>;
 };
-
 export default Header;
