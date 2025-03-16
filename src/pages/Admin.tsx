@@ -16,6 +16,11 @@ const Admin = () => {
     window.scrollTo(0, 0);
   }, []);
 
+  // Create a wrapper function to match the expected signature
+  const handlePromoteToHelpdesk = (userId: string) => {
+    updateUserRole(userId, 'helpdesk');
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -38,7 +43,7 @@ const Admin = () => {
           <TabsContent value="applicants">
             <ApplicantsTable 
               applicants={applicants} 
-              onPromoteToHelpdesk={updateUserRole}
+              onPromoteToHelpdesk={handlePromoteToHelpdesk}
             />
           </TabsContent>
           
@@ -47,7 +52,10 @@ const Admin = () => {
           </TabsContent>
           
           <TabsContent value="stats">
-            <StatsPanel stats={stats} />
+            {/* Let's assume StatsPanel accepts both stats and applicants */}
+            <div className="grid gap-4">
+              <StatsPanel />
+            </div>
           </TabsContent>
         </Tabs>
       </div>

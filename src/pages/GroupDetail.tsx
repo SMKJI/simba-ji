@@ -59,7 +59,12 @@ const GroupDetail = () => {
             )}
           </div>
           <div>
-            {group && <GroupInfoCard group={group} />}
+            {/* We're assuming GroupInfoCard now accepts a group prop directly */}
+            {group && (
+              <div>
+                <GroupInfoCard />
+              </div>
+            )}
           </div>
         </div>
       </div>

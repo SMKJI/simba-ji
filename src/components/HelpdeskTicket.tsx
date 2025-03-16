@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { 
   HelpdeskTicket as TicketType, 
@@ -23,7 +22,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 
-interface HelpdeskTicketProps {
+export interface HelpdeskTicketProps {
   ticket: TicketType;
   onClose: () => void;
 }

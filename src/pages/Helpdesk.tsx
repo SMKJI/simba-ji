@@ -3,9 +3,8 @@ import { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Search } from 'lucide-react';
 import { useRegistrations } from '@/hooks/useRegistrations';
 import HelpdeskTicketComponent from '@/components/HelpdeskTicket';
@@ -35,6 +34,11 @@ const Helpdesk = () => {
 
   const getStatusCount = (status: 'open' | 'in-progress' | 'closed') => {
     return tickets.filter(ticket => ticket.status === status).length;
+  };
+
+  // Handle closing a ticket modal (empty function for now)
+  const handleTicketClose = () => {
+    // This would normally close a ticket modal or perform some action
   };
 
   return (
@@ -91,8 +95,7 @@ const Helpdesk = () => {
                   <HelpdeskTicketComponent 
                     key={ticket.id} 
                     ticket={ticket}
-                    onClose={() => {}} // Add a placeholder function for now
-                    updateStatus={updateTicketStatus}
+                    onClose={handleTicketClose}
                   />
                 ))
               )}
