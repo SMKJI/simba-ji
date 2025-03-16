@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -41,12 +41,14 @@ interface LoginFormProps {
 const LoginForm = ({ prefilledEmail }: LoginFormProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+  const emailFromState = location.state?.email || prefilledEmail || '';
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: prefilledEmail || '',
+      email: emailFromState,
       password: '',
     },
   });

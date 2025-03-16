@@ -11,8 +11,8 @@ const Login = () => {
   const navigate = useNavigate();
   const { authenticated, currentUser, loading } = useRegistrations();
   
-  // Get the intended destination from state or default to dashboard
-  const from = location.state?.from || '/dashboard';
+  // Get prefilled email from state if available
+  const prefilledEmail = location.state?.email || '';
   
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -35,7 +35,7 @@ const Login = () => {
           break;
       }
     }
-  }, [authenticated, currentUser, navigate, from]);
+  }, [authenticated, currentUser, navigate]);
 
   if (loading) {
     return (
@@ -59,7 +59,7 @@ const Login = () => {
           </p>
         </div>
         
-        <LoginForm />
+        <LoginForm prefilledEmail={prefilledEmail} />
       </div>
     </PageLayout>
   );

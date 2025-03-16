@@ -16,4 +16,39 @@ export type Profile = {
   avatar_url: string | null;
 };
 
+// Sign up dengan email dan password
+export const signUp = async (email: string, password: string, userData: any) => {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: userData,
+    }
+  });
+  
+  return { data, error };
+};
+
+// Login dengan email dan password
+export const signIn = async (email: string, password: string) => {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+  
+  return { data, error };
+};
+
+// Logout
+export const signOut = async () => {
+  const { error } = await supabase.auth.signOut();
+  return { error };
+};
+
+// Get current session
+export const getSession = async () => {
+  const { data, error } = await supabase.auth.getSession();
+  return { data, error };
+};
+
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);

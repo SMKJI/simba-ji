@@ -1,16 +1,22 @@
 
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Check, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Check, ArrowLeft, Login } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import PageLayout from '@/components/PageLayout';
 import RegistrationCard, { RegistrationResult } from '@/components/success/RegistrationCard';
 
+// Extend RegistrationResult to include login credentials
+interface RegistrationResultWithCredentials extends RegistrationResult {
+  email?: string;
+  password?: string;
+}
+
 const Success = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [registrationData, setRegistrationData] = useState<RegistrationResult | null>(null);
+  const [registrationData, setRegistrationData] = useState<RegistrationResultWithCredentials | null>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -36,6 +42,15 @@ const Success = () => {
       setTimeout(() => navigate('/'), 3000);
     }
   }, [navigate, toast]);
+
+  // Handler to navigate to login with pre-filled email
+  const handleGoToLogin = () => {
+    if (registrationData?.email) {
+      navigate('/login', { state: { email: registrationData.email } });
+    } else {
+      navigate('/login');
+    }
+  };
 
   if (!registrationData) {
     return (
@@ -67,18 +82,36 @@ const Success = () => {
         
         <RegistrationCard data={registrationData} />
         
+        {registrationData.email && (
+          <div className="bg-primary/5 border border-primary/10 rounded-xl p-6 mt-8 animate-fade-in stagger-3">
+            <h2 className="text-xl font-bold text-primary mb-3">Akun Anda Telah Dibuat</h2>
+            <p className="text-gray-600 mb-4">
+              Akun Anda telah berhasil dibuat. Silakan login menggunakan email dan password yang Anda daftarkan untuk melanjutkan ke dashboard calon murid.
+            </p>
+            <div className="bg-white p-4 rounded-lg border border-gray-200 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Email:</p>
+                  <p className="font-medium">{registrationData.email}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Password:</p>
+                  <p className="font-medium">Password yang Anda masukkan saat pendaftaran</p>
+                </div>
+              </div>
+            </div>
+            <Button onClick={handleGoToLogin} className="w-full">
+              <Login className="mr-2 h-4 w-4" /> 
+              Login ke Dashboard
+            </Button>
+          </div>
+        )}
+        
         <div className="mt-10 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
           <Button variant="ghost" asChild>
             <Link to="/" className="flex items-center">
               <ArrowLeft className="mr-2 h-4 w-4" /> 
               Kembali ke Beranda
-            </Link>
-          </Button>
-          
-          <Button variant="outline" asChild>
-            <Link to="/helpdesk" className="flex items-center">
-              Butuh Bantuan? 
-              <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
         </div>

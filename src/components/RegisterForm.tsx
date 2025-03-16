@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -7,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRegistrations } from '@/hooks/useRegistrations';
+import { supabase } from '@/integrations/supabase/client';
 
 import {
   Form,
@@ -29,6 +29,8 @@ const formSchema = z.object({
     message: 'Nomor telepon tidak valid (contoh: 08XXXXXXXXXX)',
   }),
   email: z.string().email({ message: 'Email tidak valid' }),
+  password: z.string().min(6, { message: 'Password minimal 6 karakter' }),
+  confirmPassword: z.string().min(6, { message: 'Konfirmasi password minimal 6 karakter' }),
   birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
     message: 'Format tanggal lahir tidak valid (YYYY-MM-DD)',
   }),
@@ -46,6 +48,9 @@ const formSchema = z.object({
   agreement: z.boolean().refine((val) => val === true, {
     message: 'Anda harus menyetujui syarat dan ketentuan',
   }),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Konfirmasi password tidak cocok",
+  path: ["confirmPassword"],
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -62,6 +67,8 @@ const RegisterForm = () => {
       name: '',
       phone: '',
       email: '',
+      password: '',
+      confirmPassword: '',
       birthDate: '',
       birthPlace: '',
       gender: '',
@@ -80,24 +87,54 @@ const RegisterForm = () => {
     setIsSubmitting(true);
     
     try {
-      const result = await submitRegistration(data);
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            name: data.name,
+            phone: data.phone,
+          },
+        }
+      });
       
-      // Store the registration result in sessionStorage for use on the success page
-      if (result && result.success) {
-        sessionStorage.setItem('registrationResult', JSON.stringify(result.data));
-        
-        toast({
-          title: 'Pendaftaran Berhasil',
-          description: 'Anda telah berhasil mendaftar pada penjaringan awal.',
+      if (authError) {
+        throw new Error(authError.message);
+      }
+
+      if (authData.user) {
+        const result = await submitRegistration({
+          ...data,
+          userId: authData.user.id
         });
         
-        // Navigate to success page
-        navigate('/success');
+        if (result && result.success) {
+          const registrationData = {
+            ...result.data,
+            email: data.email,
+            password: data.password
+          };
+          
+          sessionStorage.setItem('registrationResult', JSON.stringify(registrationData));
+          
+          toast({
+            title: 'Pendaftaran Berhasil',
+            description: 'Akun Anda telah dibuat. Silakan login untuk melanjutkan.',
+          });
+          
+          navigate('/success');
+        }
       }
     } catch (error) {
+      let errorMessage = 'Terjadi kesalahan saat mendaftar. Silakan coba lagi.';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: 'Pendaftaran Gagal',
-        description: 'Terjadi kesalahan saat mendaftar. Silakan coba lagi.',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
@@ -162,6 +199,36 @@ const RegisterForm = () => {
                   </FormItem>
                 )}
               />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="Masukkan password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Konfirmasi Password</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="Konfirmasi password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
