@@ -6,7 +6,9 @@ import Dashboard from '@/components/Dashboard';
 import { Button } from '@/components/ui/button';
 import { useRegistrations } from '@/hooks/useRegistrations';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { UserCircle, Bell, Users, Info, Loader2 } from 'lucide-react';
+import { UserCircle, Bell, Users, Info, Loader2, HelpCircle, TicketCheck } from 'lucide-react';
+import GroupJoinConfirmation from '@/components/GroupJoinConfirmation';
+import TicketList from '@/components/TicketList';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
@@ -42,9 +44,9 @@ const DashboardPage = () => {
 
   return (
     <PageLayout>
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto px-4">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
             Selamat Datang, {currentUser.name}
           </h1>
           <p className="text-gray-600 mt-2">
@@ -52,9 +54,25 @@ const DashboardPage = () => {
           </p>
         </div>
 
+        {/* Mobile tab selector - visible on small screens */}
+        <div className="md:hidden mb-6">
+          <select 
+            className="w-full p-2 border rounded-md bg-white"
+            value={activeTab}
+            onChange={(e) => setActiveTab(e.target.value)}
+          >
+            <option value="overview">Informasi Umum</option>
+            <option value="group">Grup WhatsApp</option>
+            <option value="info">Informasi PPDB</option>
+            <option value="announcements">Pengumuman</option>
+            <option value="helpdesk">Bantuan Helpdesk</option>
+          </select>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="md:col-span-1">
-            <Card className="border-0 shadow-lg rounded-xl overflow-hidden h-full">
+          {/* Sidebar - hidden on mobile */}
+          <div className="hidden md:block md:col-span-1">
+            <Card className="border-0 shadow-lg rounded-xl overflow-hidden h-full sticky top-4">
               <CardHeader className="bg-primary/5 border-b p-6">
                 <CardTitle className="text-xl font-semibold text-primary">
                   Menu Aplikasi
@@ -69,6 +87,22 @@ const DashboardPage = () => {
                   >
                     <UserCircle className="mr-2 h-5 w-5" />
                     Informasi Umum
+                  </Button>
+                  <Button 
+                    variant={activeTab === 'group' ? 'secondary' : 'ghost'} 
+                    className="justify-start rounded-none h-12 px-6"
+                    onClick={() => setActiveTab('group')}
+                  >
+                    <Users className="mr-2 h-5 w-5" />
+                    Grup WhatsApp
+                  </Button>
+                  <Button 
+                    variant={activeTab === 'helpdesk' ? 'secondary' : 'ghost'} 
+                    className="justify-start rounded-none h-12 px-6"
+                    onClick={() => setActiveTab('helpdesk')}
+                  >
+                    <TicketCheck className="mr-2 h-5 w-5" />
+                    Bantuan Helpdesk
                   </Button>
                   <Button 
                     variant={activeTab === 'info' ? 'secondary' : 'ghost'} 
@@ -86,14 +120,6 @@ const DashboardPage = () => {
                     <Bell className="mr-2 h-5 w-5" />
                     Pengumuman
                   </Button>
-                  <Button 
-                    variant={activeTab === 'groups' ? 'secondary' : 'ghost'} 
-                    className="justify-start rounded-none h-12 px-6"
-                    onClick={() => setActiveTab('groups')}
-                  >
-                    <Users className="mr-2 h-5 w-5" />
-                    Grup WhatsApp
-                  </Button>
                 </nav>
               </CardContent>
             </Card>
@@ -102,6 +128,14 @@ const DashboardPage = () => {
           <div className="md:col-span-3">
             {activeTab === 'overview' && (
               <Dashboard stats={stats} loading={loading} />
+            )}
+            
+            {activeTab === 'group' && (
+              <GroupJoinConfirmation />
+            )}
+            
+            {activeTab === 'helpdesk' && (
+              <TicketList />
             )}
             
             {activeTab === 'info' && (
@@ -187,43 +221,6 @@ const DashboardPage = () => {
                       </p>
                       <p className="text-xs text-gray-500">Diposting: 5 Januari 2024</p>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-            
-            {activeTab === 'groups' && (
-              <Card className="border-0 shadow-lg rounded-xl overflow-hidden">
-                <CardHeader className="bg-primary/5 border-b p-6">
-                  <CardTitle className="text-xl font-semibold text-primary">
-                    Grup WhatsApp
-                  </CardTitle>
-                  <CardDescription>
-                    Grup WhatsApp untuk informasi penjaringan awal calon murid baru
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <div className="space-y-6">
-                    {stats.groups.map((group) => (
-                      <div key={group.id} className="p-4 border rounded-lg">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <h3 className="text-lg font-semibold">{group.name}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {group.count} pendaftar dari {group.capacity || 1000} kapasitas
-                            </p>
-                          </div>
-                          <div>
-                            <Button 
-                              onClick={() => navigate(`/group-detail/${group.id}`)}
-                              size="sm"
-                            >
-                              Lihat Detail
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
                   </div>
                 </CardContent>
               </Card>

@@ -12,10 +12,11 @@ import { useToast } from '@/hooks/use-toast';
 const GroupDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { stats, authenticated } = useRegistrations();
+  const { stats, authenticated, confirmGroupJoin, currentUser } = useRegistrations();
   const { toast } = useToast();
   const [group, setGroup] = useState<Group | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -55,10 +56,29 @@ const GroupDetail = () => {
     );
   };
 
+  const handleConfirmJoin = async () => {
+    setConfirming(true);
+    const result = await confirmGroupJoin();
+    setConfirming(false);
+    
+    if (result.success) {
+      toast({
+        title: 'Berhasil!',
+        description: 'Konfirmasi bergabung ke grup WhatsApp telah berhasil.',
+      });
+    } else {
+      toast({
+        title: 'Gagal!',
+        description: result.error || 'Gagal mengkonfirmasi bergabung ke grup WhatsApp.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (!group) {
     return (
       <PageLayout>
-        <div className="max-w-3xl mx-auto mt-8 animate-pulse">
+        <div className="max-w-3xl mx-auto mt-8 animate-pulse px-4">
           <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
           <div className="h-64 bg-gray-200 rounded"></div>
         </div>
@@ -68,7 +88,7 @@ const GroupDetail = () => {
 
   return (
     <PageLayout>
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-3xl mx-auto px-4">
         <div className="mb-8">
           <Button 
             variant="ghost" 
@@ -79,7 +99,7 @@ const GroupDetail = () => {
             Kembali ke Dashboard
           </Button>
           
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
             Detail Grup {group.name}
           </h1>
         </div>
@@ -106,7 +126,7 @@ const GroupDetail = () => {
                   </div>
                 </div>
                 <div className="text-sm font-medium">
-                  {group.count} / 1000
+                  {group.count} / {group.capacity}
                 </div>
               </div>
               
@@ -116,7 +136,7 @@ const GroupDetail = () => {
                   <span>{group.isFull ? 'Penuh' : 'Tersedia'}</span>
                 </div>
                 <Progress 
-                  value={group.count / 10} 
+                  value={(group.count / group.capacity) * 100} 
                   className={`h-2 ${group.isFull ? 'bg-secondary/20' : 'bg-primary/20'}`}
                 />
               </div>
@@ -125,18 +145,18 @@ const GroupDetail = () => {
                 <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">
                   Link Grup WhatsApp
                 </h3>
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2">
                   <input
                     type="text"
-                    value="https://chat.whatsapp.com/example"
+                    value={group.link || "https://chat.whatsapp.com/example"}
                     readOnly
-                    className="flex-1 p-2 border rounded bg-white text-sm"
+                    className="flex-1 p-2 border rounded bg-white text-sm w-full"
                   />
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => copyToClipboard("https://chat.whatsapp.com/example")}
-                    className={copySuccess ? "bg-green-100 text-green-600" : ""}
+                    onClick={() => copyToClipboard(group.link || "https://chat.whatsapp.com/example")}
+                    className={`${copySuccess ? "bg-green-100 text-green-600" : ""} w-full sm:w-auto`}
                   >
                     {copySuccess ? (
                       <>
@@ -151,15 +171,40 @@ const GroupDetail = () => {
                 </div>
               </div>
               
-              <div className="pt-4">
+              <div className="pt-4 flex flex-col sm:flex-row gap-4">
                 <Button
                   variant="default"
                   size="lg"
-                  className="w-full bg-green-600 hover:bg-green-700 text-white"
-                  onClick={() => window.open("https://chat.whatsapp.com/example", '_blank')}
+                  className="w-full sm:w-auto sm:flex-1 bg-green-600 hover:bg-green-700 text-white"
+                  onClick={() => window.open(group.link || "https://chat.whatsapp.com/example", '_blank')}
                 >
                   <ExternalLink className="h-4 w-4 mr-2" />
-                  Gabung Grup WhatsApp Sekarang
+                  Buka Grup WhatsApp
+                </Button>
+                
+                <Button
+                  variant={currentUser?.joinConfirmed ? "secondary" : "outline"}
+                  size="lg"
+                  className="w-full sm:w-auto sm:flex-1"
+                  disabled={currentUser?.joinConfirmed || confirming}
+                  onClick={handleConfirmJoin}
+                >
+                  {confirming ? (
+                    <span className="flex items-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Mengkonfirmasi...
+                    </span>
+                  ) : currentUser?.joinConfirmed ? (
+                    <span className="flex items-center">
+                      <Check className="h-4 w-4 mr-2" />
+                      Sudah Bergabung
+                    </span>
+                  ) : (
+                    "Konfirmasi Sudah Bergabung"
+                  )}
                 </Button>
               </div>
             </div>

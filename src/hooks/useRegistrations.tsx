@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -27,9 +26,9 @@ export interface Group {
 export const MOCK_DATA = {
   total: 1327,
   groups: [
-    { id: 1, name: 'Grup 1', count: 1000, capacity: 1000, isFull: true },
-    { id: 2, name: 'Grup 2', count: 327, capacity: 1000, isFull: false },
-    { id: 3, name: 'Grup 3', count: 0, capacity: 1000, isFull: false },
+    { id: 1, name: 'Grup 1', count: 1000, capacity: 1000, isFull: true, link: "https://chat.whatsapp.com/group1" },
+    { id: 2, name: 'Grup 2', count: 327, capacity: 1000, isFull: false, link: "https://chat.whatsapp.com/group2" },
+    { id: 3, name: 'Grup 3', count: 0, capacity: 1000, isFull: false, link: "https://chat.whatsapp.com/group3" },
   ]
 };
 
@@ -49,14 +48,65 @@ export interface User {
   email: string;
   role: UserRole;
   avatarUrl?: string;
+  assignedGroupId?: number;
+  joinConfirmed?: boolean;
+}
+
+// Define helpdesk ticket interface
+export interface HelpdeskTicket {
+  id: string;
+  userId: string;
+  subject: string;
+  status: 'open' | 'in-progress' | 'closed';
+  createdAt: string;
+  lastUpdated: string;
+  messages: TicketMessage[];
+}
+
+export interface TicketMessage {
+  id: string;
+  ticketId: string;
+  sender: string;
+  senderRole: UserRole;
+  message: string;
+  timestamp: string;
 }
 
 // Mock users for development
 export const DEMO_ACCOUNTS: User[] = [
-  { id: '1', name: 'Calon Murid', email: 'calon@example.com', role: 'applicant' },
+  { 
+    id: '1', 
+    name: 'Calon Murid', 
+    email: 'calon@example.com', 
+    role: 'applicant', 
+    assignedGroupId: 2,
+    joinConfirmed: false
+  },
   { id: '2', name: 'Operator Helpdesk', email: 'helpdesk@smkn1kendal.sch.id', role: 'helpdesk' },
   { id: '3', name: 'Administrator', email: 'admin@smkn1kendal.sch.id', role: 'admin' },
   { id: '4', name: 'Content Admin', email: 'content@smkn1kendal.sch.id', role: 'content' },
+];
+
+// Mock tickets
+const MOCK_TICKETS: HelpdeskTicket[] = [
+  {
+    id: "ticket-1",
+    userId: "1",
+    subject: "Kesulitan bergabung grup WhatsApp",
+    status: "open",
+    createdAt: "2024-07-05T08:30:00Z",
+    lastUpdated: "2024-07-05T08:30:00Z",
+    messages: [
+      {
+        id: "msg-1",
+        ticketId: "ticket-1",
+        sender: "1",
+        senderRole: "applicant",
+        message: "Saya mencoba bergabung grup WhatsApp tapi link tidak berfungsi",
+        timestamp: "2024-07-05T08:30:00Z"
+      }
+    ]
+  }
 ];
 
 export const useRegistrations = () => {
@@ -65,6 +115,7 @@ export const useRegistrations = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [authenticated, setAuthenticated] = useState(false);
+  const [tickets, setTickets] = useState<HelpdeskTicket[]>(MOCK_TICKETS);
 
   // Check for Supabase session and user on mount
   useEffect(() => {
@@ -290,6 +341,125 @@ export const useRegistrations = () => {
     return currentUser.role === role;
   };
 
+  // Function to get assigned group for current user
+  const getUserAssignedGroup = (): Group | null => {
+    if (!currentUser || !currentUser.assignedGroupId) return null;
+    return stats.groups.find(g => g.id === currentUser.assignedGroupId) || null;
+  };
+
+  // Function to confirm user has joined the WhatsApp group
+  const confirmGroupJoin = async () => {
+    if (!currentUser) return { success: false, error: "User not logged in" };
+    
+    try {
+      // In a real app, this would update the database
+      const updatedUser = { ...currentUser, joinConfirmed: true };
+      setCurrentUser(updatedUser);
+      
+      // Save to session storage for demo purposes
+      if (sessionStorage.getItem('currentUser')) {
+        sessionStorage.setItem('currentUser', JSON.stringify(updatedUser));
+      }
+      
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: "Failed to update join status" };
+    }
+  };
+
+  // Function to create a new helpdesk ticket
+  const createTicket = (subject: string, message: string): HelpdeskTicket | null => {
+    if (!currentUser) return null;
+    
+    const newTicket: HelpdeskTicket = {
+      id: `ticket-${Date.now()}`,
+      userId: currentUser.id,
+      subject,
+      status: 'open',
+      createdAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
+      messages: [
+        {
+          id: `msg-${Date.now()}`,
+          ticketId: `ticket-${Date.now()}`,
+          sender: currentUser.id,
+          senderRole: currentUser.role,
+          message,
+          timestamp: new Date().toISOString()
+        }
+      ]
+    };
+    
+    setTickets(prevTickets => [...prevTickets, newTicket]);
+    return newTicket;
+  };
+
+  // Function to add message to existing ticket
+  const addTicketMessage = (ticketId: string, message: string) => {
+    if (!currentUser) return null;
+    
+    setTickets(prevTickets => {
+      return prevTickets.map(ticket => {
+        if (ticket.id === ticketId) {
+          const newMessage: TicketMessage = {
+            id: `msg-${Date.now()}`,
+            ticketId,
+            sender: currentUser.id,
+            senderRole: currentUser.role,
+            message,
+            timestamp: new Date().toISOString()
+          };
+          
+          return {
+            ...ticket,
+            messages: [...ticket.messages, newMessage],
+            lastUpdated: new Date().toISOString(),
+            // If helpdesk replies to a closed ticket, reopen it
+            status: currentUser.role === 'helpdesk' && ticket.status === 'closed' 
+              ? 'in-progress' 
+              : ticket.status
+          };
+        }
+        return ticket;
+      });
+    });
+    
+    return true;
+  };
+
+  // Function to get user tickets
+  const getUserTickets = () => {
+    if (!currentUser) return [];
+    
+    if (currentUser.role === 'helpdesk' || currentUser.role === 'admin') {
+      return tickets; // Helpdesk and admin can see all tickets
+    }
+    
+    return tickets.filter(ticket => ticket.userId === currentUser.id);
+  };
+
+  // Function to update ticket status
+  const updateTicketStatus = (ticketId: string, status: 'open' | 'in-progress' | 'closed') => {
+    if (!currentUser || (currentUser.role !== 'helpdesk' && currentUser.role !== 'admin')) {
+      return false;
+    }
+    
+    setTickets(prevTickets => {
+      return prevTickets.map(ticket => {
+        if (ticket.id === ticketId) {
+          return {
+            ...ticket,
+            status,
+            lastUpdated: new Date().toISOString()
+          };
+        }
+        return ticket;
+      });
+    });
+    
+    return true;
+  };
+
   return { 
     stats, 
     loading, 
@@ -299,6 +469,13 @@ export const useRegistrations = () => {
     logout, 
     currentUser, 
     authenticated,
-    hasRole
+    hasRole,
+    getUserAssignedGroup,
+    confirmGroupJoin,
+    createTicket,
+    addTicketMessage,
+    getUserTickets,
+    updateTicketStatus,
+    tickets
   };
 };
