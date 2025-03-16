@@ -16,8 +16,8 @@ import {
   SidebarTrigger,
   SidebarInset
 } from "@/components/ui/sidebar";
-import { UserCircle, Bell, Users, Info, HelpCircle, TicketCheck, Home, LogOut, Settings } from 'lucide-react';
-import { useRegistrations, UserRole } from '@/hooks/useRegistrations';
+import { UserCircle, Bell, Users, Info, HelpCircle, TicketCheck, Home, LogOut, Settings, FileText, MessageCircle } from 'lucide-react';
+import { useRegistrations } from '@/hooks/useRegistrations';
 import { Button } from '@/components/ui/button';
 import Footer from '@/components/Footer';
 
@@ -98,12 +98,26 @@ const DashboardLayout = ({ children, className = '' }: DashboardLayoutProps) => 
                       <span>Profil</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
+                  
+                  {/* Student Helpdesk - Only for applicants */}
+                  {hasRole('applicant') && (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton 
+                        isActive={activeTab === '/helpdesk-siswa'} 
+                        onClick={() => handleNavigate('/helpdesk-siswa')}
+                        tooltip="Bantuan Helpdesk"
+                      >
+                        <MessageCircle className="h-5 w-5" />
+                        <span>Bantuan Helpdesk</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
 
             {/* Admin and Helpdesk Only Navigation */}
-            {hasRole(['admin', 'helpdesk']) && (
+            {hasRole(['admin', 'helpdesk', 'content']) && (
               <SidebarGroup>
                 <SidebarGroupLabel>Pengelolaan</SidebarGroupLabel>
                 <SidebarGroupContent>
@@ -121,16 +135,31 @@ const DashboardLayout = ({ children, className = '' }: DashboardLayoutProps) => 
                       </SidebarMenuItem>
                     )}
                     
-                    <SidebarMenuItem>
-                      <SidebarMenuButton 
-                        isActive={activeTab === '/helpdesk'} 
-                        onClick={() => handleNavigate('/helpdesk')}
-                        tooltip="Helpdesk"
-                      >
-                        <TicketCheck className="h-5 w-5" />
-                        <span>Helpdesk</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    {hasRole(['helpdesk', 'admin']) && (
+                      <SidebarMenuItem>
+                        <SidebarMenuButton 
+                          isActive={activeTab === '/helpdesk'} 
+                          onClick={() => handleNavigate('/helpdesk')}
+                          tooltip="Helpdesk"
+                        >
+                          <TicketCheck className="h-5 w-5" />
+                          <span>Helpdesk</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    )}
+                    
+                    {hasRole(['content', 'admin']) && (
+                      <SidebarMenuItem>
+                        <SidebarMenuButton 
+                          isActive={activeTab === '/content'} 
+                          onClick={() => handleNavigate('/content')}
+                          tooltip="Konten"
+                        >
+                          <FileText className="h-5 w-5" />
+                          <span>Konten</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    )}
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>

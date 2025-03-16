@@ -1,6 +1,6 @@
 
 import { Link } from 'react-router-dom';
-import { LogOut, Settings, User, Users, HelpCircle } from 'lucide-react';
+import { LogOut, Settings, User, Users, HelpCircle, MessageCircle, FileText } from 'lucide-react';
 import { useRegistrations, UserRole } from '@/hooks/useRegistrations';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -20,10 +20,20 @@ const getRoleMenuItems = (role: UserRole) => {
       return [
         { icon: <Users className="mr-2 h-4 w-4" />, label: 'Dashboard Admin', link: '/admin' },
         { icon: <HelpCircle className="mr-2 h-4 w-4" />, label: 'Helpdesk', link: '/helpdesk' },
+        { icon: <FileText className="mr-2 h-4 w-4" />, label: 'Konten', link: '/content' },
       ];
     case 'helpdesk':
       return [
         { icon: <HelpCircle className="mr-2 h-4 w-4" />, label: 'Dashboard Helpdesk', link: '/helpdesk' },
+      ];
+    case 'content':
+      return [
+        { icon: <FileText className="mr-2 h-4 w-4" />, label: 'Dashboard Konten', link: '/content' },
+      ];
+    case 'applicant':
+      return [
+        { icon: <User className="mr-2 h-4 w-4" />, label: 'Dashboard Siswa', link: '/dashboard' },
+        { icon: <MessageCircle className="mr-2 h-4 w-4" />, label: 'Bantuan Helpdesk', link: '/helpdesk-siswa' },
       ];
     default:
       return [];
@@ -79,6 +89,7 @@ const UserMenu = () => {
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">{currentUser.name}</p>
             <p className="text-xs leading-none text-muted-foreground">{currentUser.email}</p>
+            <p className="text-xs leading-none text-muted-foreground capitalize">{currentUser.role}</p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
@@ -96,6 +107,15 @@ const UserMenu = () => {
             <DropdownMenuSeparator />
           </>
         )}
+        
+        <DropdownMenuItem asChild>
+          <Link to="/profile" className="flex items-center cursor-pointer">
+            <Settings className="mr-2 h-4 w-4" />
+            Pengaturan Profil
+          </Link>
+        </DropdownMenuItem>
+        
+        <DropdownMenuSeparator />
         
         <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
           <LogOut className="mr-2 h-4 w-4" />

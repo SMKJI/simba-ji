@@ -96,6 +96,21 @@ const Header = () => {
                       </NavigationMenuLink>
                     </NavigationMenuItem>
                     
+                    {hasRole('applicant') && (
+                      <NavigationMenuItem>
+                        <NavigationMenuLink 
+                          asChild 
+                          className={`${navigationMenuTriggerStyle()} ${
+                            location.pathname === '/helpdesk-siswa' 
+                              ? 'bg-primary/10 text-primary font-medium' 
+                              : ''
+                          }`}
+                        >
+                          <Link to="/helpdesk-siswa">Helpdesk</Link>
+                        </NavigationMenuLink>
+                      </NavigationMenuItem>
+                    )}
+                    
                     {hasRole(['admin', 'helpdesk']) && (
                       <NavigationMenuItem>
                         <NavigationMenuLink 
@@ -122,6 +137,21 @@ const Header = () => {
                           }`}
                         >
                           <Link to="/admin">Admin</Link>
+                        </NavigationMenuLink>
+                      </NavigationMenuItem>
+                    )}
+                    
+                    {hasRole(['content', 'admin']) && (
+                      <NavigationMenuItem>
+                        <NavigationMenuLink 
+                          asChild 
+                          className={`${navigationMenuTriggerStyle()} ${
+                            location.pathname === '/content' 
+                              ? 'bg-primary/10 text-primary font-medium' 
+                              : ''
+                          }`}
+                        >
+                          <Link to="/content">Konten</Link>
                         </NavigationMenuLink>
                       </NavigationMenuItem>
                     )}
