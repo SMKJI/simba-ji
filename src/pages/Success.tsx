@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Check, ArrowLeft, Login } from 'lucide-react';
+import { Check, ArrowLeft, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import PageLayout from '@/components/PageLayout';
@@ -101,7 +101,7 @@ const Success = () => {
               </div>
             </div>
             <Button onClick={handleGoToLogin} className="w-full">
-              <Login className="mr-2 h-4 w-4" /> 
+              <LogIn className="mr-2 h-4 w-4" /> 
               Login ke Dashboard
             </Button>
           </div>
