@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Check, ArrowLeft, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import PageLayout from '@/components/PageLayout';
+import MainLayout from '@/components/layouts/MainLayout';
 import RegistrationCard, { RegistrationResult } from '@/components/success/RegistrationCard';
 
 // Extend RegistrationResult to include login credentials
@@ -54,19 +54,19 @@ const Success = () => {
 
   if (!registrationData) {
     return (
-      <PageLayout>
+      <MainLayout>
         <div className="flex-1 flex items-center justify-center">
           <div className="animate-pulse flex flex-col items-center p-8">
             <div className="h-8 w-64 bg-gray-200 rounded mb-4"></div>
             <div className="h-4 w-48 bg-gray-200 rounded"></div>
           </div>
         </div>
-      </PageLayout>
+      </MainLayout>
     );
   }
 
   return (
-    <PageLayout>
+    <MainLayout>
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4 animate-fade-in">
@@ -116,7 +116,7 @@ const Success = () => {
           </Button>
         </div>
       </div>
-    </PageLayout>
+    </MainLayout>
   );
 };
 

@@ -1,10 +1,11 @@
 
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import PageLayout from '@/components/PageLayout';
+import { Loader2 } from 'lucide-react';
+import MainLayout from '@/components/layouts/MainLayout';
 import LoginForm from '@/components/LoginForm';
 import { useRegistrations } from '@/hooks/useRegistrations';
-import { Loader2 } from 'lucide-react';
+import PageTitle from '@/components/ui/PageTitle';
 
 const Login = () => {
   const location = useLocation();
@@ -40,29 +41,24 @@ const Login = () => {
 
   if (loading) {
     return (
-      <PageLayout>
+      <MainLayout>
         <div className="flex justify-center items-center min-h-[50vh]">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </PageLayout>
+      </MainLayout>
     );
   }
 
   return (
-    <PageLayout>
+    <MainLayout>
       <div className="max-w-md mx-auto px-4 py-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Masuk Akun
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Silakan masuk untuk melanjutkan ke sistem pendaftaran
-          </p>
+          <PageTitle title="Masuk Akun" description="Silakan masuk untuk melanjutkan ke sistem pendaftaran" />
         </div>
         
         <LoginForm prefilledEmail={prefilledEmail} />
       </div>
-    </PageLayout>
+    </MainLayout>
   );
 };
 
