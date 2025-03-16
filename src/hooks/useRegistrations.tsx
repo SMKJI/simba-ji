@@ -74,18 +74,19 @@ export const useRegistrations = () => {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session) {
+          // Using maybeSingle() instead of single() to handle null properly
           const { data: profileData } = await supabase
             .from('profiles')
             .select('name, role, avatar_url')
             .eq('id', session.user.id)
-            .single();
+            .maybeSingle();
             
           const user: User = {
             id: session.user.id,
             email: session.user.email || '',
             name: profileData?.name || session.user.email?.split('@')[0] || 'User',
-            role: profileData?.role || 'applicant',
-            avatarUrl: profileData?.avatar_url
+            role: (profileData?.role as UserRole) || 'applicant',
+            avatarUrl: profileData?.avatar_url || undefined
           };
           
           setCurrentUser(user);
@@ -116,18 +117,19 @@ export const useRegistrations = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
+          // Using maybeSingle() instead of single() to handle null properly
           const { data: profileData } = await supabase
             .from('profiles')
             .select('name, role, avatar_url')
             .eq('id', session.user.id)
-            .single();
+            .maybeSingle();
             
           const user: User = {
             id: session.user.id,
             email: session.user.email || '',
             name: profileData?.name || session.user.email?.split('@')[0] || 'User',
-            role: profileData?.role || 'applicant',
-            avatarUrl: profileData?.avatar_url
+            role: (profileData?.role as UserRole) || 'applicant',
+            avatarUrl: profileData?.avatar_url || undefined
           };
           
           setCurrentUser(user);
@@ -237,18 +239,19 @@ export const useRegistrations = () => {
       
       // Successfully logged in with Supabase
       if (data.user) {
+        // Using maybeSingle() instead of single() to handle null properly
         const { data: profileData } = await supabase
           .from('profiles')
           .select('name, role, avatar_url')
           .eq('id', data.user.id)
-          .single();
+          .maybeSingle();
           
         const user: User = {
           id: data.user.id,
           email: data.user.email || '',
           name: profileData?.name || data.user.email?.split('@')[0] || 'User',
-          role: profileData?.role || 'applicant',
-          avatarUrl: profileData?.avatar_url
+          role: (profileData?.role as UserRole) || 'applicant',
+          avatarUrl: profileData?.avatar_url || undefined
         };
         
         setCurrentUser(user);

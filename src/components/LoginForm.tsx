@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -64,11 +65,12 @@ const LoginForm = ({ prefilledEmail }: LoginFormProps) => {
     }
     
     if (data.user) {
+      // Fixing the type error by using maybeSingle() and handling null properly
       const { data: profileData } = await supabase
         .from('profiles')
         .select('name, role, avatar_url')
         .eq('id', data.user.id)
-        .single();
+        .maybeSingle();
         
       return { 
         success: true, 
@@ -122,9 +124,11 @@ const LoginForm = ({ prefilledEmail }: LoginFormProps) => {
             navigate('/dashboard');
         }
       } else {
+        // Fixing the type error by checking if error exists
+        const errorMessage = 'error' in result ? result.error : 'Email atau password salah';
         toast({
           title: 'Login Gagal',
-          description: result.error || 'Email atau password salah',
+          description: errorMessage,
           variant: 'destructive',
         });
       }
