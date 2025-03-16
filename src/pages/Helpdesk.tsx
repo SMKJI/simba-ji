@@ -9,12 +9,16 @@ import { Search } from 'lucide-react';
 import { useRegistrations } from '@/hooks/useRegistrations';
 import HelpdeskTicketComponent from '@/components/HelpdeskTicket';
 import type { HelpdeskTicket } from '@/hooks/useRegistrations';
+import OperatorManagement from '@/components/helpdesk/OperatorManagement';
+import TicketAllocation from '@/components/helpdesk/TicketAllocation';
 
 const Helpdesk = () => {
-  const { getUserTickets, updateTicketStatus } = useRegistrations();
+  const { getUserTickets, updateTicketStatus, hasRole } = useRegistrations();
   const [tickets, setTickets] = useState<HelpdeskTicket[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState<'all' | 'open' | 'in-progress' | 'closed'>('all');
+
+  const isAdmin = hasRole('admin');
 
   useEffect(() => {
     // Get all tickets
@@ -51,59 +55,81 @@ const Helpdesk = () => {
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-between mb-4 sm:mb-6">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Cari tiket..."
-              className="pl-8 text-sm"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <Tabs defaultValue="all" onValueChange={(value) => setFilter(value as any)}>
-            <TabsList className="mb-4 flex flex-wrap">
-              <TabsTrigger value="all" className="text-xs sm:text-sm">
-                Semua
-                <Badge variant="secondary" className="ml-1 sm:ml-2 text-xs">{tickets.length}</Badge>
-              </TabsTrigger>
-              <TabsTrigger value="open" className="text-xs sm:text-sm">
-                Terbuka
-                <Badge variant="secondary" className="ml-1 sm:ml-2 text-xs">{getStatusCount('open')}</Badge>
-              </TabsTrigger>
-              <TabsTrigger value="in-progress" className="text-xs sm:text-sm">
-                Dalam Proses
-                <Badge variant="secondary" className="ml-1 sm:ml-2 text-xs">{getStatusCount('in-progress')}</Badge>
-              </TabsTrigger>
-              <TabsTrigger value="closed" className="text-xs sm:text-sm">
-                Selesai
-                <Badge variant="secondary" className="ml-1 sm:ml-2 text-xs">{getStatusCount('closed')}</Badge>
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value={filter}>
-              <div className="space-y-4">
-                {filteredTickets.length === 0 ? (
-                  <Card className="p-6 sm:p-8 text-center">
-                    <p className="text-muted-foreground text-sm sm:text-base">Tidak ada tiket yang ditemukan</p>
-                  </Card>
-                ) : (
-                  filteredTickets.map(ticket => (
-                    <HelpdeskTicketComponent 
-                      key={ticket.id} 
-                      ticket={ticket}
-                      onClose={handleTicketClose}
-                    />
-                  ))
-                )}
+        <Tabs defaultValue="tickets" className="w-full">
+          <TabsList className="mb-4 w-full justify-start">
+            <TabsTrigger value="tickets">Tiket Bantuan</TabsTrigger>
+            <TabsTrigger value="allocation">Alokasi Tiket</TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="operators">Manajemen Operator</TabsTrigger>
+            )}
+          </TabsList>
+          
+          <TabsContent value="tickets">
+            <div className="flex flex-col sm:flex-row gap-4 justify-between mb-4 sm:mb-6">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Cari tiket..."
+                  className="pl-8 text-sm"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <Tabs defaultValue="all" onValueChange={(value) => setFilter(value as any)}>
+                <TabsList className="mb-4 flex flex-wrap">
+                  <TabsTrigger value="all" className="text-xs sm:text-sm">
+                    Semua
+                    <Badge variant="secondary" className="ml-1 sm:ml-2 text-xs">{tickets.length}</Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="open" className="text-xs sm:text-sm">
+                    Terbuka
+                    <Badge variant="secondary" className="ml-1 sm:ml-2 text-xs">{getStatusCount('open')}</Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="in-progress" className="text-xs sm:text-sm">
+                    Dalam Proses
+                    <Badge variant="secondary" className="ml-1 sm:ml-2 text-xs">{getStatusCount('in-progress')}</Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="closed" className="text-xs sm:text-sm">
+                    Selesai
+                    <Badge variant="secondary" className="ml-1 sm:ml-2 text-xs">{getStatusCount('closed')}</Badge>
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value={filter}>
+                  <div className="space-y-4">
+                    {filteredTickets.length === 0 ? (
+                      <Card className="p-6 sm:p-8 text-center">
+                        <p className="text-muted-foreground text-sm sm:text-base">Tidak ada tiket yang ditemukan</p>
+                      </Card>
+                    ) : (
+                      filteredTickets.map(ticket => (
+                        <HelpdeskTicketComponent 
+                          key={ticket.id} 
+                          ticket={ticket}
+                          onClose={handleTicketClose}
+                        />
+                      ))
+                    )}
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="allocation">
+            <TicketAllocation />
+          </TabsContent>
+          
+          {isAdmin && (
+            <TabsContent value="operators">
+              <OperatorManagement />
             </TabsContent>
-          </Tabs>
-        </div>
+          )}
+        </Tabs>
       </div>
     </DashboardLayout>
   );

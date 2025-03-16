@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -75,6 +74,7 @@ export interface HelpdeskTicket {
   status: 'open' | 'in-progress' | 'closed';
   createdAt: string;
   lastUpdated: string;
+  assignedTo?: string | null;
   messages: TicketMessage[];
 }
 
@@ -85,6 +85,16 @@ export interface TicketMessage {
   senderRole: UserRole;
   message: string;
   timestamp: string;
+}
+
+// Add new interface for HelpdeskOperator
+export interface HelpdeskOperator {
+  id: string;
+  name: string;
+  email: string;
+  assignedTickets: number;
+  status: 'active' | 'inactive';
+  lastActive: string;
 }
 
 // Mock users for development
@@ -114,6 +124,18 @@ const MOCK_APPLICANTS: Applicant[] = Array.from({ length: 25 }).map((_, i) => ({
   registeredAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
 }));
 
+// Add mock operators
+const MOCK_OPERATORS: HelpdeskOperator[] = [
+  { 
+    id: '2', 
+    name: 'Operator Helpdesk', 
+    email: 'helpdesk@smkn1kendal.sch.id', 
+    assignedTickets: 1,
+    status: 'active',
+    lastActive: new Date().toISOString()
+  },
+];
+
 // Mock tickets
 const MOCK_TICKETS: HelpdeskTicket[] = [
   {
@@ -123,6 +145,7 @@ const MOCK_TICKETS: HelpdeskTicket[] = [
     status: "open",
     createdAt: "2024-07-05T08:30:00Z",
     lastUpdated: "2024-07-05T08:30:00Z",
+    assignedTo: "2",
     messages: [
       {
         id: "msg-1",
@@ -146,6 +169,7 @@ export const useRegistrations = () => {
   const [tickets, setTickets] = useState<HelpdeskTicket[]>(MOCK_TICKETS);
   const [applicants, setApplicants] = useState<Applicant[]>(MOCK_APPLICANTS);
   const [users, setUsers] = useState<User[]>(DEMO_ACCOUNTS);
+  const [operators, setOperators] = useState<HelpdeskOperator[]>(MOCK_OPERATORS);
 
   // Check for Supabase session and user on mount
   useEffect(() => {
@@ -411,21 +435,29 @@ export const useRegistrations = () => {
     }
   };
 
-  // Function to create a new helpdesk ticket
+  // Function to create a new helpdesk ticket with automatic operator assignment
   const createTicket = (subject: string, message: string): HelpdeskTicket | null => {
     if (!currentUser) return null;
     
+    // Find operator with least tickets
+    const operatorWithLeastTickets = operators
+      .filter(op => op.status === 'active')
+      .sort((a, b) => a.assignedTickets - b.assignedTickets)[0];
+    
+    const newTicketId = `ticket-${Date.now()}`;
+    
     const newTicket: HelpdeskTicket = {
-      id: `ticket-${Date.now()}`,
+      id: newTicketId,
       userId: currentUser.id,
       subject,
       status: 'open',
       createdAt: new Date().toISOString(),
       lastUpdated: new Date().toISOString(),
+      assignedTo: operatorWithLeastTickets?.id || null,
       messages: [
         {
           id: `msg-${Date.now()}`,
-          ticketId: `ticket-${Date.now()}`,
+          ticketId: newTicketId,
           sender: currentUser.id,
           senderRole: currentUser.role,
           message,
@@ -435,6 +467,12 @@ export const useRegistrations = () => {
     };
     
     setTickets(prevTickets => [...prevTickets, newTicket]);
+    
+    // Update operator's assigned tickets count
+    if (operatorWithLeastTickets) {
+      updateOperatorTicketCount(operatorWithLeastTickets.id, 1);
+    }
+    
     return newTicket;
   };
 
@@ -491,6 +529,11 @@ export const useRegistrations = () => {
     setTickets(prevTickets => {
       return prevTickets.map(ticket => {
         if (ticket.id === ticketId) {
+          // If ticket is being closed, update operator ticket count
+          if (status === 'closed' && ticket.status !== 'closed' && ticket.assignedTo) {
+            updateOperatorTicketCount(ticket.assignedTo, -1);
+          }
+          
           return {
             ...ticket,
             status,
@@ -653,6 +696,174 @@ export const useRegistrations = () => {
     }
   };
 
+  // Function to get all helpdesk operators
+  const getHelpdeskOperators = (): HelpdeskOperator[] => {
+    return operators;
+  };
+
+  // Function to add a new helpdesk operator
+  const addHelpdeskOperator = (userData: Omit<HelpdeskOperator, 'id' | 'assignedTickets' | 'status' | 'lastActive'>): boolean => {
+    try {
+      const newOperator: HelpdeskOperator = {
+        id: `operator-${Date.now()}`,
+        name: userData.name,
+        email: userData.email,
+        assignedTickets: 0,
+        status: 'active',
+        lastActive: new Date().toISOString()
+      };
+      
+      setOperators(prev => [...prev, newOperator]);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
+
+  // Function to update operator status
+  const updateOperatorStatus = (id: string, status: 'active' | 'inactive'): boolean => {
+    try {
+      setOperators(prev => prev.map(operator => 
+        operator.id === id 
+          ? { 
+              ...operator, 
+              status, 
+              lastActive: status === 'active' ? new Date().toISOString() : operator.lastActive 
+            } 
+          : operator
+      ));
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
+
+  // Function to update operator's assigned ticket count
+  const updateOperatorTicketCount = (id: string, change: number): boolean => {
+    try {
+      setOperators(prev => prev.map(operator => 
+        operator.id === id 
+          ? { 
+              ...operator, 
+              assignedTickets: Math.max(0, operator.assignedTickets + change)
+            } 
+          : operator
+      ));
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
+
+  // Function to remove a helpdesk operator
+  const removeHelpdeskOperator = (id: string): boolean => {
+    try {
+      // Check if operator has assigned tickets
+      const operator = operators.find(op => op.id === id);
+      if (operator && operator.assignedTickets > 0) {
+        // Reassign tickets to other operators
+        setTickets(prev => prev.map(ticket => {
+          if (ticket.assignedTo === id) {
+            const nextOperator = operators
+              .filter(op => op.id !== id && op.status === 'active')
+              .sort((a, b) => a.assignedTickets - b.assignedTickets)[0];
+            
+            if (nextOperator) {
+              updateOperatorTicketCount(nextOperator.id, 1);
+              return { ...ticket, assignedTo: nextOperator.id };
+            }
+            
+            return { ...ticket, assignedTo: null };
+          }
+          return ticket;
+        }));
+      }
+      
+      setOperators(prev => prev.filter(operator => operator.id !== id));
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
+
+  // Function to reassign tickets among operators
+  const balanceTickets = (): boolean => {
+    try {
+      const activeOperators = operators.filter(op => op.status === 'active');
+      if (activeOperators.length === 0) return false;
+      
+      // Reset all operator ticket counts
+      setOperators(prev => prev.map(op => ({ ...op, assignedTickets: 0 })));
+      
+      // Get all tickets that need assignment
+      const ticketsToAssign = tickets.filter(t => t.status !== 'closed');
+      
+      // Assign tickets evenly
+      const updatedTickets = [...tickets];
+      let currentOperatorIndex = 0;
+      
+      for (let i = 0; i < ticketsToAssign.length; i++) {
+        const ticketIndex = tickets.findIndex(t => t.id === ticketsToAssign[i].id);
+        if (ticketIndex >= 0) {
+          const assignedOperator = activeOperators[currentOperatorIndex];
+          updatedTickets[ticketIndex] = { 
+            ...updatedTickets[ticketIndex], 
+            assignedTo: assignedOperator.id 
+          };
+          
+          // Update operator's ticket count
+          const operatorIndex = operators.findIndex(op => op.id === assignedOperator.id);
+          if (operatorIndex >= 0) {
+            setOperators(prev => {
+              const newOperators = [...prev];
+              newOperators[operatorIndex] = {
+                ...newOperators[operatorIndex],
+                assignedTickets: newOperators[operatorIndex].assignedTickets + 1
+              };
+              return newOperators;
+            });
+          }
+          
+          // Move to next operator (round-robin)
+          currentOperatorIndex = (currentOperatorIndex + 1) % activeOperators.length;
+        }
+      }
+      
+      setTickets(updatedTickets);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
+
+  // Function to manually assign a ticket to an operator
+  const assignTicket = (ticketId: string, operatorId: string): boolean => {
+    try {
+      // Get current assignment
+      const ticket = tickets.find(t => t.id === ticketId);
+      if (!ticket) return false;
+      
+      // Decrement count for previous operator if exists
+      if (ticket.assignedTo) {
+        updateOperatorTicketCount(ticket.assignedTo, -1);
+      }
+      
+      // Update ticket assignment
+      setTickets(prev => prev.map(ticket => 
+        ticket.id === ticketId 
+          ? { ...ticket, assignedTo: operatorId }
+          : ticket
+      ));
+      
+      // Increment count for new operator
+      updateOperatorTicketCount(operatorId, 1);
+      
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
+
   return { 
     stats, 
     loading, 
@@ -678,6 +889,13 @@ export const useRegistrations = () => {
     updateGroup,
     deleteGroup,
     applicants,
-    updateUserRole
+    updateUserRole,
+    getHelpdeskOperators,
+    addHelpdeskOperator,
+    updateOperatorStatus,
+    removeHelpdeskOperator,
+    balanceTickets,
+    assignTicket,
+    operators
   };
 };

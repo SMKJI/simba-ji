@@ -1,208 +1,161 @@
-import { useState } from 'react';
-import { 
-  HelpdeskTicket as TicketType, 
-  TicketMessage, 
-  useRegistrations 
-} from '@/hooks/useRegistrations';
-import { formatDistanceToNow } from 'date-fns';
-import { id } from 'date-fns/locale';
-import { MessageCircle, Send, User } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/hooks/use-toast';
 
-export interface HelpdeskTicketProps {
-  ticket: TicketType;
+import { useState } from 'react';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { MessageSquare, Send, User } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useRegistrations, HelpdeskTicket } from '@/hooks/useRegistrations';
+
+interface HelpdeskTicketProps {
+  ticket: HelpdeskTicket;
   onClose: () => void;
 }
 
-const HelpdeskTicket = ({ ticket, onClose }: HelpdeskTicketProps) => {
-  const [message, setMessage] = useState('');
-  const [sending, setSending] = useState(false);
-  const { currentUser, addTicketMessage, updateTicketStatus } = useRegistrations();
-  const { toast } = useToast();
+const HelpdeskTicketComponent = ({ ticket, onClose }: HelpdeskTicketProps) => {
+  const [newMessage, setNewMessage] = useState('');
+  const { addTicketMessage, updateTicketStatus, currentUser, getHelpdeskOperators } = useRegistrations();
+  const operators = getHelpdeskOperators();
   
-  const handleSendMessage = async () => {
-    if (!message.trim()) return;
+  const handleAddMessage = () => {
+    if (newMessage.trim() === '') return;
     
-    setSending(true);
-    const result = addTicketMessage(ticket.id, message.trim());
-    setSending(false);
-    
-    if (result) {
-      setMessage('');
-      toast({
-        title: 'Pesan terkirim',
-        description: 'Pesan Anda telah terkirim ke helpdesk',
-      });
-    } else {
-      toast({
-        title: 'Gagal mengirim pesan',
-        description: 'Terjadi kesalahan saat mengirim pesan',
-        variant: 'destructive',
-      });
-    }
+    addTicketMessage(ticket.id, newMessage);
+    setNewMessage('');
   };
   
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'open':
-        return 'bg-blue-100 text-blue-800';
-      case 'in-progress':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'closed':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+      case 'open': return "bg-orange-100 text-orange-800 hover:bg-orange-200";
+      case 'in-progress': return "bg-blue-100 text-blue-800 hover:bg-blue-200";
+      case 'closed': return "bg-green-100 text-green-800 hover:bg-green-200";
+      default: return "bg-gray-100 text-gray-800 hover:bg-gray-200";
     }
   };
   
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'open':
-        return 'Terbuka';
-      case 'in-progress':
-        return 'Diproses';
-      case 'closed':
-        return 'Selesai';
-      default:
-        return status;
-    }
+  const handleStatusChange = (newStatus: 'open' | 'in-progress' | 'closed') => {
+    updateTicketStatus(ticket.id, newStatus);
   };
   
-  const getSenderInitials = (message: TicketMessage) => {
-    if (message.senderRole === 'helpdesk') {
-      return 'HD';
-    } else if (message.senderRole === 'admin') {
-      return 'AD';
-    } else {
-      return 'CM';
-    }
-  };
-  
-  const getSenderName = (message: TicketMessage) => {
-    if (message.senderRole === 'helpdesk') {
-      return 'Helpdesk';
-    } else if (message.senderRole === 'admin') {
-      return 'Admin';
-    } else {
-      return 'Anda';
-    }
-  };
-  
-  const isSender = (senderId: string) => {
-    return currentUser?.id === senderId;
-  };
+  // Get operator name if assigned
+  const assignedOperator = ticket.assignedTo 
+    ? operators.find(op => op.id === ticket.assignedTo) 
+    : null;
 
   return (
-    <Card className="border-0 shadow-lg rounded-xl overflow-hidden h-full flex flex-col">
-      <CardHeader className="bg-primary/5 border-b p-4 sm:p-6">
+    <Card className="mb-4">
+      <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
           <div>
-            <CardTitle className="text-lg sm:text-xl font-semibold text-primary flex items-center">
-              <MessageCircle className="h-5 w-5 mr-2" />
-              {ticket.subject}
-            </CardTitle>
-            <CardDescription className="mt-1">
-              Dibuat {formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true, locale: id })}
-            </CardDescription>
+            <CardTitle className="text-lg font-semibold">{ticket.subject}</CardTitle>
+            <div className="text-sm text-muted-foreground mt-1">
+              {new Date(ticket.createdAt).toLocaleDateString('id-ID', { 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </div>
           </div>
-          <Badge className={getStatusColor(ticket.status)}>
-            {getStatusText(ticket.status)}
-          </Badge>
+          <div className="flex space-x-2">
+            {assignedOperator && (
+              <Badge variant="outline" className="bg-purple-50">
+                Ditangani: {assignedOperator.name}
+              </Badge>
+            )}
+            <Badge 
+              variant="secondary" 
+              className={getStatusColor(ticket.status)}
+            >
+              {ticket.status === 'open' ? 'Terbuka' : 
+               ticket.status === 'in-progress' ? 'Dalam Proses' : 'Selesai'}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
-      
-      <CardContent className="p-4 sm:p-6 overflow-y-auto flex-grow">
-        <div className="space-y-6">
+      <CardContent className="pt-0">
+        <div className="space-y-4 max-h-80 overflow-y-auto px-1">
           {ticket.messages.map((msg) => (
             <div 
               key={msg.id} 
-              className={`flex ${isSender(msg.sender) ? 'justify-end' : 'justify-start'}`}
+              className={`flex ${msg.sender === currentUser?.id ? 'justify-end' : 'justify-start'}`}
             >
-              <div className={`flex ${isSender(msg.sender) ? 'flex-row-reverse' : 'flex-row'} items-start max-w-[80%]`}>
-                <Avatar className={`${isSender(msg.sender) ? 'ml-2' : 'mr-2'} h-8 w-8 bg-primary/20`}>
-                  <AvatarFallback className="text-xs">
-                    {getSenderInitials(msg)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <div className={`p-3 rounded-lg mb-1 ${
-                    isSender(msg.sender) 
-                      ? 'bg-primary text-primary-foreground rounded-tr-none' 
-                      : 'bg-muted rounded-tl-none'
-                  }`}>
-                    {msg.message}
-                  </div>
-                  <div className="flex items-center text-xs text-muted-foreground">
-                    <span>{getSenderName(msg)}</span>
-                    <span className="mx-1">•</span>
-                    <span>{formatDistanceToNow(new Date(msg.timestamp), { addSuffix: true, locale: id })}</span>
-                  </div>
+              <div 
+                className={`max-w-[85%] p-3 rounded-lg ${
+                  msg.sender === currentUser?.id 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'bg-muted'
+                }`}
+              >
+                <div className="flex items-center mb-1">
+                  <Avatar className="h-6 w-6 mr-2">
+                    <AvatarFallback>
+                      {msg.senderRole === 'applicant' ? <User className="h-4 w-4" /> : <MessageSquare className="h-4 w-4" />}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-xs font-medium">
+                    {msg.senderRole === 'applicant' ? 'Calon Murid' : 'Helpdesk'}
+                  </span>
+                  <span className="text-xs ml-2 opacity-70">
+                    {new Date(msg.timestamp).toLocaleTimeString('id-ID', {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </span>
                 </div>
+                <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
               </div>
             </div>
           ))}
         </div>
       </CardContent>
       
-      <Separator />
-      
-      <CardFooter className="p-4 sm:p-6">
-        {ticket.status !== 'closed' ? (
-          <div className="flex flex-col sm:flex-row w-full gap-2">
-            <Textarea 
-              placeholder="Tulis pesan..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              className="flex-grow resize-none"
-              rows={2}
+      {ticket.status !== 'closed' && currentUser?.role !== 'applicant' && (
+        <CardFooter className="flex flex-col space-y-3 pt-0">
+          <div className="w-full flex space-x-2">
+            <Input
+              placeholder="Ketik balasan Anda di sini..."
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              className="flex-1"
+              onKeyPress={(e) => e.key === 'Enter' && handleAddMessage()}
             />
-            <div className="flex sm:flex-col gap-2">
+            <Button onClick={handleAddMessage} size="icon">
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          <div className="flex w-full justify-between">
+            <div className="space-x-2">
               <Button 
-                onClick={handleSendMessage} 
-                disabled={!message.trim() || sending}
-                className="flex-grow sm:w-auto"
+                variant={ticket.status === 'open' ? 'default' : 'outline'} 
+                size="sm"
+                onClick={() => handleStatusChange('open')}
               >
-                {sending ? (
-                  <svg className="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                ) : (
-                  <Send className="h-4 w-4 mr-2" />
-                )}
-                Kirim
+                Terbuka
               </Button>
               <Button 
-                variant="outline" 
-                onClick={onClose}
-                className="flex-grow sm:w-auto"
+                variant={ticket.status === 'in-progress' ? 'default' : 'outline'} 
+                size="sm"
+                onClick={() => handleStatusChange('in-progress')}
               >
-                Tutup
+                Dalam Proses
+              </Button>
+              <Button 
+                variant={ticket.status === 'closed' ? 'default' : 'outline'} 
+                size="sm"
+                onClick={() => handleStatusChange('closed')}
+              >
+                Selesai
               </Button>
             </div>
           </div>
-        ) : (
-          <div className="w-full flex justify-between">
-            <p className="text-sm text-muted-foreground">Tiket ini telah ditutup.</p>
-            <Button variant="outline" onClick={onClose}>Tutup</Button>
-          </div>
-        )}
-      </CardFooter>
+        </CardFooter>
+      )}
     </Card>
   );
 };
 
-export default HelpdeskTicket;
+export default HelpdeskTicketComponent;
