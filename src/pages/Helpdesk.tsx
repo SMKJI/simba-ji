@@ -58,10 +58,8 @@ const Helpdesk = () => {
         <Tabs defaultValue="tickets" className="w-full">
           <TabsList className="mb-4 w-full justify-start">
             <TabsTrigger value="tickets">Tiket Bantuan</TabsTrigger>
-            <TabsTrigger value="allocation">Alokasi Tiket</TabsTrigger>
-            {isAdmin && (
-              <TabsTrigger value="operators">Manajemen Operator</TabsTrigger>
-            )}
+            {isAdmin && <TabsTrigger value="allocation">Alokasi Tiket</TabsTrigger>}
+            {isAdmin && <TabsTrigger value="operators">Manajemen Operator</TabsTrigger>}
           </TabsList>
           
           <TabsContent value="tickets">
@@ -120,9 +118,11 @@ const Helpdesk = () => {
             </div>
           </TabsContent>
           
-          <TabsContent value="allocation">
-            <TicketAllocation />
-          </TabsContent>
+          {isAdmin && (
+            <TabsContent value="allocation">
+              <TicketAllocation />
+            </TabsContent>
+          )}
           
           {isAdmin && (
             <TabsContent value="operators">
