@@ -1,4 +1,3 @@
-
 import { useNavigate } from 'react-router-dom';
 import { Check, AlertCircle, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,14 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRegistrations } from '@/hooks/useRegistrations';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-
 const RegistrationStatus = () => {
   const navigate = useNavigate();
-  const { currentUser, getUserAssignedGroup } = useRegistrations();
+  const {
+    currentUser,
+    getUserAssignedGroup
+  } = useRegistrations();
   const assignedGroup = getUserAssignedGroup();
-  
-  return (
-    <Card className="border-0 shadow-lg rounded-xl overflow-hidden mb-8">
+  return <Card className="border-0 shadow-lg rounded-xl overflow-hidden mb-8">
       <CardHeader className="bg-primary/5 border-b p-6">
         <CardTitle className="text-xl font-semibold text-primary">
           Status Pendaftaran
@@ -50,12 +49,7 @@ const RegistrationStatus = () => {
                 </span>
               </div>
               <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => navigate('/group-detail/2')}
-                  className="flex items-center"
-                >
+                <Button variant="outline" size="sm" onClick={() => navigate('/group-detail/2')} className="flex items-center">
                   <ExternalLink className="mr-1 h-4 w-4" />
                   Lihat Grup
                 </Button>
@@ -67,16 +61,16 @@ const RegistrationStatus = () => {
             <h3 className="font-medium text-primary mb-3">Langkah Berikutnya</h3>
             <ol className="list-decimal list-inside space-y-2 text-gray-700">
               <li className="flex items-start">
-                <span className="ml-2">Unggah dokumen pendaftaran yang diperlukan (Rapor, Ijazah, dll.)</span>
+                <span className="ml-2">Bergabung ke grup WhatApp yang telah disediakan</span>
               </li>
               <li className="flex items-start">
                 <span className="ml-2">Bergabung dengan grup WhatsApp untuk mendapatkan informasi terbaru</span>
               </li>
               <li className="flex items-start">
-                <span className="ml-2">Ikuti tes seleksi pada 15 Juli 2023 (lokasi akan diinformasikan)</span>
+                <span className="ml-2">Lakukan Pendaftaran SPMB di laman resmi Dinas Pendidikan dan Kebudayaan Provinsi Jawa Tengah</span>
               </li>
               <li className="flex items-start">
-                <span className="ml-2">Pantau pengumuman hasil seleksi pada 20 Juli 2023</span>
+                <span className="ml-2">Pantau pengumuman hasil seleksi pada 20 Juli 2025</span>
               </li>
             </ol>
             
@@ -89,8 +83,6 @@ const RegistrationStatus = () => {
           </div>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
-
 export default RegistrationStatus;
