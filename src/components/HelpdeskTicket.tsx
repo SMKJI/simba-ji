@@ -127,31 +127,33 @@ const HelpdeskTicketComponent = ({ ticket, onClose }: HelpdeskTicketProps) => {
             </Button>
           </div>
           
-          <div className="flex w-full justify-between">
-            <div className="space-x-2">
-              <Button 
-                variant={ticket.status === 'open' ? 'default' : 'outline'} 
-                size="sm"
-                onClick={() => handleStatusChange('open')}
-              >
-                Terbuka
-              </Button>
-              <Button 
-                variant={ticket.status === 'in-progress' ? 'default' : 'outline'} 
-                size="sm"
-                onClick={() => handleStatusChange('in-progress')}
-              >
-                Dalam Proses
-              </Button>
-              <Button 
-                variant={ticket.status === 'closed' ? 'default' : 'outline'} 
-                size="sm"
-                onClick={() => handleStatusChange('closed')}
-              >
-                Selesai
-              </Button>
+          {currentUser && currentUser.role !== 'applicant' && (
+            <div className="flex w-full justify-between">
+              <div className="space-x-2">
+                <Button 
+                  variant={ticket.status === 'open' ? 'default' : 'outline'} 
+                  size="sm"
+                  onClick={() => handleStatusChange('open')}
+                >
+                  Terbuka
+                </Button>
+                <Button 
+                  variant={ticket.status === 'in-progress' ? 'default' : 'outline'} 
+                  size="sm"
+                  onClick={() => handleStatusChange('in-progress')}
+                >
+                  Dalam Proses
+                </Button>
+                <Button 
+                  variant={ticket.status === 'closed' ? 'default' : 'outline'} 
+                  size="sm"
+                  onClick={() => handleStatusChange('closed')}
+                >
+                  Selesai
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </CardFooter>
       )}
     </Card>
