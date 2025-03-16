@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, ArrowRight } from 'lucide-react';
@@ -47,10 +48,13 @@ Jujur, Inovatif, berdaya saing tinggi di dunia kerja dan wirausaha.&quot;</p>
               <Card className="border-0 shadow-md h-full">
                 <CardContent className="p-6">
                   <ul className="list-disc pl-5 text-gray-600 space-y-2">
-                    <li>Menyelenggarakan pendidikan kejuruan yang berkualitas sesuai dengan kebutuhan dunia kerja</li>
-                    <li>Membekali siswa dengan keterampilan, pengetahuan, dan sikap professional</li>
-                    <li>Mengembangkan karakter dan kepribadian siswa yang berdasarkan nilai-nilai luhur</li>
-                    <li>Menjalin kerjasama dengan dunia usaha dan industri</li>
+                    <li>Membangun karakter mulia dengan mengintegrasikan pendidikan karakter dalam kurikulum, sehingga peserta didik memiliki karakter akhlakul karimah.</li>
+                    <li>Meningkatkan kompetensi kejuruan melalui pembelajaran berbasis praktik dan penguatan kerja sama dengan dunia industri agar lulusan memiliki keahlian teknis sesuai kebutuhan pasar kerja.</li>
+                    <li>Mengembangkan sikap energik dengan menciptakan lingkungan belajar yang dinamis, mendukung semangat, dan mendorong motivasi belajar tinggi bagi seluruh peserta didik.</li>
+                    <li>Mendorong kemampuan bemalar / berpikir kritis melalui kegiatan akademik dan non-akademik yang membangun pola pikir analitis serta pemecahan masalah yang efektif.</li>
+                    <li>Menumbuhkan nilai-nilai kejujuran dan etika kerja dalam setiap kegiatan pembelajaran dan aktivitas sekolah untuk membentuk karakter peserta didik yang berintegritas dan bertanggung jawab.</li>
+                    <li>Mendorong inovasi dibidang kejuruan dengan mendorong kreativitas peserta didik dan pengembangan produk atau proyek yang bermanfaat serta relevan dengan perkembangan teknologi.</li>
+                    <li>Menyiapkan peserta didik untuk dunia kerja dan wirausaha melalui program Praktik Kerja Industri (PKL), pelatihan kewirausahaan, serta pembekalan soft skills yang diperlukan dalam dunia profesional.</li>
                   </ul>
                 </CardContent>
               </Card>
