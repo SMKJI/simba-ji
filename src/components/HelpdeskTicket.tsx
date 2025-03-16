@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -64,6 +65,9 @@ const HelpdeskTicketComponent = ({ ticket, onClose }: HelpdeskTicketProps) => {
   const assignedOperator = ticket.assignedTo 
     ? operators.find(op => op.id === ticket.assignedTo) 
     : null;
+
+  // The key fix: Explicitly cast the ticket.status to the union type to help TypeScript understand our comparison
+  const isTicketClosed = (ticket.status as 'open' | 'in-progress' | 'closed') === 'closed';
 
   return (
     <Card className="mb-4">
@@ -144,7 +148,7 @@ const HelpdeskTicketComponent = ({ ticket, onClose }: HelpdeskTicketProps) => {
         </div>
       </CardContent>
       
-      {ticket.status !== 'closed' && (
+      {!isTicketClosed && (
         <CardFooter className="flex flex-col space-y-3 pt-0">
           <div className="w-full flex space-x-2">
             <Input
