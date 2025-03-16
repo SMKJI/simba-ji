@@ -7,12 +7,13 @@ import GroupInfoCard from '@/components/groups/GroupInfoCard';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useRegistrations } from '@/hooks/useRegistrations';
+import { Group } from '@/hooks/useRegistrations.d'; // Import the correct type
 
 const GroupDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { stats } = useRegistrations();
-  const [group, setGroup] = useState(null);
+  const [group, setGroup] = useState<Group | null>(null);
 
   useEffect(() => {
     if (id && stats.groups) {

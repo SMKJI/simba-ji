@@ -26,7 +26,7 @@ const Admin = () => {
           </p>
         </div>
 
-        <StatCards stats={stats} applicants={applicants} />
+        <StatCards stats={stats} />
 
         <Tabs defaultValue="applicants">
           <TabsList className="mb-4">
@@ -38,10 +38,7 @@ const Admin = () => {
           <TabsContent value="applicants">
             <ApplicantsTable 
               applicants={applicants} 
-              updateApplicant={updateApplicant}
-              deleteApplicant={deleteApplicant}
-              resetUserPassword={resetUserPassword}
-              updateUserRole={updateUserRole}
+              onPromoteToHelpdesk={updateUserRole}
             />
           </TabsContent>
           
@@ -50,7 +47,7 @@ const Admin = () => {
           </TabsContent>
           
           <TabsContent value="stats">
-            <StatsPanel stats={stats} applicants={applicants} />
+            <StatsPanel stats={stats} />
           </TabsContent>
         </Tabs>
       </div>

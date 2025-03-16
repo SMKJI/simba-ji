@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Search } from 'lucide-react';
-import { useRegistrations, HelpdeskTicket } from '@/hooks/useRegistrations';
-import HelpdeskTicket from '@/components/HelpdeskTicket';
+import { useRegistrations } from '@/hooks/useRegistrations';
+import HelpdeskTicketComponent from '@/components/HelpdeskTicket';
+import type { HelpdeskTicket } from '@/hooks/useRegistrations';
 
 const Helpdesk = () => {
   const { getUserTickets, updateTicketStatus } = useRegistrations();
@@ -87,9 +88,10 @@ const Helpdesk = () => {
                 </Card>
               ) : (
                 filteredTickets.map(ticket => (
-                  <HelpdeskTicket 
+                  <HelpdeskTicketComponent 
                     key={ticket.id} 
                     ticket={ticket}
+                    onClose={() => {}} // Add a placeholder function for now
                     updateStatus={updateTicketStatus}
                   />
                 ))

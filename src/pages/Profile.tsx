@@ -19,7 +19,7 @@ const Profile = () => {
 
         <div className="grid md:grid-cols-3 gap-8">
           <div className="col-span-2">
-            <ProfileForm user={currentUser} />
+            <ProfileForm currentUser={currentUser} />
           </div>
           <div>
             <RegistrationStatus />

@@ -2,9 +2,11 @@
 import { Users, UserCheck } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { StatsData } from '@/hooks/useRegistrations';
+import { Applicant } from '@/components/admin/ApplicantsTable';
 
 interface StatCardsProps {
   stats: StatsData;
+  applicants?: Applicant[]; // Made optional so it doesn't break existing usage
 }
 
 const StatCards = ({ stats }: StatCardsProps) => {
