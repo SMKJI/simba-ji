@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -62,7 +61,6 @@ const HelpdeskTicketComponent = ({ ticket, onClose }: HelpdeskTicketProps) => {
     updateTicketPriority(ticket.id, newPriority);
   };
   
-  // Get operator name if assigned
   const assignedOperator = ticket.assignedTo 
     ? operators.find(op => op.id === ticket.assignedTo) 
     : null;
@@ -146,7 +144,6 @@ const HelpdeskTicketComponent = ({ ticket, onClose }: HelpdeskTicketProps) => {
         </div>
       </CardContent>
       
-      {/* Render card footer with input only if ticket is not closed */}
       {ticket.status !== 'closed' && (
         <CardFooter className="flex flex-col space-y-3 pt-0">
           <div className="w-full flex space-x-2">
@@ -162,7 +159,6 @@ const HelpdeskTicketComponent = ({ ticket, onClose }: HelpdeskTicketProps) => {
             </Button>
           </div>
           
-          {/* Only show status buttons and priority selector for helpdesk or admin users */}
           {currentUser && currentUser.role !== 'applicant' && (
             <div className="flex w-full justify-between flex-wrap gap-y-2">
               <div className="space-x-2">
