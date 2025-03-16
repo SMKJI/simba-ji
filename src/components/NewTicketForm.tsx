@@ -12,20 +12,47 @@ import {
   CardHeader, 
   CardTitle 
 } from '@/components/ui/card';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, AlertTriangle, HelpCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface NewTicketFormProps {
   onClose: () => void;
   onTicketCreated: () => void;
 }
 
+const COMMON_ISSUES = [
+  { value: "Kendala Pendaftaran", label: "Kendala Pendaftaran" },
+  { value: "Masalah Grup WhatsApp", label: "Masalah Grup WhatsApp" },
+  { value: "Pertanyaan Program Studi", label: "Pertanyaan Program Studi" },
+  { value: "Masalah Teknis Website", label: "Masalah Teknis Website" },
+  { value: "Informasi Biaya", label: "Informasi Biaya" },
+  { value: "Pertanyaan Jadwal", label: "Pertanyaan Jadwal" },
+  { value: "Lainnya", label: "Lainnya" }
+];
+
 const NewTicketForm = ({ onClose, onTicketCreated }: NewTicketFormProps) => {
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [issueType, setIssueType] = useState('');
   const { createTicket } = useRegistrations();
   const { toast } = useToast();
+
+  const handleSelectIssue = (value: string) => {
+    setIssueType(value);
+    if (value !== "Lainnya") {
+      setSubject(value);
+    } else {
+      setSubject('');
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,17 +100,37 @@ const NewTicketForm = ({ onClose, onTicketCreated }: NewTicketFormProps) => {
       <form onSubmit={handleSubmit}>
         <CardContent className="p-6 space-y-4">
           <div className="space-y-2">
-            <label htmlFor="subject" className="text-sm font-medium">
-              Subjek
+            <label htmlFor="issueType" className="text-sm font-medium">
+              Jenis Masalah
             </label>
-            <Input
-              id="subject"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder="Misalnya: Kendala pendaftaran, Pertanyaan jurusan, dll."
-              required
-            />
+            <Select onValueChange={handleSelectIssue}>
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih jenis masalah" />
+              </SelectTrigger>
+              <SelectContent>
+                {COMMON_ISSUES.map((issue) => (
+                  <SelectItem key={issue.value} value={issue.value}>
+                    {issue.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+          
+          {issueType === "Lainnya" && (
+            <div className="space-y-2">
+              <label htmlFor="subject" className="text-sm font-medium">
+                Subjek
+              </label>
+              <Input
+                id="subject"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="Tuliskan subjek tiket Anda"
+                required
+              />
+            </div>
+          )}
           
           <div className="space-y-2">
             <label htmlFor="message" className="text-sm font-medium">
@@ -97,6 +144,14 @@ const NewTicketForm = ({ onClose, onTicketCreated }: NewTicketFormProps) => {
               rows={5}
               required
             />
+          </div>
+          
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3">
+            <HelpCircle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-amber-800">
+              <p className="font-medium mb-1">Tips:</p>
+              <p>Berikan informasi selengkap mungkin tentang masalah yang Anda alami untuk membantu tim kami memberikan solusi dengan cepat.</p>
+            </div>
           </div>
         </CardContent>
         

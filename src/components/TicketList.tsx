@@ -1,12 +1,12 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   HelpdeskTicket as TicketType, 
   useRegistrations 
 } from '@/hooks/useRegistrations';
 import { formatDistanceToNow } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { MessageCircle, Plus } from 'lucide-react';
+import { MessageCircle, Plus, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
   Card, 
@@ -20,11 +20,33 @@ import NewTicketForm from './NewTicketForm';
 import HelpdeskTicket from './HelpdeskTicket';
 
 const TicketList = () => {
-  const { getUserTickets } = useRegistrations();
+  const { getUserTickets, hasRole } = useRegistrations();
   const [showNewTicketForm, setShowNewTicketForm] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<TicketType | null>(null);
+  const [tickets, setTickets] = useState<TicketType[]>([]);
+  const [filter, setFilter] = useState<'all' | 'open' | 'in-progress' | 'closed'>('all');
   
-  const tickets = getUserTickets();
+  useEffect(() => {
+    // Update tickets whenever getUserTickets changes
+    setTickets(getUserTickets());
+  }, [getUserTickets]);
+  
+  const filteredTickets = filter === 'all' 
+    ? tickets 
+    : tickets.filter(ticket => ticket.status === filter);
+  
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'open':
+        return <AlertCircle className="h-4 w-4" />;
+      case 'in-progress':
+        return <Clock className="h-4 w-4" />;
+      case 'closed':
+        return <CheckCircle2 className="h-4 w-4" />;
+      default:
+        return <MessageCircle className="h-4 w-4" />;
+    }
+  };
   
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -55,6 +77,7 @@ const TicketList = () => {
   const refreshTickets = () => {
     // In a real app, this would fetch tickets from the server
     // For now, the state is handled in the useRegistrations hook
+    setTickets(getUserTickets());
     setShowNewTicketForm(false);
   };
   
@@ -62,7 +85,10 @@ const TicketList = () => {
     return (
       <HelpdeskTicket 
         ticket={selectedTicket} 
-        onClose={() => setSelectedTicket(null)} 
+        onClose={() => {
+          setSelectedTicket(null);
+          refreshTickets();
+        }} 
       />
     );
   }
@@ -73,6 +99,15 @@ const TicketList = () => {
         onClose={() => setShowNewTicketForm(false)} 
         onTicketCreated={refreshTickets} 
       />
+    );
+  }
+
+  // If no tickets are available yet (before useEffect runs)
+  if (!tickets) {
+    return (
+      <div className="flex justify-center items-center py-8">
+        <MessageCircle className="h-6 w-6 animate-pulse text-primary" />
+      </div>
     );
   }
 
@@ -96,9 +131,9 @@ const TicketList = () => {
       </CardHeader>
       
       <CardContent className="p-6">
-        {tickets.length > 0 ? (
+        {filteredTickets.length > 0 ? (
           <div className="space-y-4">
-            {tickets.map((ticket) => (
+            {filteredTickets.map((ticket) => (
               <div 
                 key={ticket.id} 
                 className="p-4 border rounded-lg cursor-pointer hover:bg-muted/30 transition-colors"
@@ -114,8 +149,9 @@ const TicketList = () => {
                       </p>
                     </div>
                   </div>
-                  <Badge className={getStatusColor(ticket.status)}>
-                    {getStatusText(ticket.status)}
+                  <Badge className={`flex items-center gap-1 ${getStatusColor(ticket.status)}`}>
+                    {getStatusIcon(ticket.status)}
+                    <span>{getStatusText(ticket.status)}</span>
                   </Badge>
                 </div>
                 <p className="text-sm text-gray-600 pl-7 line-clamp-2">

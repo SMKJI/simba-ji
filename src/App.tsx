@@ -1,5 +1,6 @@
+
 import { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import Index from '@/pages/Index';
 import About from '@/pages/About';
@@ -34,8 +35,8 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           
-          {/* Protected routes */}
-          <Route element={<ProtectedRoute allowedRoles={['applicant']} />}>
+          {/* Protected routes for applicants */}
+          <Route element={<ProtectedRoute allowedRoles={['applicant']}><Outlet /></ProtectedRoute>}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/group-detail/:id" element={<GroupDetail />} />
@@ -43,15 +44,18 @@ const App = () => {
             <Route path="/helpdesk-siswa" element={<StudentHelpdesk />} />
           </Route>
           
-          <Route element={<ProtectedRoute allowedRoles={['helpdesk', 'admin']} />}>
+          {/* Protected routes for helpdesk and admin */}
+          <Route element={<ProtectedRoute allowedRoles={['helpdesk', 'admin']}><Outlet /></ProtectedRoute>}>
             <Route path="/helpdesk" element={<Helpdesk />} />
           </Route>
           
-          <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+          {/* Protected routes for admin only */}
+          <Route element={<ProtectedRoute allowedRoles={['admin']}><Outlet /></ProtectedRoute>}>
             <Route path="/admin" element={<Admin />} />
           </Route>
           
-          <Route element={<ProtectedRoute allowedRoles={['content', 'admin']} />}>
+          {/* Protected routes for content and admin */}
+          <Route element={<ProtectedRoute allowedRoles={['content', 'admin']}><Outlet /></ProtectedRoute>}>
             <Route path="/content" element={<Content />} />
           </Route>
           
