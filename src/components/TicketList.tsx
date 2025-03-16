@@ -6,7 +6,7 @@ import {
 } from '@/hooks/useRegistrations';
 import { formatDistanceToNow } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { MessageCircle, Plus, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { MessageCircle, Plus, CheckCircle2, Clock, AlertCircle, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
   Card, 
@@ -58,6 +58,32 @@ const TicketList = () => {
         return 'bg-green-100 text-green-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return 'bg-red-100 text-red-800';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'low':
+        return 'bg-green-100 text-green-800';
+      default:
+        return '';
+    }
+  };
+
+  const getPriorityIcon = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return <AlertTriangle className="h-3 w-3 mr-1" />;
+      case 'medium':
+        return <Clock className="h-3 w-3 mr-1" />;
+      case 'low':
+        return <CheckCircle2 className="h-3 w-3 mr-1" />;
+      default:
+        return null;
     }
   };
   
@@ -149,10 +175,21 @@ const TicketList = () => {
                       </p>
                     </div>
                   </div>
-                  <Badge className={`flex items-center gap-1 ${getStatusColor(ticket.status)}`}>
-                    {getStatusIcon(ticket.status)}
-                    <span>{getStatusText(ticket.status)}</span>
-                  </Badge>
+                  <div className="flex space-x-2">
+                    {ticket.priority && (
+                      <Badge className={`flex items-center gap-1 ${getPriorityColor(ticket.priority)}`}>
+                        {getPriorityIcon(ticket.priority)}
+                        <span>
+                          {ticket.priority === 'high' ? 'Tinggi' : 
+                          ticket.priority === 'medium' ? 'Menengah' : 'Rendah'}
+                        </span>
+                      </Badge>
+                    )}
+                    <Badge className={`flex items-center gap-1 ${getStatusColor(ticket.status)}`}>
+                      {getStatusIcon(ticket.status)}
+                      <span>{getStatusText(ticket.status)}</span>
+                    </Badge>
+                  </div>
                 </div>
                 <p className="text-sm text-gray-600 pl-7 line-clamp-2">
                   {ticket.messages[ticket.messages.length - 1].message}

@@ -5,20 +5,27 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search } from 'lucide-react';
+import { Search, Filter } from 'lucide-react';
 import { useRegistrations } from '@/hooks/useRegistrations';
 import HelpdeskTicketComponent from '@/components/HelpdeskTicket';
 import type { HelpdeskTicket } from '@/hooks/useRegistrations';
 import OperatorManagement from '@/components/helpdesk/OperatorManagement';
 import TicketAllocation from '@/components/helpdesk/TicketAllocation';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const Helpdesk = () => {
-  const { getUserTickets, updateTicketStatus, hasRole } = useRegistrations();
+  const { getUserTickets, hasRole, getHelpdeskOperators } = useRegistrations();
   const [tickets, setTickets] = useState<HelpdeskTicket[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filter, setFilter] = useState<'all' | 'open' | 'in-progress' | 'closed'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'in-progress' | 'closed'>('all');
+  const [priorityFilter, setPriorityFilter] = useState<'all' | 'low' | 'medium' | 'high'>('all');
+  const [operatorFilter, setOperatorFilter] = useState('all');
+  const [showFilters, setShowFilters] = useState(false);
 
   const isAdmin = hasRole('admin');
+  const operators = getHelpdeskOperators();
 
   useEffect(() => {
     // Get all tickets
@@ -26,23 +33,36 @@ const Helpdesk = () => {
     setTickets(allTickets);
   }, [getUserTickets]);
 
-  // Filter tickets based on search term and status filter
+  // Filter tickets based on search term, status, priority, and operator filters
   const filteredTickets = tickets.filter(ticket => {
     const matchesSearch = ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          ticket.messages.some(msg => msg.message.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesFilter = filter === 'all' || ticket.status === filter;
+    const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter;
+    const matchesPriority = priorityFilter === 'all' || ticket.priority === priorityFilter;
+    const matchesOperator = operatorFilter === 'all' || ticket.assignedTo === operatorFilter;
     
-    return matchesSearch && matchesFilter;
+    return matchesSearch && matchesStatus && matchesPriority && matchesOperator;
   });
 
   const getStatusCount = (status: 'open' | 'in-progress' | 'closed') => {
     return tickets.filter(ticket => ticket.status === status).length;
   };
 
+  const getPriorityCount = (priority: 'low' | 'medium' | 'high') => {
+    return tickets.filter(ticket => ticket.priority === priority).length;
+  };
+
   // Handle closing a ticket modal (empty function for now)
   const handleTicketClose = () => {
     // This would normally close a ticket modal or perform some action
+  };
+
+  const resetFilters = () => {
+    setStatusFilter('all');
+    setPriorityFilter('all');
+    setOperatorFilter('all');
+    setSearchTerm('');
   };
 
   return (
@@ -74,10 +94,71 @@ const Helpdesk = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
+              <Popover open={showFilters} onOpenChange={setShowFilters}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="flex items-center gap-2">
+                    <Filter className="h-4 w-4" />
+                    <span>Filter</span>
+                    {(priorityFilter !== 'all' || operatorFilter !== 'all') && (
+                      <Badge variant="secondary" className="ml-1">!</Badge>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80">
+                  <div className="space-y-4">
+                    <h3 className="font-medium text-sm">Filter Tiket</h3>
+                    <div className="space-y-2">
+                      <label className="text-sm" htmlFor="priority-filter">Filter Prioritas</label>
+                      <Select 
+                        value={priorityFilter} 
+                        onValueChange={(value) => setPriorityFilter(value as any)}
+                      >
+                        <SelectTrigger id="priority-filter">
+                          <SelectValue placeholder="Semua prioritas" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Semua prioritas</SelectItem>
+                          <SelectItem value="high">Prioritas Tinggi ({getPriorityCount('high')})</SelectItem>
+                          <SelectItem value="medium">Prioritas Menengah ({getPriorityCount('medium')})</SelectItem>
+                          <SelectItem value="low">Prioritas Rendah ({getPriorityCount('low')})</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {hasRole(['admin', 'helpdesk']) && (
+                      <div className="space-y-2">
+                        <label className="text-sm" htmlFor="operator-filter">Filter Operator</label>
+                        <Select 
+                          value={operatorFilter} 
+                          onValueChange={setOperatorFilter}
+                        >
+                          <SelectTrigger id="operator-filter">
+                            <SelectValue placeholder="Semua operator" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Semua operator</SelectItem>
+                            {operators.map(op => (
+                              <SelectItem key={op.id} value={op.id}>{op.name}</SelectItem>
+                            ))}
+                            <SelectItem value="unassigned">Belum ditetapkan</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                    <div className="flex justify-between pt-2">
+                      <Button variant="outline" size="sm" onClick={resetFilters}>
+                        Reset Filter
+                      </Button>
+                      <Button size="sm" onClick={() => setShowFilters(false)}>
+                        Terapkan
+                      </Button>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div className="overflow-x-auto">
-              <Tabs defaultValue="all" onValueChange={(value) => setFilter(value as any)}>
+              <Tabs defaultValue="all" onValueChange={(value) => setStatusFilter(value as any)}>
                 <TabsList className="mb-4 flex flex-wrap">
                   <TabsTrigger value="all" className="text-xs sm:text-sm">
                     Semua
@@ -97,7 +178,7 @@ const Helpdesk = () => {
                   </TabsTrigger>
                 </TabsList>
                 
-                <TabsContent value={filter}>
+                <TabsContent value={statusFilter}>
                   <div className="space-y-4">
                     {filteredTickets.length === 0 ? (
                       <Card className="p-6 sm:p-8 text-center">

@@ -4,9 +4,11 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, Send, User } from 'lucide-react';
+import { MessageSquare, Send, User, AlertTriangle, Clock, CheckCircle2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRegistrations, HelpdeskTicket } from '@/hooks/useRegistrations';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 interface HelpdeskTicketProps {
   ticket: HelpdeskTicket;
@@ -15,7 +17,7 @@ interface HelpdeskTicketProps {
 
 const HelpdeskTicketComponent = ({ ticket, onClose }: HelpdeskTicketProps) => {
   const [newMessage, setNewMessage] = useState('');
-  const { addTicketMessage, updateTicketStatus, currentUser, getHelpdeskOperators } = useRegistrations();
+  const { addTicketMessage, updateTicketStatus, updateTicketPriority, currentUser, getHelpdeskOperators } = useRegistrations();
   const operators = getHelpdeskOperators();
   
   const handleAddMessage = () => {
@@ -33,9 +35,31 @@ const HelpdeskTicketComponent = ({ ticket, onClose }: HelpdeskTicketProps) => {
       default: return "bg-gray-100 text-gray-800 hover:bg-gray-200";
     }
   };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return "bg-red-100 text-red-800";
+      case 'medium': return "bg-yellow-100 text-yellow-800";
+      case 'low': return "bg-green-100 text-green-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getPriorityIcon = (priority: string) => {
+    switch (priority) {
+      case 'high': return <AlertTriangle className="h-3 w-3 mr-1" />;
+      case 'medium': return <Clock className="h-3 w-3 mr-1" />;
+      case 'low': return <CheckCircle2 className="h-3 w-3 mr-1" />;
+      default: return null;
+    }
+  };
   
   const handleStatusChange = (newStatus: 'open' | 'in-progress' | 'closed') => {
     updateTicketStatus(ticket.id, newStatus);
+  };
+
+  const handlePriorityChange = (newPriority: 'low' | 'medium' | 'high') => {
+    updateTicketPriority(ticket.id, newPriority);
   };
   
   // Get operator name if assigned
@@ -60,6 +84,16 @@ const HelpdeskTicketComponent = ({ ticket, onClose }: HelpdeskTicketProps) => {
             </div>
           </div>
           <div className="flex space-x-2">
+            {ticket.priority && (
+              <Badge 
+                variant="outline" 
+                className={getPriorityColor(ticket.priority)}
+              >
+                {getPriorityIcon(ticket.priority)}
+                {ticket.priority === 'high' ? 'Prioritas Tinggi' : 
+                 ticket.priority === 'medium' ? 'Prioritas Menengah' : 'Prioritas Rendah'}
+              </Badge>
+            )}
             {assignedOperator && (
               <Badge variant="outline" className="bg-purple-50">
                 Ditangani: {assignedOperator.name}
@@ -128,9 +162,9 @@ const HelpdeskTicketComponent = ({ ticket, onClose }: HelpdeskTicketProps) => {
             </Button>
           </div>
           
-          {/* Only show status buttons for helpdesk or admin users */}
+          {/* Only show status buttons and priority selector for helpdesk or admin users */}
           {currentUser && currentUser.role !== 'applicant' && (
-            <div className="flex w-full justify-between">
+            <div className="flex w-full justify-between flex-wrap gap-y-2">
               <div className="space-x-2">
                 <Button 
                   variant={ticket.status === 'open' ? 'default' : 'outline'} 
@@ -153,6 +187,23 @@ const HelpdeskTicketComponent = ({ ticket, onClose }: HelpdeskTicketProps) => {
                 >
                   Selesai
                 </Button>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Label htmlFor="priority-select" className="text-sm">Prioritas:</Label>
+                <Select 
+                  value={ticket.priority || 'low'} 
+                  onValueChange={(value) => handlePriorityChange(value as 'low' | 'medium' | 'high')}
+                >
+                  <SelectTrigger id="priority-select" className="w-[140px]">
+                    <SelectValue placeholder="Pilih prioritas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Rendah</SelectItem>
+                    <SelectItem value="medium">Menengah</SelectItem>
+                    <SelectItem value="high">Tinggi</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           )}

@@ -66,12 +66,13 @@ export interface Applicant {
   registeredAt: string;
 }
 
-// Define helpdesk ticket interface
+// Define helpdesk ticket interface with priority field
 export interface HelpdeskTicket {
   id: string;
   userId: string;
   subject: string;
   status: 'open' | 'in-progress' | 'closed';
+  priority?: 'low' | 'medium' | 'high';
   createdAt: string;
   lastUpdated: string;
   assignedTo?: string | null;
@@ -136,13 +137,14 @@ const MOCK_OPERATORS: HelpdeskOperator[] = [
   },
 ];
 
-// Mock tickets
+// Mock tickets with priority
 const MOCK_TICKETS: HelpdeskTicket[] = [
   {
     id: "ticket-1",
     userId: "1",
     subject: "Kesulitan bergabung grup WhatsApp",
     status: "open",
+    priority: "medium",
     createdAt: "2024-07-05T08:30:00Z",
     lastUpdated: "2024-07-05T08:30:00Z",
     assignedTo: "2",
@@ -451,6 +453,7 @@ export const useRegistrations = () => {
       userId: currentUser.id,
       subject,
       status: 'open',
+      priority: 'low', // Default priority is low
       createdAt: new Date().toISOString(),
       lastUpdated: new Date().toISOString(),
       assignedTo: operatorWithLeastTickets?.id || null,
@@ -537,6 +540,28 @@ export const useRegistrations = () => {
           return {
             ...ticket,
             status,
+            lastUpdated: new Date().toISOString()
+          };
+        }
+        return ticket;
+      });
+    });
+    
+    return true;
+  };
+
+  // NEW: Function to update ticket priority
+  const updateTicketPriority = (ticketId: string, priority: 'low' | 'medium' | 'high') => {
+    if (!currentUser || (currentUser.role !== 'helpdesk' && currentUser.role !== 'admin')) {
+      return false;
+    }
+    
+    setTickets(prevTickets => {
+      return prevTickets.map(ticket => {
+        if (ticket.id === ticketId) {
+          return {
+            ...ticket,
+            priority,
             lastUpdated: new Date().toISOString()
           };
         }
@@ -880,6 +905,7 @@ export const useRegistrations = () => {
     addTicketMessage,
     getUserTickets,
     updateTicketStatus,
+    updateTicketPriority,
     tickets,
     getApplicants,
     updateApplicant,
