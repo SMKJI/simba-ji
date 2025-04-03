@@ -58,6 +58,8 @@ const GroupDetailCard = ({ group }: GroupDetailCardProps) => {
     }
   };
 
+  const memberCount = group.member_count || group.count || 0;
+
   return (
     <Card className="border-0 shadow-lg rounded-xl overflow-hidden mb-8">
       <CardHeader className="bg-primary/5 border-b p-6">
@@ -81,7 +83,7 @@ const GroupDetailCard = ({ group }: GroupDetailCardProps) => {
               </div>
             </div>
             <div className="text-sm font-medium">
-              {group.member_count} / {group.capacity}
+              {memberCount} / {group.capacity}
             </div>
           </div>
           
@@ -91,7 +93,7 @@ const GroupDetailCard = ({ group }: GroupDetailCardProps) => {
               <span>{group.isFull ? 'Penuh' : 'Tersedia'}</span>
             </div>
             <Progress 
-              value={(group.member_count / group.capacity) * 100} 
+              value={(memberCount / group.capacity) * 100} 
               className={`h-2 ${group.isFull ? 'bg-secondary/20' : 'bg-primary/20'}`}
             />
           </div>
@@ -103,14 +105,14 @@ const GroupDetailCard = ({ group }: GroupDetailCardProps) => {
             <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2">
               <input
                 type="text"
-                value={group.invite_link || "https://chat.whatsapp.com/example"}
+                value={group.invite_link || group.link || "https://chat.whatsapp.com/example"}
                 readOnly
                 className="flex-1 p-2 border rounded bg-white text-sm w-full"
               />
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => copyToClipboard(group.invite_link || "https://chat.whatsapp.com/example")}
+                onClick={() => copyToClipboard(group.invite_link || group.link || "https://chat.whatsapp.com/example")}
                 className={`${copySuccess ? "bg-green-100 text-green-600" : ""} w-full sm:w-auto`}
               >
                 {copySuccess ? (
@@ -131,7 +133,7 @@ const GroupDetailCard = ({ group }: GroupDetailCardProps) => {
               variant="default"
               size="lg"
               className="w-full sm:w-auto sm:flex-1 bg-green-600 hover:bg-green-700 text-white"
-              onClick={() => window.open(group.invite_link || "https://chat.whatsapp.com/example", '_blank')}
+              onClick={() => window.open(group.invite_link || group.link || "https://chat.whatsapp.com/example", '_blank')}
             >
               <ExternalLink className="h-4 w-4 mr-2" />
               Buka Grup WhatsApp
