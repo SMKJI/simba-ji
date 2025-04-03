@@ -67,7 +67,7 @@ const GroupsManager = ({ groups }: GroupsManagerProps) => {
       return;
     }
 
-    const success = updateGroup(currentGroup.id.toString(), {
+    const success = updateGroup(String(currentGroup.id), {
       name: newGroupName,
       capacity: parseInt(newGroupCapacity),
       link: newGroupLink
@@ -92,7 +92,7 @@ const GroupsManager = ({ groups }: GroupsManagerProps) => {
   const handleDeleteGroup = () => {
     if (!currentGroup) return;
 
-    const success = deleteGroup(currentGroup.id.toString());
+    const success = deleteGroup(String(currentGroup.id));
 
     if (success) {
       toast({

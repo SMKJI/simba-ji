@@ -22,11 +22,14 @@ const GroupDetail = () => {
       if (foundGroup) {
         // Create a new Group object that matches the expected type
         const typedGroup: Group = {
-          ...foundGroup,
+          id: foundGroup.id,
+          name: foundGroup.name,
           description: foundGroup.description || null,
           invite_link: foundGroup.invite_link || foundGroup.link || '',
+          capacity: foundGroup.capacity,
           member_count: foundGroup.member_count || foundGroup.count || 0,
-          is_active: foundGroup.is_active !== undefined ? foundGroup.is_active : true
+          is_active: foundGroup.is_active !== undefined ? foundGroup.is_active : true,
+          isFull: foundGroup.isFull
         };
         setGroup(typedGroup);
       } else {
