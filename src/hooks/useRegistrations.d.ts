@@ -1,70 +1,37 @@
 
-export type UserRole = 'admin' | 'helpdesk' | 'content' | 'applicant';
+import { 
+  User, 
+  UserRole,
+  Group,
+  StatsData,
+  LoginResult,
+  RegistrationResult,
+  HelpdeskOperator,
+  HelpdeskTicket,
+  TicketMessage,
+  TicketCategory,
+  QueueTicket,
+  HelpdeskCounter,
+  DailyCapacity,
+  TicketAttachment
+} from '@/types/supabase';
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  avatarUrl?: string;
-}
-
-export interface Group {
-  id: number;
-  name: string;
-  count: number;
-  capacity: number;
-  isFull: boolean;
-  link?: string;
-}
-
-export interface StatsData {
-  total: number;
-  groups: Group[];
-}
-
-export interface LoginResult {
-  success: boolean;
-  user?: User;
-  error?: string;
-}
-
-export interface RegistrationResult {
-  registrationId: number;
-  assignedGroup: string;
-  groupLink: string;
-  timestamp: string;
-}
-
-export interface HelpdeskOperator {
-  id: string;
-  name: string;
-  email: string;
-  assignedTickets: number;
-  status: 'active' | 'inactive';
-  lastActive: string;
-}
-
-export interface HelpdeskTicket {
-  id: string;
-  userId: string;
-  subject: string;
-  status: 'open' | 'in-progress' | 'closed';
-  priority?: 'low' | 'medium' | 'high';
-  createdAt: string;
-  lastUpdated: string;
-  assignedTo?: string | null;
-  messages: TicketMessage[];
-}
-
-export interface TicketMessage {
-  id: string;
-  ticketId: string;
-  sender: string;
-  senderRole: UserRole;
-  message: string;
-  timestamp: string;
-}
+export type { 
+  User, 
+  UserRole,
+  Group,
+  StatsData,
+  LoginResult,
+  RegistrationResult,
+  HelpdeskOperator,
+  HelpdeskTicket,
+  TicketMessage,
+  TicketCategory,
+  QueueTicket,
+  HelpdeskCounter,
+  DailyCapacity,
+  TicketAttachment
+};
 
 export interface RegistrationsContextType {
   stats: StatsData;
