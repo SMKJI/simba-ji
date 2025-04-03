@@ -15,6 +15,7 @@ import Content from '@/pages/Content';
 import Helpdesk from '@/pages/Helpdesk';
 import StudentHelpdesk from '@/pages/StudentHelpdesk';
 import OfflineHelpdesk from '@/pages/OfflineHelpdesk';
+import QueueDisplay from '@/pages/QueueDisplay';
 import GroupDetail from '@/pages/GroupDetail';
 import Success from '@/pages/Success';
 import NotFound from '@/pages/NotFound';
@@ -32,6 +33,7 @@ const App = () => {
           <Route path="/programs" element={<Programs />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/queue-display" element={<QueueDisplay />} />
           
           {/* Protected routes for applicants */}
           <Route element={<ProtectedRoute allowedRoles={['applicant']}><Outlet /></ProtectedRoute>}>
