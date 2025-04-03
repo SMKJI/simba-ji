@@ -4,7 +4,7 @@ import { ArrowRight, Edit, Trash, Plus, Check, X, ExternalLink } from 'lucide-re
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRegistrations } from '@/hooks/useRegistrations';
-import { Group } from '@/types/supabase'; // Updated import
+import { Group } from '@/types/supabase';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -67,7 +67,7 @@ const GroupsManager = ({ groups }: GroupsManagerProps) => {
       return;
     }
 
-    const success = updateGroup(currentGroup.id, {
+    const success = updateGroup(currentGroup.id.toString(), {
       name: newGroupName,
       capacity: parseInt(newGroupCapacity),
       link: newGroupLink
@@ -92,7 +92,7 @@ const GroupsManager = ({ groups }: GroupsManagerProps) => {
   const handleDeleteGroup = () => {
     if (!currentGroup) return;
 
-    const success = deleteGroup(currentGroup.id);
+    const success = deleteGroup(currentGroup.id.toString());
 
     if (success) {
       toast({

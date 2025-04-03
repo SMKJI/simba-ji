@@ -71,7 +71,7 @@ const Admin = () => {
             </TabsContent>
             
             <TabsContent value="groups">
-              <GroupsManager groups={stats.groups as Group[]} />
+              <GroupsManager groups={stats.groups as unknown as Group[]} />
             </TabsContent>
             
             <TabsContent value="stats">

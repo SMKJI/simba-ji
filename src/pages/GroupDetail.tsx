@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
@@ -17,8 +16,7 @@ const GroupDetail = () => {
 
   useEffect(() => {
     if (id && stats.groups) {
-      const groupId = id; // Use string ID directly
-      const foundGroup = stats.groups.find(g => g.id === groupId);
+      const foundGroup = stats.groups.find(g => g.id.toString() === id);
       if (foundGroup) {
         setGroup(foundGroup);
       } else {

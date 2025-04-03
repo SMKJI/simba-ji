@@ -15,7 +15,7 @@ export interface User {
 }
 
 export interface Group {
-  id: string;
+  id: string | number;
   name: string;
   description: string | null;
   invite_link: string;
