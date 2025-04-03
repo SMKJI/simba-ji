@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { ArrowRight, Edit, Trash, Plus, Check, X, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Group, useRegistrations } from '@/hooks/useRegistrations';
+import { useRegistrations } from '@/hooks/useRegistrations';
+import { Group } from '@/types/supabase'; // Updated import
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -112,7 +113,7 @@ const GroupsManager = ({ groups }: GroupsManagerProps) => {
     setCurrentGroup(group);
     setNewGroupName(group.name);
     setNewGroupCapacity(group.capacity.toString());
-    setNewGroupLink(group.link || '');
+    setNewGroupLink(group.invite_link || '');
     setIsEditDialogOpen(true);
   };
 
@@ -158,12 +159,12 @@ const GroupsManager = ({ groups }: GroupsManagerProps) => {
                 <div>
                   <h3 className="text-lg font-semibold">{group.name}</h3>
                   <p className="text-sm text-muted-foreground">
-                    {group.count} pendaftar dari {group.capacity} kapasitas
+                    {group.member_count} pendaftar dari {group.capacity} kapasitas
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  {group.link && (
-                    <Button size="sm" variant="outline" onClick={() => visitGroupLink(group.link!)}>
+                  {group.invite_link && (
+                    <Button size="sm" variant="outline" onClick={() => window.open(group.invite_link, '_blank')}>
                       <ExternalLink className="mr-2 h-4 w-4" />
                       Buka Link
                     </Button>

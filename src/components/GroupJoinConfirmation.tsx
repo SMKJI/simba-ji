@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
-import { Group, useRegistrations } from '@/hooks/useRegistrations';
+import { useRegistrations } from '@/hooks/useRegistrations';
+import { Group } from '@/types/supabase'; // Updated import
 import { Check, Copy, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -97,10 +98,10 @@ const GroupJoinConfirmation = () => {
             </div>
             <div className="flex items-center justify-between text-sm mb-1">
               <span>Kapasitas</span>
-              <span>{assignedGroup.count} / {assignedGroup.capacity}</span>
+              <span>{assignedGroup.member_count} / {assignedGroup.capacity}</span>
             </div>
             <Progress 
-              value={(assignedGroup.count / assignedGroup.capacity) * 100} 
+              value={(assignedGroup.member_count / assignedGroup.capacity) * 100} 
               className={`h-2 ${assignedGroup.isFull ? 'bg-secondary/20' : 'bg-primary/20'}`}
             />
           </div>
@@ -112,14 +113,14 @@ const GroupJoinConfirmation = () => {
             <div className="flex items-center space-x-2">
               <input
                 type="text"
-                value={assignedGroup.link || "https://chat.whatsapp.com/example"}
+                value={assignedGroup.invite_link || "https://chat.whatsapp.com/example"}
                 readOnly
                 className="flex-1 p-2 border rounded bg-white text-sm"
               />
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => copyToClipboard(assignedGroup.link || "https://chat.whatsapp.com/example")}
+                onClick={() => copyToClipboard(assignedGroup.invite_link || "https://chat.whatsapp.com/example")}
                 className={copySuccess ? "bg-green-100 text-green-600" : ""}
               >
                 {copySuccess ? (
