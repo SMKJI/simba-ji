@@ -1,3 +1,4 @@
+
 import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -1086,3 +1087,57 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
       return false;
     }
   };
+
+  // Create a value object with all context functions
+  const value = {
+    loading,
+    error,
+    stats,
+    currentUser,
+    authenticated,
+    tickets,
+    categories,
+    operators,
+    counters,
+    queueTickets,
+    dailyCapacities,
+    login,
+    register,
+    logout,
+    hasRole,
+    getUserAssignedGroup,
+    confirmGroupJoin,
+    assignUserToGroup,
+    updateUserRole,
+    getApplicants,
+    createTicket,
+    addTicketMessage,
+    addTicketAttachment,
+    getTicketAttachments,
+    getFileUrl,
+    fetchUserTickets,
+    updateTicketStatus,
+    updateTicketPriority,
+    assignTicket,
+    fetchHelpdeskOperators,
+    addHelpdeskOperator,
+    updateOperatorStatus,
+    fetchStats,
+    fetchCategories
+  };
+
+  return (
+    <RegistrationsContext.Provider value={value}>
+      {children}
+    </RegistrationsContext.Provider>
+  );
+};
+
+// Custom hook to use the registration context
+export const useRegistrations = () => {
+  const context = useContext(RegistrationsContext);
+  if (context === null) {
+    throw new Error('useRegistrations must be used within a RegistrationsProvider');
+  }
+  return context;
+};
