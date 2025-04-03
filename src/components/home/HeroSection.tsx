@@ -1,11 +1,8 @@
-
 import { Link } from 'react-router-dom';
 import { ArrowRight, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
 const HeroSection = () => {
-  return (
-    <section className="pt-24 pb-16 md:pt-32 md:pb-24 bg-gradient-to-b from-primary/5 to-transparent">
+  return <section className="pt-24 pb-16 md:pt-32 md:pb-24 bg-gradient-to-b from-primary/5 to-transparent">
       <div className="container mx-auto px-4">
         <div className="flex flex-col-reverse md:flex-row items-center">
           <div className="w-full md:w-1/2 mt-10 md:mt-0 text-center md:text-left">
@@ -35,14 +32,12 @@ const HeroSection = () => {
             <div className="relative w-64 h-64 md:w-80 md:h-80 animate-float">
               <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl opacity-20"></div>
               <div className="relative h-full w-full overflow-hidden rounded-xl border p-2 bg-white shadow-lg">
-                <img alt="SMKN 1 Kendal Logo" className="h-full w-full object-contain rounded-xl" src="/lovable-uploads/f5ba977f-fb10-430c-b426-68c3389cee2c.png" />
+                <img alt="SMKN 1 Kendal Logo" className="h-full w-full object-contain rounded-xl" src="/lovable-uploads/dd215b4c-67a6-49e0-a4f9-0b5b40ae757e.jpg" />
               </div>
             </div>
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default HeroSection;
