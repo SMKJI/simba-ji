@@ -181,23 +181,24 @@ export const useRegistrations = () => {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session) {
-          // Using maybeSingle() instead of single() to handle null properly
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('name, role, avatar_url')
-            .eq('id', session.user.id)
-            .maybeSingle();
-            
-          const user: User = {
-            id: session.user.id,
-            email: session.user.email || '',
-            name: profileData?.name || session.user.email?.split('@')[0] || 'User',
-            role: (profileData?.role as UserRole) || 'applicant',
-            avatarUrl: profileData?.avatar_url || undefined
-          };
+          // For now, use a demo user or create a basic user from session data
+          const demoUser = DEMO_ACCOUNTS.find(u => u.email.toLowerCase() === session.user.email?.toLowerCase());
           
-          setCurrentUser(user);
-          setAuthenticated(true);
+          if (demoUser) {
+            setCurrentUser(demoUser);
+            setAuthenticated(true);
+          } else {
+            // Create a basic user object from session data
+            const user: User = {
+              id: session.user.id,
+              email: session.user.email || '',
+              name: session.user.email?.split('@')[0] || 'User',
+              role: 'applicant',
+            };
+            
+            setCurrentUser(user);
+            setAuthenticated(true);
+          }
         } else {
           // Fall back to session storage for demo mode
           const savedUser = sessionStorage.getItem('currentUser');
@@ -224,23 +225,24 @@ export const useRegistrations = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
-          // Using maybeSingle() instead of single() to handle null properly
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('name, role, avatar_url')
-            .eq('id', session.user.id)
-            .maybeSingle();
-            
-          const user: User = {
-            id: session.user.id,
-            email: session.user.email || '',
-            name: profileData?.name || session.user.email?.split('@')[0] || 'User',
-            role: (profileData?.role as UserRole) || 'applicant',
-            avatarUrl: profileData?.avatar_url || undefined
-          };
+          // For now, use a demo user or create a basic user from session data
+          const demoUser = DEMO_ACCOUNTS.find(u => u.email.toLowerCase() === session.user.email?.toLowerCase());
           
-          setCurrentUser(user);
-          setAuthenticated(true);
+          if (demoUser) {
+            setCurrentUser(demoUser);
+            setAuthenticated(true);
+          } else {
+            // Create a basic user object from session data
+            const user: User = {
+              id: session.user.id,
+              email: session.user.email || '',
+              name: session.user.email?.split('@')[0] || 'User',
+              role: 'applicant',
+            };
+            
+            setCurrentUser(user);
+            setAuthenticated(true);
+          }
         } else if (event === 'SIGNED_OUT') {
           setCurrentUser(null);
           setAuthenticated(false);
@@ -360,19 +362,22 @@ export const useRegistrations = () => {
       
       // Successfully logged in with Supabase
       if (data.user) {
-        // Using maybeSingle() instead of single() to handle null properly
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('name, role, avatar_url')
-          .eq('id', data.user.id)
-          .maybeSingle();
-          
+        // Try to find a matching demo account first
+        const demoUser = DEMO_ACCOUNTS.find(u => u.email.toLowerCase() === data.user.email?.toLowerCase());
+        
+        if (demoUser) {
+          setCurrentUser(demoUser);
+          setAuthenticated(true);
+          setLoading(false);
+          return { success: true, user: demoUser };
+        }
+        
+        // Create a default user from the auth data
         const user: User = {
           id: data.user.id,
           email: data.user.email || '',
-          name: profileData?.name || data.user.email?.split('@')[0] || 'User',
-          role: (profileData?.role as UserRole) || 'applicant',
-          avatarUrl: profileData?.avatar_url || undefined
+          name: data.user.email?.split('@')[0] || 'User',
+          role: 'applicant',
         };
         
         setCurrentUser(user);

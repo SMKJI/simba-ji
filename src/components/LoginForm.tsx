@@ -68,21 +68,25 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
     }
     
     if (data.user) {
-      // Fixing the type error by using maybeSingle() and handling null properly
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('name, role, avatar_url')
-        .eq('id', data.user.id)
-        .maybeSingle();
-        
+      // We're using demo mode for now since the profiles table doesn't exist
+      const demoUser = DEMO_ACCOUNTS.find(account => account.email === email);
+      
+      if (demoUser) {
+        return { 
+          success: true, 
+          user: demoUser 
+        };
+      }
+      
+      // Default user info without profile data
       return { 
         success: true, 
         user: {
           id: data.user.id,
-          name: profileData?.name || data.user.email?.split('@')[0] || 'User',
+          name: data.user.email?.split('@')[0] || 'User',
           email: data.user.email || '',
-          role: profileData?.role || 'applicant',
-          avatarUrl: profileData?.avatar_url
+          role: 'applicant',
+          avatarUrl: undefined
         }
       };
     }
