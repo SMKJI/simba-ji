@@ -41,6 +41,10 @@ const Header = () => {
     { name: 'Program', path: '/programs' },
     { name: 'FAQ', path: '/faq' }
   ];
+  
+  const handleNavigation = (path: string) => {
+    navigate(path);
+  };
 
   return (
     <header 
@@ -169,14 +173,14 @@ const Header = () => {
               <div className="hidden md:flex items-center space-x-2">
                 <Button 
                   variant="ghost" 
-                  onClick={() => navigate('/login')} 
+                  onClick={() => handleNavigation('/login')} 
                   size="sm" 
                   className="font-medium"
                 >
                   Masuk
                 </Button>
                 <Button 
-                  onClick={() => navigate('/register')} 
+                  onClick={() => handleNavigation('/register')} 
                   size="sm" 
                   className="font-medium"
                 >
@@ -300,7 +304,7 @@ const Header = () => {
                     <Button 
                       variant="outline" 
                       onClick={() => {
-                        navigate('/login');
+                        handleNavigation('/login');
                         setIsMenuOpen(false);
                       }} 
                       className="w-full"
@@ -309,7 +313,7 @@ const Header = () => {
                     </Button>
                     <Button 
                       onClick={() => {
-                        navigate('/register');
+                        handleNavigation('/register');
                         setIsMenuOpen(false);
                       }} 
                       className="w-full"

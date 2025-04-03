@@ -35,7 +35,7 @@ const HeroSection = () => {
             <div className="relative w-64 h-64 md:w-80 md:h-80 animate-float">
               <div className="absolute inset-0 bg-primary/20 rounded-full blur-3xl opacity-20"></div>
               <div className="relative h-full w-full overflow-hidden rounded-xl border p-2 bg-white shadow-lg">
-                <img alt="SMKN 1 Kendal Logo" className="h-full w-full object-contain rounded-xl" src="/lovable-uploads/113dca04-6a33-4058-a2ba-d238187a8d97.jpg" />
+                <img alt="SMKN 1 Kendal Logo" className="h-full w-full object-contain rounded-xl" src="/lovable-uploads/f5ba977f-fb10-430c-b426-68c3389cee2c.png" />
               </div>
             </div>
           </div>

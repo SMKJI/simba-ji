@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, School, EyeIcon, EyeOffIcon } from 'lucide-react';
+import { Loader2, EyeIcon, EyeOffIcon } from 'lucide-react';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -61,7 +61,11 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <School className="mx-auto h-12 w-12 text-primary" />
+          <img 
+            src="/lovable-uploads/f5ba977f-fb10-430c-b426-68c3389cee2c.png" 
+            alt="SMKN 1 Kendal" 
+            className="mx-auto h-16 w-auto"
+          />
           <h1 className="mt-4 text-3xl font-bold">SMKN 1 Kendal</h1>
           <p className="mt-2 text-sm text-gray-600">
             Sistem Penjaringan Calon Murid Baru
