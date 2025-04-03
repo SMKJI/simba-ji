@@ -1,6 +1,5 @@
 
 // Custom types to interface with Supabase data
-// These types will be used throughout the application
 
 export type UserRole = 'admin' | 'helpdesk' | 'helpdesk_offline' | 'content' | 'applicant';
 
@@ -10,12 +9,12 @@ export interface User {
   email: string;
   role: UserRole;
   avatarUrl?: string;
-  assignedGroupId?: number | string;
+  assignedGroupId?: string;
   joinConfirmed?: boolean;
 }
 
 export interface Group {
-  id: string | number;
+  id: string;
   name: string;
   description: string | null;
   invite_link: string;

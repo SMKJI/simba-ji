@@ -12,31 +12,40 @@ import { Group } from '@/types/supabase';
 const GroupDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { stats } = useRegistrations();
+  const { stats, fetchStats, loading } = useRegistrations();
   const [group, setGroup] = useState<Group | null>(null);
+  const [loadingGroup, setLoadingGroup] = useState(true);
 
   useEffect(() => {
-    if (id && stats.groups) {
-      // Convert both ids to strings for comparison to handle both number and string types
-      const foundGroup = stats.groups.find(g => g.id.toString() === id);
+    const loadData = async () => {
+      await fetchStats();
+      setLoadingGroup(false);
+    };
+    
+    loadData();
+  }, [fetchStats]);
+
+  useEffect(() => {
+    if (id && stats.groups && !loadingGroup) {
+      // Find the group by ID
+      const foundGroup = stats.groups.find(g => g.id === id);
       if (foundGroup) {
-        // Create a new Group object that matches the expected type
-        const typedGroup: Group = {
-          id: foundGroup.id,
-          name: foundGroup.name,
-          description: foundGroup.description || null,
-          invite_link: foundGroup.invite_link || foundGroup.link || '',
-          capacity: foundGroup.capacity,
-          member_count: foundGroup.member_count || foundGroup.count || 0,
-          is_active: foundGroup.is_active !== undefined ? foundGroup.is_active : true,
-          isFull: foundGroup.isFull
-        };
-        setGroup(typedGroup);
+        setGroup(foundGroup);
       } else {
         setGroup(null);
       }
     }
-  }, [id, stats.groups]);
+  }, [id, stats.groups, loadingGroup]);
+
+  if (loading || loadingGroup) {
+    return (
+      <DashboardLayout>
+        <div className="flex justify-center items-center min-h-[50vh]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

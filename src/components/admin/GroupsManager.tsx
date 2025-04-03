@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { Textarea } from '@/components/ui/textarea';
 
 interface GroupsManagerProps {
   groups: Group[];
@@ -23,9 +24,10 @@ const GroupsManager = ({ groups }: GroupsManagerProps) => {
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupCapacity, setNewGroupCapacity] = useState('1000');
   const [newGroupLink, setNewGroupLink] = useState('');
+  const [newGroupDescription, setNewGroupDescription] = useState('');
   const { toast } = useToast();
 
-  const handleAddGroup = () => {
+  const handleAddGroup = async () => {
     if (!newGroupName || !newGroupCapacity || !newGroupLink) {
       toast({
         title: "Validasi Gagal",
@@ -35,10 +37,11 @@ const GroupsManager = ({ groups }: GroupsManagerProps) => {
       return;
     }
 
-    const success = createGroup({
+    const success = await createGroup({
       name: newGroupName,
       capacity: parseInt(newGroupCapacity),
-      link: newGroupLink
+      link: newGroupLink,
+      description: newGroupDescription
     });
 
     if (success) {
@@ -57,7 +60,7 @@ const GroupsManager = ({ groups }: GroupsManagerProps) => {
     }
   };
 
-  const handleEditGroup = () => {
+  const handleEditGroup = async () => {
     if (!currentGroup || !newGroupName || !newGroupCapacity || !newGroupLink) {
       toast({
         title: "Validasi Gagal",
@@ -67,10 +70,11 @@ const GroupsManager = ({ groups }: GroupsManagerProps) => {
       return;
     }
 
-    const success = updateGroup(String(currentGroup.id), {
+    const success = await updateGroup(String(currentGroup.id), {
       name: newGroupName,
       capacity: parseInt(newGroupCapacity),
-      link: newGroupLink
+      link: newGroupLink,
+      description: newGroupDescription
     });
 
     if (success) {
@@ -89,10 +93,10 @@ const GroupsManager = ({ groups }: GroupsManagerProps) => {
     }
   };
 
-  const handleDeleteGroup = () => {
+  const handleDeleteGroup = async () => {
     if (!currentGroup) return;
 
-    const success = deleteGroup(String(currentGroup.id));
+    const success = await deleteGroup(String(currentGroup.id));
 
     if (success) {
       toast({
@@ -113,7 +117,8 @@ const GroupsManager = ({ groups }: GroupsManagerProps) => {
     setCurrentGroup(group);
     setNewGroupName(group.name);
     setNewGroupCapacity(group.capacity.toString());
-    setNewGroupLink(group.invite_link || group.link || '');
+    setNewGroupLink(group.invite_link || '');
+    setNewGroupDescription(group.description || '');
     setIsEditDialogOpen(true);
   };
 
@@ -126,6 +131,7 @@ const GroupsManager = ({ groups }: GroupsManagerProps) => {
     setNewGroupName('');
     setNewGroupCapacity('1000');
     setNewGroupLink('');
+    setNewGroupDescription('');
     setCurrentGroup(null);
   };
 
@@ -153,37 +159,46 @@ const GroupsManager = ({ groups }: GroupsManagerProps) => {
       </CardHeader>
       <CardContent className="p-6">
         <div className="space-y-6">
-          {groups.map((group) => (
-            <div key={group.id} className="p-4 border rounded-lg">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="text-lg font-semibold">{group.name}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {group.member_count} pendaftar dari {group.capacity} kapasitas
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  {group.invite_link && (
-                    <Button size="sm" variant="outline" onClick={() => window.open(group.invite_link, '_blank')}>
-                      <ExternalLink className="mr-2 h-4 w-4" />
-                      Buka Link
+          {groups.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Belum ada grup WhatsApp. Tambahkan grup baru.</p>
+            </div>
+          ) : (
+            groups.map((group) => (
+              <div key={group.id} className="p-4 border rounded-lg">
+                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                  <div>
+                    <h3 className="text-lg font-semibold">{group.name}</h3>
+                    {group.description && (
+                      <p className="text-sm text-muted-foreground mb-2">{group.description}</p>
+                    )}
+                    <p className="text-sm text-muted-foreground">
+                      {group.member_count} pendaftar dari {group.capacity} kapasitas
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {group.invite_link && (
+                      <Button size="sm" variant="outline" onClick={() => visitGroupLink(group.invite_link)}>
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        Buka Link
+                      </Button>
+                    )}
+                    <Button size="sm" variant="outline" onClick={() => openEditDialog(group)}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit
                     </Button>
-                  )}
-                  <Button size="sm" variant="outline" onClick={() => openEditDialog(group)}>
-                    <Edit className="mr-2 h-4 w-4" />
-                    Edit
-                  </Button>
-                  <Button size="sm" variant="destructive" onClick={() => openDeleteDialog(group)}>
-                    <Trash className="mr-2 h-4 w-4" />
-                    Hapus
-                  </Button>
-                  <Button size="sm" variant={group.isFull ? "secondary" : "outline"}>
-                    {group.isFull ? 'Penuh' : 'Tersedia'}
-                  </Button>
+                    <Button size="sm" variant="destructive" onClick={() => openDeleteDialog(group)}>
+                      <Trash className="mr-2 h-4 w-4" />
+                      Hapus
+                    </Button>
+                    <Button size="sm" variant={group.isFull ? "secondary" : "outline"}>
+                      {group.isFull ? 'Penuh' : 'Tersedia'}
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </CardContent>
 
@@ -201,6 +216,15 @@ const GroupsManager = ({ groups }: GroupsManagerProps) => {
                 value={newGroupName}
                 onChange={(e) => setNewGroupName(e.target.value)}
                 placeholder="Grup 4"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="groupDescription">Deskripsi (Opsional)</Label>
+              <Textarea
+                id="groupDescription"
+                value={newGroupDescription}
+                onChange={(e) => setNewGroupDescription(e.target.value)}
+                placeholder="Deskripsi grup"
               />
             </div>
             <div className="space-y-2">
@@ -251,6 +275,15 @@ const GroupsManager = ({ groups }: GroupsManagerProps) => {
                 id="editGroupName"
                 value={newGroupName}
                 onChange={(e) => setNewGroupName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editGroupDescription">Deskripsi (Opsional)</Label>
+              <Textarea
+                id="editGroupDescription"
+                value={newGroupDescription}
+                onChange={(e) => setNewGroupDescription(e.target.value)}
+                placeholder="Deskripsi grup"
               />
             </div>
             <div className="space-y-2">

@@ -14,15 +14,13 @@ import Admin from '@/pages/Admin';
 import Content from '@/pages/Content';
 import Helpdesk from '@/pages/Helpdesk';
 import StudentHelpdesk from '@/pages/StudentHelpdesk';
+import OfflineHelpdesk from '@/pages/OfflineHelpdesk';
 import GroupDetail from '@/pages/GroupDetail';
 import Success from '@/pages/Success';
 import NotFound from '@/pages/NotFound';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
 const App = () => {
-  // You can add any global state or context here if needed
-  // For example, authentication context, theme context, etc.
-
   return (
     <div className="min-h-screen flex flex-col">
       <Router>
@@ -42,11 +40,13 @@ const App = () => {
             <Route path="/group-detail/:id" element={<GroupDetail />} />
             <Route path="/success" element={<Success />} />
             <Route path="/helpdesk-siswa" element={<StudentHelpdesk />} />
+            <Route path="/offline-helpdesk" element={<OfflineHelpdesk />} />
           </Route>
           
           {/* Protected routes for helpdesk and admin */}
-          <Route element={<ProtectedRoute allowedRoles={['helpdesk', 'admin']}><Outlet /></ProtectedRoute>}>
+          <Route element={<ProtectedRoute allowedRoles={['helpdesk', 'helpdesk_offline', 'admin']}><Outlet /></ProtectedRoute>}>
             <Route path="/helpdesk" element={<Helpdesk />} />
+            <Route path="/offline-helpdesk" element={<OfflineHelpdesk />} />
           </Route>
           
           {/* Protected routes for admin only */}

@@ -1,44 +1,34 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useRegistrations } from '@/hooks/useRegistrations';
 import { Group } from '@/types/supabase';
-import { Check, Copy, ExternalLink } from 'lucide-react';
+import { Check, Copy, ExternalLink, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 
 const GroupJoinConfirmation = () => {
-  const { getUserAssignedGroup, confirmGroupJoin, currentUser } = useRegistrations();
+  const { getUserAssignedGroup, confirmGroupJoin, currentUser, stats } = useRegistrations();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [copySuccess, setCopySuccess] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [assignedGroup, setAssignedGroup] = useState<Group | null>(null);
+  const [loading, setLoading] = useState(true);
   
-  const assignedGroup = getUserAssignedGroup();
+  useEffect(() => {
+    const fetchGroup = async () => {
+      setLoading(true);
+      const group = await getUserAssignedGroup();
+      setAssignedGroup(group);
+      setLoading(false);
+    };
+    
+    fetchGroup();
+  }, [getUserAssignedGroup]);
   
-  if (!assignedGroup) {
-    return (
-      <Card className="border-0 shadow-lg rounded-xl overflow-hidden">
-        <CardHeader className="bg-primary/5 border-b p-6">
-          <CardTitle className="text-xl font-semibold text-primary">
-            Grup WhatsApp
-          </CardTitle>
-          <CardDescription>
-            Informasi grup WhatsApp untuk calon murid baru
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-6">
-          <div className="p-4 bg-yellow-50 rounded-lg">
-            <h3 className="font-medium text-yellow-800 mb-1">Grup belum tersedia</h3>
-            <p className="text-sm text-yellow-700">
-              Anda belum ditugaskan ke grup WhatsApp. Silakan hubungi helpdesk jika ini adalah kesalahan.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text).then(
       () => {
@@ -59,7 +49,7 @@ const GroupJoinConfirmation = () => {
       }
     );
   };
-
+  
   const handleConfirmJoin = async () => {
     setConfirming(true);
     const result = await confirmGroupJoin();
@@ -78,10 +68,109 @@ const GroupJoinConfirmation = () => {
       });
     }
   };
+  
+  const navigateToAvailableGroup = () => {
+    // Find a group that isn't full
+    const availableGroup = stats.groups.find(g => !g.isFull);
+    
+    if (availableGroup) {
+      navigate(`/group-detail/${availableGroup.id}`);
+    } else {
+      toast({
+        title: 'Tidak ada grup tersedia',
+        description: 'Semua grup saat ini penuh. Silakan coba lagi nanti.',
+        variant: 'destructive',
+      });
+    }
+  };
 
-  // Use a consistent way to get member count, handling both properties
-  const memberCount = assignedGroup.member_count || assignedGroup.count || 0;
-  const inviteLink = assignedGroup.invite_link || assignedGroup.link || "https://chat.whatsapp.com/example";
+  if (loading) {
+    return (
+      <Card className="border-0 shadow-lg rounded-xl overflow-hidden">
+        <CardHeader className="bg-primary/5 border-b p-6">
+          <CardTitle className="text-xl font-semibold text-primary">
+            Grup WhatsApp
+          </CardTitle>
+          <CardDescription>
+            Informasi grup WhatsApp untuk calon murid baru
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="flex justify-center p-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!assignedGroup) {
+    return (
+      <Card className="border-0 shadow-lg rounded-xl overflow-hidden">
+        <CardHeader className="bg-primary/5 border-b p-6">
+          <CardTitle className="text-xl font-semibold text-primary">
+            Grup WhatsApp
+          </CardTitle>
+          <CardDescription>
+            Informasi grup WhatsApp untuk calon murid baru
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="p-4 bg-yellow-50 rounded-lg">
+            <h3 className="font-medium text-yellow-800 mb-1">Grup belum tersedia</h3>
+            <p className="text-sm text-yellow-700">
+              Anda belum ditugaskan ke grup WhatsApp. Silakan bergabung dengan salah satu grup yang tersedia.
+            </p>
+          </div>
+          
+          <div className="mt-6 space-y-4">
+            <h3 className="font-medium">Grup WhatsApp yang tersedia:</h3>
+            
+            {stats.groups.map((group) => (
+              <div key={group.id} className="p-4 border rounded-lg">
+                <div className="flex justify-between items-center mb-2">
+                  <div>
+                    <h4 className="font-medium">{group.name}</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {group.member_count} pendaftar dari {group.capacity} kapasitas
+                    </p>
+                  </div>
+                  <Button
+                    variant={group.isFull ? "secondary" : "outline"}
+                    size="sm"
+                    disabled={group.isFull}
+                    onClick={() => navigate(`/group-detail/${group.id}`)}
+                  >
+                    {group.isFull ? 'Penuh' : 'Lihat Detail'}
+                  </Button>
+                </div>
+                <Progress 
+                  value={(group.member_count / group.capacity) * 100} 
+                  className={`h-2 ${group.isFull ? 'bg-secondary/20' : 'bg-primary/20'}`}
+                />
+              </div>
+            ))}
+            
+            <div className="p-4 bg-primary/5 rounded-lg mt-4">
+              <div className="flex items-start">
+                <AlertCircle className="h-5 w-5 text-primary mt-0.5 mr-2" />
+                <p className="text-sm">
+                  Bergabunglah dengan grup WhatsApp untuk mendapatkan informasi terbaru tentang penerimaan murid baru.
+                </p>
+              </div>
+            </div>
+            
+            <Button
+              className="mt-4 w-full"
+              onClick={navigateToAvailableGroup}
+            >
+              Cari Grup Tersedia
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="border-0 shadow-lg rounded-xl overflow-hidden">
@@ -90,22 +179,32 @@ const GroupJoinConfirmation = () => {
           Grup WhatsApp Anda
         </CardTitle>
         <CardDescription>
-          Silakan bergabung dengan grup WhatsApp untuk informasi selanjutnya
+          Informasi grup WhatsApp untuk calon murid baru
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6">
         <div className="space-y-6">
-          <div className="p-4 border rounded-lg">
-            <h3 className="font-medium mb-2">{assignedGroup.name}</h3>
-            <div className="text-sm text-gray-600 mb-2">
-              <p>Grup WhatsApp untuk calon murid baru. Bergabunglah untuk mendapatkan informasi terbaru.</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div>
+                <h2 className="font-medium">{assignedGroup.name}</h2>
+                <p className="text-sm text-muted-foreground">
+                  Grup WhatsApp untuk pendaftaran
+                </p>
+              </div>
             </div>
-            <div className="flex items-center justify-between text-sm mb-1">
-              <span>Kapasitas</span>
-              <span>{memberCount} / {assignedGroup.capacity}</span>
+            <div className="text-sm font-medium">
+              {assignedGroup.member_count} / {assignedGroup.capacity}
+            </div>
+          </div>
+          
+          <div>
+            <div className="flex justify-between text-sm mb-1">
+              <span>Status Kapasitas</span>
+              <span>{assignedGroup.isFull ? 'Penuh' : 'Tersedia'}</span>
             </div>
             <Progress 
-              value={(memberCount / assignedGroup.capacity) * 100} 
+              value={(assignedGroup.member_count / assignedGroup.capacity) * 100} 
               className={`h-2 ${assignedGroup.isFull ? 'bg-secondary/20' : 'bg-primary/20'}`}
             />
           </div>
@@ -114,18 +213,18 @@ const GroupJoinConfirmation = () => {
             <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">
               Link Grup WhatsApp
             </h3>
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2">
               <input
                 type="text"
-                value={inviteLink}
+                value={assignedGroup.invite_link}
                 readOnly
-                className="flex-1 p-2 border rounded bg-white text-sm"
+                className="flex-1 p-2 border rounded bg-white text-sm w-full"
               />
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => copyToClipboard(inviteLink)}
-                className={copySuccess ? "bg-green-100 text-green-600" : ""}
+                onClick={() => copyToClipboard(assignedGroup.invite_link)}
+                className={`${copySuccess ? "bg-green-100 text-green-600" : ""} w-full sm:w-auto`}
               >
                 {copySuccess ? (
                   <>
@@ -140,12 +239,12 @@ const GroupJoinConfirmation = () => {
             </div>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="pt-4 flex flex-col sm:flex-row gap-4">
             <Button
               variant="default"
               size="lg"
-              className="bg-green-600 hover:bg-green-700 text-white flex-1"
-              onClick={() => window.open(inviteLink, '_blank')}
+              className="w-full sm:w-auto sm:flex-1 bg-green-600 hover:bg-green-700 text-white"
+              onClick={() => window.open(assignedGroup.invite_link, '_blank')}
             >
               <ExternalLink className="h-4 w-4 mr-2" />
               Buka Grup WhatsApp
@@ -154,7 +253,7 @@ const GroupJoinConfirmation = () => {
             <Button
               variant={currentUser?.joinConfirmed ? "secondary" : "outline"}
               size="lg"
-              className="flex-1"
+              className="w-full sm:w-auto sm:flex-1"
               disabled={currentUser?.joinConfirmed || confirming}
               onClick={handleConfirmJoin}
             >
@@ -176,15 +275,6 @@ const GroupJoinConfirmation = () => {
               )}
             </Button>
           </div>
-          
-          {!currentUser?.joinConfirmed && (
-            <div className="p-4 bg-yellow-50 rounded-lg">
-              <h3 className="font-medium text-yellow-800 mb-1">Penting!</h3>
-              <p className="text-sm text-yellow-700">
-                Setelah bergabung dengan grup WhatsApp, jangan lupa untuk mengklik tombol konfirmasi di atas.
-              </p>
-            </div>
-          )}
         </div>
       </CardContent>
     </Card>

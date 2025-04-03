@@ -1,187 +1,177 @@
 
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { UserPlus, Trash2, MailCheck, UserX, RefreshCw, KeyRound } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useRegistrations } from '@/hooks/useRegistrations';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { PlusCircle, Edit, UserCheck, CheckCircle, XCircle, RotateCw, LucideIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useRegistrations, HelpdeskOperator } from '@/hooks/useRegistrations';
 
 const OperatorManagement = () => {
-  const { toast } = useToast();
   const { 
-    getHelpdeskOperators, 
-    addHelpdeskOperator, 
-    updateOperatorStatus, 
-    removeHelpdeskOperator, 
-    balanceTickets,
-    resetOperatorPassword,
-    sendOperatorCredentials
+    fetchHelpdeskOperators, 
+    operators, 
+    updateOperatorStatus,
+    addHelpdeskOperator,
+    getApplicants,
+    loading 
   } = useRegistrations();
+  const { toast } = useToast();
   
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false);
-  const [isResetPasswordDialogOpen, setIsResetPasswordDialogOpen] = useState(false);
-  const [selectedOperator, setSelectedOperator] = useState<HelpdeskOperator | null>(null);
-  const [newOperator, setNewOperator] = useState({ name: '', email: '', password: '' });
-  const [newPassword, setNewPassword] = useState('');
-  const [passwordInDialog, setPasswordInDialog] = useState({ show: false, value: '' });
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [isOffline, setIsOffline] = useState<boolean>(false);
+  const [applicants, setApplicants] = useState<any[]>([]);
+  const [loadingApplicants, setLoadingApplicants] = useState(true);
   
-  const operators = getHelpdeskOperators();
-  
-  const handleStatusToggle = (id: string, currentStatus: 'active' | 'inactive') => {
-    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-    const success = updateOperatorStatus(id, newStatus);
+  // Load data when component mounts
+  useEffect(() => {
+    const loadData = async () => {
+      await fetchHelpdeskOperators();
+      
+      setLoadingApplicants(true);
+      const applicantsData = await getApplicants();
+      setApplicants(applicantsData || []);
+      setLoadingApplicants(false);
+    };
     
-    if (success) {
-      toast({
-        title: `Status operator ${newStatus === 'active' ? 'diaktifkan' : 'dinonaktifkan'}`,
-        description: "Perubahan status operator berhasil disimpan"
-      });
-    } else {
-      toast({
-        title: "Gagal mengubah status",
-        description: "Terjadi kesalahan saat mencoba mengubah status operator",
-        variant: "destructive"
-      });
-    }
-  };
+    loadData();
+  }, [fetchHelpdeskOperators, getApplicants]);
   
-  const handleAddOperator = () => {
-    if (!newOperator.name || !newOperator.email || !newOperator.password) {
+  // Handle adding a new operator
+  const handleAddOperator = async () => {
+    if (!selectedUserId) {
       toast({
-        title: "Form tidak lengkap",
-        description: "Mohon isi semua bidang yang diperlukan",
+        title: "Validasi Gagal",
+        description: "Pilih pengguna untuk dijadikan operator",
         variant: "destructive"
       });
       return;
     }
     
-    const success = addHelpdeskOperator(newOperator);
+    const success = await addHelpdeskOperator(selectedUserId, isOffline);
     
     if (success) {
       toast({
-        title: "Operator baru ditambahkan",
-        description: `${newOperator.name} berhasil ditambahkan sebagai operator helpdesk`
+        title: "Berhasil",
+        description: `Pengguna telah ditambahkan sebagai operator helpdesk ${isOffline ? 'luring' : 'daring'}`
       });
-      setNewOperator({ name: '', email: '', password: '' });
       setIsAddDialogOpen(false);
+      setSelectedUserId('');
+      setIsOffline(false);
+      
+      // Refresh operators list
+      await fetchHelpdeskOperators();
     } else {
       toast({
-        title: "Gagal menambahkan operator",
-        description: "Terjadi kesalahan saat mencoba menambahkan operator baru",
+        title: "Gagal",
+        description: "Tidak dapat menambahkan operator baru",
         variant: "destructive"
       });
     }
   };
   
-  const openRemoveDialog = (operator: HelpdeskOperator) => {
-    setSelectedOperator(operator);
-    setIsRemoveDialogOpen(true);
-  };
-  
-  const openResetPasswordDialog = (operator: HelpdeskOperator) => {
-    setSelectedOperator(operator);
-    setNewPassword('');
-    setPasswordInDialog({ show: false, value: '' });
-    setIsResetPasswordDialogOpen(true);
-  };
-  
-  const handleRemoveOperator = () => {
-    if (!selectedOperator) return;
-    
-    const success = removeHelpdeskOperator(selectedOperator.id);
+  // Handle updating operator status
+  const handleToggleStatus = async (operatorId: string, isActive: boolean) => {
+    const success = await updateOperatorStatus(operatorId, isActive);
     
     if (success) {
       toast({
-        title: "Operator dihapus",
-        description: `${selectedOperator.name} berhasil dihapus dari daftar operator helpdesk`
+        title: "Status Diperbarui",
+        description: `Operator berhasil ${isActive ? 'diaktifkan' : 'dinonaktifkan'}`
       });
-      setIsRemoveDialogOpen(false);
+      
+      // Refresh operators list
+      await fetchHelpdeskOperators();
     } else {
       toast({
-        title: "Gagal menghapus operator",
-        description: "Terjadi kesalahan saat mencoba menghapus operator",
+        title: "Gagal",
+        description: "Tidak dapat memperbarui status operator",
         variant: "destructive"
       });
     }
   };
   
-  const handleBalanceTickets = () => {
-    const success = balanceTickets();
-    
-    if (success) {
-      toast({
-        title: "Tiket berhasil diseimbangkan",
-        description: "Semua tiket telah didistribusikan secara merata ke operator yang aktif"
-      });
-    } else {
-      toast({
-        title: "Gagal menyeimbangkan tiket",
-        description: "Terjadi kesalahan saat mencoba mendistribusikan tiket",
-        variant: "destructive"
-      });
-    }
+  // Filter operators by type
+  const onlineOperators = operators.filter(op => !op.is_offline);
+  const offlineOperators = operators.filter(op => op.is_offline);
+  
+  // Format time from ISO string
+  const formatTime = (isoString: string) => {
+    return new Date(isoString).toLocaleString('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
   
-  const handleResetPassword = () => {
-    if (!selectedOperator || !newPassword) {
-      toast({
-        title: "Password baru diperlukan",
-        description: "Mohon masukkan password baru",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Check password strength
-    if (newPassword.length < 8) {
-      toast({
-        title: "Password terlalu pendek",
-        description: "Password harus minimal 8 karakter",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    const result = resetOperatorPassword(selectedOperator.id, newPassword);
-    
-    if (result.success) {
-      setPasswordInDialog({ show: true, value: newPassword });
-      toast({
-        title: "Password berhasil direset",
-        description: "Password operator telah diperbarui"
-      });
-    } else {
-      toast({
-        title: "Gagal mereset password",
-        description: "Terjadi kesalahan saat mencoba mereset password",
-        variant: "destructive"
-      });
-    }
+  // Render operator card
+  const renderOperatorCard = (operator: any) => {
+    return (
+      <div key={operator.id} className="p-4 border rounded-lg">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+          <div>
+            <h3 className="font-medium">{operator.name}</h3>
+            <p className="text-sm text-muted-foreground">{operator.email}</p>
+            <div className="flex flex-wrap gap-2 mt-2">
+              <Badge variant="outline" className={operator.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}>
+                {operator.status === 'active' ? 'Aktif' : 'Nonaktif'}
+              </Badge>
+              <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                {operator.assignedTickets} Tiket Aktif
+              </Badge>
+              <Badge variant="outline" className={operator.is_offline ? 'bg-purple-50 text-purple-700' : 'bg-cyan-50 text-cyan-700'}>
+                Helpdesk {operator.is_offline ? 'Luring' : 'Daring'}
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Terakhir aktif: {formatTime(operator.lastActive)}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id={`operator-status-${operator.id}`}
+                checked={operator.status === 'active'} 
+                onCheckedChange={(checked) => handleToggleStatus(operator.id, checked)}
+              />
+              <Label htmlFor={`operator-status-${operator.id}`}>
+                {operator.status === 'active' ? 'Aktif' : 'Nonaktif'}
+              </Label>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
   
-  const handleSendCredentials = (operatorId: string) => {
-    const success = sendOperatorCredentials(operatorId);
-    
-    if (success) {
-      toast({
-        title: "Kredensial berhasil dikirim",
-        description: "Email dengan informasi login telah dikirim ke operator"
-      });
-    } else {
-      toast({
-        title: "Gagal mengirim kredensial",
-        description: "Terjadi kesalahan saat mencoba mengirim email",
-        variant: "destructive"
-      });
-    }
-  };
+  if (loading) {
+    return (
+      <Card className="border-0 shadow-lg rounded-xl overflow-hidden">
+        <CardHeader className="bg-primary/5 border-b p-6">
+          <CardTitle className="text-xl font-semibold text-primary">
+            Manajemen Operator Helpdesk
+          </CardTitle>
+          <CardDescription>
+            Kelola operator helpdesk daring dan luring
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
   
   return (
     <Card className="border-0 shadow-lg rounded-xl overflow-hidden">
@@ -192,134 +182,94 @@ const OperatorManagement = () => {
               Manajemen Operator Helpdesk
             </CardTitle>
             <CardDescription>
-              Kelola operator yang menangani tiket bantuan dari calon murid
+              Kelola operator helpdesk daring dan luring
             </CardDescription>
           </div>
-          <div className="flex space-x-2">
-            <Button onClick={() => handleBalanceTickets()} variant="outline">
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Seimbangkan Tiket
-            </Button>
-            <Button onClick={() => setIsAddDialogOpen(true)}>
-              <UserPlus className="mr-2 h-4 w-4" />
-              Tambah Operator
-            </Button>
-          </div>
+          <Button onClick={() => setIsAddDialogOpen(true)}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Tambah Operator
+          </Button>
         </div>
       </CardHeader>
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nama</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Tiket Ditangani</TableHead>
-                <TableHead>Terakhir Aktif</TableHead>
-                <TableHead>Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {operators.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                    Belum ada operator helpdesk yang terdaftar
-                  </TableCell>
-                </TableRow>
+      <CardContent className="p-6">
+        <Tabs defaultValue="online" className="w-full">
+          <TabsList className="mb-4">
+            <TabsTrigger value="online">Helpdesk Daring ({onlineOperators.length})</TabsTrigger>
+            <TabsTrigger value="offline">Helpdesk Luring ({offlineOperators.length})</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="online">
+            <div className="space-y-4">
+              {onlineOperators.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Tidak ada operator helpdesk daring. Tambahkan operator baru.
+                </div>
               ) : (
-                operators.map((operator) => (
-                  <TableRow key={operator.id}>
-                    <TableCell className="font-medium">{operator.name}</TableCell>
-                    <TableCell>{operator.email}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          checked={operator.status === 'active'}
-                          onCheckedChange={() => handleStatusToggle(operator.id, operator.status)}
-                        />
-                        <Badge 
-                          variant="outline" 
-                          className={operator.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-gray-50 text-gray-700'}
-                        >
-                          {operator.status === 'active' ? 'Aktif' : 'Nonaktif'}
-                        </Badge>
-                      </div>
-                    </TableCell>
-                    <TableCell>{operator.assignedTickets}</TableCell>
-                    <TableCell>{new Date(operator.lastActive).toLocaleString('id-ID')}</TableCell>
-                    <TableCell>
-                      <div className="flex space-x-1">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          title="Kirim Kredensial"
-                          onClick={() => handleSendCredentials(operator.id)}
-                        >
-                          <MailCheck className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          title="Reset Password"
-                          onClick={() => openResetPasswordDialog(operator)}
-                        >
-                          <KeyRound className="h-4 w-4 text-blue-500" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => openRemoveDialog(operator)}
-                          title="Hapus Operator"
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+                onlineOperators.map(renderOperatorCard)
               )}
-            </TableBody>
-          </Table>
-        </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="offline">
+            <div className="space-y-4">
+              {offlineOperators.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Tidak ada operator helpdesk luring. Tambahkan operator baru.
+                </div>
+              ) : (
+                offlineOperators.map(renderOperatorCard)
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
       </CardContent>
       
       {/* Add Operator Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Tambah Operator Helpdesk Baru</DialogTitle>
+            <DialogTitle>Tambah Operator Helpdesk</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="operator-name">Nama Lengkap</Label>
-              <Input
-                id="operator-name"
-                value={newOperator.name}
-                onChange={(e) => setNewOperator({...newOperator, name: e.target.value})}
-                placeholder="Masukkan nama operator"
-              />
+              <Label htmlFor="user-select">Pilih Pengguna</Label>
+              <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                <SelectTrigger id="user-select">
+                  <SelectValue placeholder="Pilih pengguna" />
+                </SelectTrigger>
+                <SelectContent>
+                  {loadingApplicants ? (
+                    <div className="flex justify-center p-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                    </div>
+                  ) : (
+                    applicants.map((applicant) => (
+                      <SelectItem key={applicant.id} value={applicant.id}>
+                        {applicant.name} ({applicant.email})
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="operator-email">Email</Label>
-              <Input
-                id="operator-email"
-                type="email"
-                value={newOperator.email}
-                onChange={(e) => setNewOperator({...newOperator, email: e.target.value})}
-                placeholder="Masukkan email operator"
+            
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="helpdesk-type"
+                checked={isOffline} 
+                onCheckedChange={setIsOffline}
               />
+              <Label htmlFor="helpdesk-type">
+                Operator Helpdesk Luring
+              </Label>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="operator-password">Password</Label>
-              <Input
-                id="operator-password"
-                type="password"
-                value={newOperator.password}
-                onChange={(e) => setNewOperator({...newOperator, password: e.target.value})}
-                placeholder="Masukkan password"
-              />
-              <p className="text-xs text-muted-foreground">Password minimal 8 karakter</p>
+            
+            <div className="p-3 bg-blue-50 rounded-md text-sm text-blue-700">
+              <p className="mb-2">Perhatian:</p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>Operator daring akan menangani tiket bantuan melalui website</li>
+                <li>Operator luring akan menangani sistem antrean di loket helpdesk</li>
+              </ul>
             </div>
           </div>
           <DialogFooter>
@@ -327,114 +277,9 @@ const OperatorManagement = () => {
               Batal
             </Button>
             <Button onClick={handleAddOperator}>
+              <UserCheck className="mr-2 h-4 w-4" />
               Tambah Operator
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Remove Operator Dialog */}
-      <Dialog open={isRemoveDialogOpen} onOpenChange={setIsRemoveDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Hapus Operator Helpdesk</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p>Apakah Anda yakin ingin menghapus operator ini?</p>
-            {selectedOperator && (
-              <div className="mt-2 p-3 bg-muted rounded-md">
-                <p><strong>Nama:</strong> {selectedOperator.name}</p>
-                <p><strong>Email:</strong> {selectedOperator.email}</p>
-                {selectedOperator.assignedTickets > 0 && (
-                  <p className="text-amber-600 font-medium mt-2">
-                    Operator ini sedang menangani {selectedOperator.assignedTickets} tiket aktif. 
-                    Tiket tersebut akan diserahkan ke operator lain yang aktif.
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsRemoveDialogOpen(false)}>
-              Batal
-            </Button>
-            <Button variant="destructive" onClick={handleRemoveOperator}>
-              Hapus Operator
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Reset Password Dialog */}
-      <Dialog 
-        open={isResetPasswordDialogOpen} 
-        onOpenChange={(open) => {
-          if (!open) setPasswordInDialog({ show: false, value: '' });
-          setIsResetPasswordDialogOpen(open);
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reset Password Operator</DialogTitle>
-            <DialogDescription>
-              Masukkan password baru untuk operator ini
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            {selectedOperator && (
-              <div className="space-y-4">
-                <div className="p-3 bg-muted rounded-md">
-                  <p><strong>Nama:</strong> {selectedOperator.name}</p>
-                  <p><strong>Email:</strong> {selectedOperator.email}</p>
-                </div>
-                
-                {passwordInDialog.show ? (
-                  <div className="space-y-4">
-                    <div className="p-4 border rounded-md bg-green-50">
-                      <p className="font-medium text-green-700 mb-2">Password berhasil direset!</p>
-                      <div className="flex items-center space-x-2">
-                        <p className="text-sm">Password baru:</p>
-                        <code className="px-2 py-1 bg-white rounded border">{passwordInDialog.value}</code>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Salin dan simpan password ini dengan aman. Password tidak akan ditampilkan lagi setelah dialog ini ditutup.
-                      </p>
-                    </div>
-                    <Button 
-                      className="w-full" 
-                      onClick={() => handleSendCredentials(selectedOperator.id)}
-                    >
-                      <MailCheck className="mr-2 h-4 w-4" />
-                      Kirim Kredensial Via Email
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="new-password">Password Baru</Label>
-                      <Input
-                        id="new-password"
-                        type="password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="Masukkan password baru"
-                      />
-                      <p className="text-xs text-muted-foreground">Password minimal 8 karakter</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsResetPasswordDialogOpen(false)}>
-              {passwordInDialog.show ? 'Tutup' : 'Batal'}
-            </Button>
-            {!passwordInDialog.show && (
-              <Button onClick={handleResetPassword}>
-                Reset Password
-              </Button>
-            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
