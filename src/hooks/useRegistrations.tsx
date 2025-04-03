@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -36,7 +35,11 @@ export type {
   TicketAttachment
 };
 
-export const useRegistrations = () => {
+// Create context
+const RegistrationsContext = createContext<any>(null);
+
+// Provider component
+export const RegistrationsProvider = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<StatsData>({ total: 0, groups: [] });
@@ -74,29 +77,14 @@ export const useRegistrations = () => {
           }
           
           if (profileData) {
-            // Get the user's assigned group, if any
-            const { data: groupData } = await supabase
-              .from('user_whatsapp_groups')
-              .select(`
-                id,
-                group_id,
-                whatsapp_groups (
-                  id,
-                  name,
-                  invite_link
-                )
-              `)
-              .eq('user_id', session.user.id)
-              .single();
-            
             const user: User = {
               id: profileData.id,
               name: profileData.name,
               email: profileData.email,
               role: profileData.role as UserRole,
               avatarUrl: profileData.avatar_url,
-              assignedGroupId: groupData?.group_id || undefined,
-              joinConfirmed: !!groupData // If they have a group assignment, they're confirmed
+              assignedGroupId: profileData.assigned_group_id,
+              joinConfirmed: profileData.join_confirmed
             };
             
             setCurrentUser(user);
@@ -137,29 +125,14 @@ export const useRegistrations = () => {
           }
           
           if (profileData) {
-            // Get the user's assigned group, if any
-            const { data: groupData } = await supabase
-              .from('user_whatsapp_groups')
-              .select(`
-                id,
-                group_id,
-                whatsapp_groups (
-                  id,
-                  name,
-                  invite_link
-                )
-              `)
-              .eq('user_id', session.user.id)
-              .single();
-            
             const user: User = {
               id: profileData.id,
               name: profileData.name,
               email: profileData.email,
               role: profileData.role as UserRole,
               avatarUrl: profileData.avatar_url,
-              assignedGroupId: groupData?.group_id || undefined,
-              joinConfirmed: !!groupData // If they have a group assignment, they're confirmed
+              assignedGroupId: profileData.assigned_group_id,
+              joinConfirmed: profileData.join_confirmed
             };
             
             setCurrentUser(user);
@@ -283,26 +256,14 @@ export const useRegistrations = () => {
           return { success: false, error: 'Profil pengguna tidak ditemukan' };
         }
         
-        // Get user's assigned group if they're an applicant
-        let assignedGroupId;
-        if (profile.role === 'applicant') {
-          const { data: groupData } = await supabase
-            .from('user_whatsapp_groups')
-            .select('group_id')
-            .eq('user_id', data.user.id)
-            .single();
-          
-          assignedGroupId = groupData?.group_id;
-        }
-        
         const user: User = {
           id: profile.id,
           name: profile.name,
           email: profile.email,
           role: profile.role,
           avatarUrl: profile.avatar_url,
-          assignedGroupId,
-          joinConfirmed: !!assignedGroupId
+          assignedGroupId: profile.assigned_group_id,
+          joinConfirmed: profile.join_confirmed
         };
         
         setCurrentUser(user);
@@ -361,7 +322,9 @@ export const useRegistrations = () => {
             name: profile.name,
             email: profile.email,
             role: profile.role,
-            avatarUrl: profile.avatar_url
+            avatarUrl: profile.avatar_url,
+            assignedGroupId: profile.assigned_group_id,
+            joinConfirmed: profile.join_confirmed
           };
           
           setCurrentUser(user);
@@ -449,81 +412,122 @@ export const useRegistrations = () => {
 
   // Function to confirm user has joined the WhatsApp group
   const confirmGroupJoin = async () => {
-    if (!currentUser || !currentUser.assignedGroupId) {
-      return { success: false, error: "Pengguna belum masuk atau tidak memiliki grup yang ditugaskan" };
+    if (!currentUser) {
+      return { success: false, error: "Pengguna belum masuk" };
     }
     
     try {
-      // In a real app, this would update the database
-      // Update the current user state
-      setCurrentUser(prev => {
-        if (prev) {
-          return { ...prev, joinConfirmed: true };
-        }
-        return prev;
-      });
+      // Call the new DB function
+      const { data, error } = await supabase
+        .rpc('confirm_group_join', { user_id: currentUser.id });
       
-      // Also update the joinConfirmed flag in the database if needed
-      // We're using the user_whatsapp_groups table to track this
+      if (error) {
+        console.error('Error confirming group join:', error);
+        return { success: false, error: error.message };
+      }
       
-      return { success: true };
-    } catch (err) {
+      if (data) {
+        // Update the current user state
+        setCurrentUser(prev => {
+          if (prev) {
+            return { ...prev, joinConfirmed: true };
+          }
+          return prev;
+        });
+        
+        return { success: true };
+      } else {
+        return { success: false, error: "Tidak dapat mengkonfirmasi bergabung dengan grup" };
+      }
+    } catch (err: any) {
       console.error('Error in confirmGroupJoin:', err);
-      return { success: false, error: "Gagal memperbarui status bergabung" };
+      return { success: false, error: err.message || "Gagal memperbarui status bergabung" };
     }
   };
 
   // Function to assign a user to a WhatsApp group
   const assignUserToGroup = async (userId: string, groupId: string): Promise<boolean> => {
     try {
-      // Check if user is already in a group
-      const { data: existingGroup, error: checkError } = await supabase
-        .from('user_whatsapp_groups')
-        .select('id')
-        .eq('user_id', userId);
+      // Use the new function
+      const { data, error } = await supabase
+        .rpc('assign_user_to_group', { user_id: userId, group_id: groupId });
       
-      if (checkError) {
-        console.error('Error checking existing group:', checkError);
+      if (error) {
+        console.error('Error assigning user to group:', error);
         return false;
-      }
-      
-      // If user is already in a group, update the assignment
-      if (existingGroup && existingGroup.length > 0) {
-        const { error: updateError } = await supabase
-          .from('user_whatsapp_groups')
-          .update({ group_id: groupId })
-          .eq('user_id', userId);
-        
-        if (updateError) {
-          console.error('Error updating group assignment:', updateError);
-          return false;
-        }
-      } else {
-        // Create a new assignment
-        const { error: insertError } = await supabase
-          .from('user_whatsapp_groups')
-          .insert({ user_id: userId, group_id: groupId });
-        
-        if (insertError) {
-          console.error('Error inserting group assignment:', insertError);
-          return false;
-        }
       }
       
       // If the current user is being assigned, update the local state
       if (currentUser && currentUser.id === userId) {
         setCurrentUser(prev => {
           if (prev) {
-            return { ...prev, assignedGroupId: groupId };
+            return { ...prev, assignedGroupId: groupId, joinConfirmed: false };
           }
           return prev;
         });
       }
       
-      return true;
+      // Fetch fresh stats to update group counts
+      await fetchStats();
+      
+      return !!data;
     } catch (err) {
       console.error('Error in assignUserToGroup:', err);
       return false;
+    }
+  };
+
+  // Function to update user role
+  const updateUserRole = async (userId: string, newRole: UserRole): Promise<boolean> => {
+    try {
+      // Use the new function
+      const { data, error } = await supabase
+        .rpc('update_user_role', { user_id: userId, new_role: newRole });
+      
+      if (error) {
+        console.error('Error updating user role:', error);
+        return false;
+      }
+      
+      // If the current user's role is being updated, update local state
+      if (currentUser && currentUser.id === userId) {
+        setCurrentUser(prev => {
+          if (prev) {
+            return { ...prev, role: newRole };
+          }
+          return prev;
+        });
+      }
+      
+      return !!data;
+    } catch (err) {
+      console.error('Error in updateUserRole:', err);
+      return false;
+    }
+  };
+
+  // Fetch all applicants for admin management
+  const getApplicants = async () => {
+    if (!currentUser || currentUser.role !== 'admin') {
+      return [];
+    }
+    
+    try {
+      // Use the user_management view
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching applicants:', error);
+        return [];
+      }
+      
+      return data || [];
+    } catch (err) {
+      console.error('Error in getApplicants:', err);
+      return [];
     }
   };
 
@@ -1082,686 +1086,3 @@ export const useRegistrations = () => {
       return false;
     }
   };
-
-  // Function to fetch helpdesk counters for offline helpdesk
-  const fetchHelpdeskCounters = async (): Promise<HelpdeskCounter[]> => {
-    try {
-      const { data, error } = await supabase
-        .from('helpdesk_counters')
-        .select(`
-          id,
-          name,
-          is_active,
-          operator_id,
-          helpdesk_operators (
-            id,
-            profiles (name)
-          )
-        `)
-        .order('name');
-      
-      if (error) {
-        console.error('Error fetching counters:', error);
-        return [];
-      }
-      
-      const formattedCounters: HelpdeskCounter[] = data.map(counter => ({
-        id: counter.id,
-        name: counter.name,
-        is_active: counter.is_active,
-        operator_id: counter.operator_id,
-        operatorName: counter.helpdesk_operators?.profiles?.name
-      }));
-      
-      setCounters(formattedCounters);
-      return formattedCounters;
-    } catch (err) {
-      console.error('Error in fetchHelpdeskCounters:', err);
-      return [];
-    }
-  };
-
-  // Function to add a new helpdesk counter
-  const addHelpdeskCounter = async (name: string): Promise<boolean> => {
-    if (!currentUser || currentUser.role !== 'admin') {
-      return false;
-    }
-    
-    try {
-      const { error } = await supabase
-        .from('helpdesk_counters')
-        .insert({
-          name,
-          is_active: true
-        });
-      
-      if (error) {
-        console.error('Error adding counter:', error);
-        return false;
-      }
-      
-      // Refresh counters list
-      await fetchHelpdeskCounters();
-      return true;
-    } catch (err) {
-      console.error('Error in addHelpdeskCounter:', err);
-      return false;
-    }
-  };
-
-  // Function to update counter status
-  const updateCounterStatus = async (
-    counterId: string, 
-    isActive: boolean
-  ): Promise<boolean> => {
-    if (!currentUser || currentUser.role !== 'admin') {
-      return false;
-    }
-    
-    try {
-      const { error } = await supabase
-        .from('helpdesk_counters')
-        .update({ is_active: isActive })
-        .eq('id', counterId);
-      
-      if (error) {
-        console.error('Error updating counter status:', error);
-        return false;
-      }
-      
-      // Refresh counters list
-      await fetchHelpdeskCounters();
-      return true;
-    } catch (err) {
-      console.error('Error in updateCounterStatus:', err);
-      return false;
-    }
-  };
-
-  // Function to assign operator to counter
-  const assignOperatorToCounter = async (
-    counterId: string, 
-    operatorId: string | null
-  ): Promise<boolean> => {
-    if (!currentUser || currentUser.role !== 'admin') {
-      return false;
-    }
-    
-    try {
-      const { error } = await supabase
-        .from('helpdesk_counters')
-        .update({ operator_id: operatorId })
-        .eq('id', counterId);
-      
-      if (error) {
-        console.error('Error assigning operator to counter:', error);
-        return false;
-      }
-      
-      // Refresh counters list
-      await fetchHelpdeskCounters();
-      return true;
-    } catch (err) {
-      console.error('Error in assignOperatorToCounter:', err);
-      return false;
-    }
-  };
-
-  // Function to create a queue ticket for offline helpdesk
-  const createQueueTicket = async (
-    categoryId: string
-  ): Promise<{ success: boolean; queueNumber?: number; error?: string }> => {
-    if (!currentUser) {
-      return { success: false, error: "Pengguna belum masuk" };
-    }
-    
-    try {
-      // Check if the user already has an active ticket
-      const { data: existingTickets, error: checkError } = await supabase
-        .from('queue_tickets')
-        .select('*')
-        .eq('user_id', currentUser.id)
-        .in('status', ['waiting', 'called', 'serving'])
-        .maybeSingle();
-      
-      if (checkError) {
-        console.error('Error checking existing tickets:', checkError);
-        return { success: false, error: checkError.message };
-      }
-      
-      if (existingTickets) {
-        return { 
-          success: false, 
-          error: "Anda sudah memiliki nomor antrean yang aktif", 
-          queueNumber: existingTickets.queue_number 
-        };
-      }
-      
-      // Check daily capacity
-      const today = new Date().toISOString().split('T')[0];
-      const { data: capacity, error: capacityError } = await supabase
-        .from('daily_helpdesk_capacity')
-        .select('offline_capacity')
-        .eq('date', today)
-        .single();
-      
-      if (capacityError) {
-        console.error('Error checking capacity:', capacityError);
-        // Continue anyway, using default capacity
-      }
-      
-      // Count today's tickets
-      const { count: todayCount, error: countError } = await supabase
-        .from('queue_tickets')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', `${today}T00:00:00`)
-        .lte('created_at', `${today}T23:59:59`);
-      
-      if (countError) {
-        console.error('Error counting today\'s tickets:', countError);
-        return { success: false, error: countError.message };
-      }
-      
-      // Check if we're at capacity
-      const dailyCapacity = capacity?.offline_capacity || 30;
-      if (todayCount && todayCount >= dailyCapacity) {
-        return { 
-          success: false, 
-          error: "Kuota harian telah penuh. Silakan coba lagi besok." 
-        };
-      }
-      
-      // Create the queue ticket
-      const { data: ticket, error: insertError } = await supabase
-        .from('queue_tickets')
-        .insert({
-          user_id: currentUser.id,
-          category_id: categoryId,
-          status: 'waiting'
-        })
-        .select()
-        .single();
-      
-      if (insertError || !ticket) {
-        console.error('Error creating queue ticket:', insertError);
-        return { success: false, error: insertError?.message || "Gagal membuat tiket antrean" };
-      }
-      
-      // Refresh queue tickets list
-      await fetchQueueTickets();
-      
-      return { 
-        success: true, 
-        queueNumber: ticket.queue_number 
-      };
-    } catch (err: any) {
-      console.error('Error in createQueueTicket:', err);
-      return { success: false, error: err.message || "Gagal membuat tiket antrean" };
-    }
-  };
-
-  // Function to fetch queue tickets
-  const fetchQueueTickets = async (): Promise<QueueTicket[]> => {
-    if (!currentUser) {
-      setQueueTickets([]);
-      return [];
-    }
-    
-    try {
-      let query = supabase
-        .from('queue_tickets')
-        .select(`
-          id,
-          user_id,
-          queue_number,
-          category_id,
-          status,
-          counter_id,
-          operator_id,
-          created_at,
-          served_at,
-          completed_at,
-          ticket_categories (name),
-          helpdesk_counters (name),
-          profiles (name)
-        `);
-      
-      // Filter based on role and status
-      if (currentUser.role === 'applicant') {
-        // Applicants only see their own queue tickets
-        query = query.eq('user_id', currentUser.id);
-      } else if (currentUser.role === 'helpdesk_offline') {
-        // Offline helpdesk operators see tickets in their counter or unassigned waiting tickets
-        // Get the operator's assigned counter
-        const { data: counterData } = await supabase
-          .from('helpdesk_counters')
-          .select('id')
-          .eq('operator_id', currentUser.id)
-          .maybeSingle();
-        
-        if (counterData) {
-          query = query.or(`counter_id.is.null,counter_id.eq.${counterData.id}`);
-        }
-      }
-      // Admins see all tickets (no filter)
-      
-      const { data, error } = await query.order('created_at', { ascending: true });
-      
-      if (error) {
-        console.error('Error fetching queue tickets:', error);
-        setQueueTickets([]);
-        return [];
-      }
-      
-      const formattedTickets: QueueTicket[] = data.map(ticket => ({
-        id: ticket.id,
-        user_id: ticket.user_id,
-        queue_number: ticket.queue_number,
-        category_id: ticket.category_id,
-        categoryName: ticket.ticket_categories?.name,
-        status: ticket.status,
-        counter_id: ticket.counter_id,
-        counterName: ticket.helpdesk_counters?.name,
-        operator_id: ticket.operator_id,
-        operatorName: ticket.profiles?.name,
-        created_at: ticket.created_at,
-        served_at: ticket.served_at,
-        completed_at: ticket.completed_at
-      }));
-      
-      setQueueTickets(formattedTickets);
-      return formattedTickets;
-    } catch (err) {
-      console.error('Error in fetchQueueTickets:', err);
-      setQueueTickets([]);
-      return [];
-    }
-  };
-
-  // Function to update queue ticket status
-  const updateQueueTicketStatus = async (
-    ticketId: string, 
-    status: 'waiting' | 'called' | 'serving' | 'completed' | 'skipped'
-  ): Promise<boolean> => {
-    if (!currentUser || (currentUser.role !== 'helpdesk_offline' && currentUser.role !== 'admin')) {
-      return false;
-    }
-    
-    try {
-      const updateData: any = { 
-        status,
-        updated_at: new Date().toISOString()
-      };
-      
-      // Add additional data based on status
-      if (status === 'called' || status === 'serving') {
-        // Get the operator's assigned counter
-        const { data: counterData } = await supabase
-          .from('helpdesk_counters')
-          .select('id')
-          .eq('operator_id', currentUser.id)
-          .maybeSingle();
-        
-        if (counterData) {
-          updateData.counter_id = counterData.id;
-          updateData.operator_id = currentUser.id;
-        }
-        
-        if (status === 'serving') {
-          updateData.served_at = new Date().toISOString();
-        }
-      } else if (status === 'completed' || status === 'skipped') {
-        updateData.completed_at = new Date().toISOString();
-      }
-      
-      const { error } = await supabase
-        .from('queue_tickets')
-        .update(updateData)
-        .eq('id', ticketId);
-      
-      if (error) {
-        console.error('Error updating queue ticket status:', error);
-        return false;
-      }
-      
-      // Refresh queue tickets list
-      await fetchQueueTickets();
-      return true;
-    } catch (err) {
-      console.error('Error in updateQueueTicketStatus:', err);
-      return false;
-    }
-  };
-
-  // Function to fetch daily helpdesk capacity
-  const fetchDailyCapacity = async (): Promise<DailyCapacity[]> => {
-    try {
-      const { data, error } = await supabase
-        .from('daily_helpdesk_capacity')
-        .select('*')
-        .order('date');
-      
-      if (error) {
-        console.error('Error fetching daily capacity:', error);
-        return [];
-      }
-      
-      const formattedCapacity: DailyCapacity[] = data.map(cap => ({
-        id: cap.id,
-        date: cap.date,
-        online_capacity: cap.online_capacity,
-        offline_capacity: cap.offline_capacity
-      }));
-      
-      setDailyCapacities(formattedCapacity);
-      return formattedCapacity;
-    } catch (err) {
-      console.error('Error in fetchDailyCapacity:', err);
-      return [];
-    }
-  };
-
-  // Function to update daily capacity
-  const updateDailyCapacity = async (
-    date: string, 
-    onlineCapacity: number, 
-    offlineCapacity: number
-  ): Promise<boolean> => {
-    if (!currentUser || currentUser.role !== 'admin') {
-      return false;
-    }
-    
-    try {
-      // Check if date exists
-      const { data: existingData, error: checkError } = await supabase
-        .from('daily_helpdesk_capacity')
-        .select('id')
-        .eq('date', date)
-        .maybeSingle();
-      
-      if (checkError) {
-        console.error('Error checking capacity:', checkError);
-        return false;
-      }
-      
-      let error;
-      if (existingData) {
-        // Update existing record
-        const { error: updateError } = await supabase
-          .from('daily_helpdesk_capacity')
-          .update({ 
-            online_capacity: onlineCapacity,
-            offline_capacity: offlineCapacity,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existingData.id);
-        
-        error = updateError;
-      } else {
-        // Insert new record
-        const { error: insertError } = await supabase
-          .from('daily_helpdesk_capacity')
-          .insert({
-            date,
-            online_capacity: onlineCapacity,
-            offline_capacity: offlineCapacity
-          });
-        
-        error = insertError;
-      }
-      
-      if (error) {
-        console.error('Error updating capacity:', error);
-        return false;
-      }
-      
-      // Refresh capacity list
-      await fetchDailyCapacity();
-      return true;
-    } catch (err) {
-      console.error('Error in updateDailyCapacity:', err);
-      return false;
-    }
-  };
-
-  // Function to get applicants
-  const getApplicants = async () => {
-    if (!currentUser || currentUser.role !== 'admin') {
-      return [];
-    }
-    
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(`
-          id,
-          name,
-          email,
-          created_at,
-          user_whatsapp_groups (
-            id,
-            whatsapp_groups (name)
-          )
-        `)
-        .eq('role', 'applicant')
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error('Error fetching applicants:', error);
-        return [];
-      }
-      
-      return data.map(applicant => ({
-        id: applicant.id,
-        name: applicant.name,
-        email: applicant.email,
-        registeredAt: applicant.created_at,
-        group: applicant.user_whatsapp_groups[0]?.whatsapp_groups?.name || 'Belum ditugaskan'
-      }));
-    } catch (err) {
-      console.error('Error in getApplicants:', err);
-      return [];
-    }
-  };
-
-  // Function to update user role
-  const updateUserRole = async (userId: string, newRole: UserRole): Promise<boolean> => {
-    if (!currentUser || currentUser.role !== 'admin') {
-      return false;
-    }
-    
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ 
-          role: newRole,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', userId);
-      
-      if (error) {
-        console.error('Error updating user role:', error);
-        return false;
-      }
-      
-      return true;
-    } catch (err) {
-      console.error('Error in updateUserRole:', err);
-      return false;
-    }
-  };
-
-  // Function to create a new WhatsApp group
-  const createGroup = async (groupData: { 
-    name: string; 
-    capacity: number; 
-    link: string;
-    description?: string;
-  }): Promise<boolean> => {
-    if (!currentUser || currentUser.role !== 'admin') {
-      return false;
-    }
-    
-    try {
-      const { error } = await supabase
-        .from('whatsapp_groups')
-        .insert({
-          name: groupData.name,
-          description: groupData.description || null,
-          invite_link: groupData.link,
-          capacity: groupData.capacity,
-          is_active: true
-        });
-      
-      if (error) {
-        console.error('Error creating group:', error);
-        return false;
-      }
-      
-      // Refresh stats
-      await fetchStats();
-      return true;
-    } catch (err) {
-      console.error('Error in createGroup:', err);
-      return false;
-    }
-  };
-
-  // Function to update a WhatsApp group
-  const updateGroup = async (id: string, groupData: { 
-    name?: string; 
-    capacity?: number; 
-    link?: string;
-    description?: string;
-    is_active?: boolean;
-  }): Promise<boolean> => {
-    if (!currentUser || currentUser.role !== 'admin') {
-      return false;
-    }
-    
-    try {
-      const updateData: any = {};
-      
-      if (groupData.name !== undefined) updateData.name = groupData.name;
-      if (groupData.capacity !== undefined) updateData.capacity = groupData.capacity;
-      if (groupData.link !== undefined) updateData.invite_link = groupData.link;
-      if (groupData.description !== undefined) updateData.description = groupData.description;
-      if (groupData.is_active !== undefined) updateData.is_active = groupData.is_active;
-      
-      updateData.updated_at = new Date().toISOString();
-      
-      const { error } = await supabase
-        .from('whatsapp_groups')
-        .update(updateData)
-        .eq('id', id);
-      
-      if (error) {
-        console.error('Error updating group:', error);
-        return false;
-      }
-      
-      // Refresh stats
-      await fetchStats();
-      return true;
-    } catch (err) {
-      console.error('Error in updateGroup:', err);
-      return false;
-    }
-  };
-
-  // Function to delete a WhatsApp group
-  const deleteGroup = async (id: string): Promise<boolean> => {
-    if (!currentUser || currentUser.role !== 'admin') {
-      return false;
-    }
-    
-    try {
-      // Check if group has members
-      const { data: group, error: groupError } = await supabase
-        .from('whatsapp_groups')
-        .select('member_count')
-        .eq('id', id)
-        .single();
-      
-      if (groupError) {
-        console.error('Error fetching group:', groupError);
-        return false;
-      }
-      
-      if (group.member_count > 0) {
-        toast({
-          title: "Gagal",
-          description: "Tidak dapat menghapus grup yang memiliki anggota",
-          variant: "destructive"
-        });
-        return false;
-      }
-      
-      const { error } = await supabase
-        .from('whatsapp_groups')
-        .delete()
-        .eq('id', id);
-      
-      if (error) {
-        console.error('Error deleting group:', error);
-        return false;
-      }
-      
-      // Refresh stats
-      await fetchStats();
-      return true;
-    } catch (err) {
-      console.error('Error in deleteGroup:', err);
-      return false;
-    }
-  };
-
-  return { 
-    stats, 
-    loading, 
-    error, 
-    login,
-    register,
-    logout, 
-    currentUser, 
-    authenticated,
-    hasRole,
-    getUserAssignedGroup,
-    confirmGroupJoin,
-    assignUserToGroup,
-    createTicket,
-    addTicketMessage,
-    addTicketAttachment,
-    getTicketAttachments,
-    getFileUrl,
-    fetchUserTickets,
-    updateTicketStatus,
-    updateTicketPriority,
-    assignTicket,
-    tickets,
-    fetchHelpdeskOperators,
-    addHelpdeskOperator,
-    updateOperatorStatus,
-    operators,
-    fetchHelpdeskCounters,
-    addHelpdeskCounter,
-    updateCounterStatus,
-    assignOperatorToCounter,
-    counters,
-    createQueueTicket,
-    fetchQueueTickets,
-    updateQueueTicketStatus,
-    queueTickets,
-    fetchDailyCapacity,
-    updateDailyCapacity,
-    dailyCapacities,
-    getApplicants,
-    updateUserRole,
-    createGroup,
-    updateGroup,
-    deleteGroup,
-    fetchStats,
-    fetchCategories,
-    categories
-  };
-};
