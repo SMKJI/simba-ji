@@ -6,9 +6,7 @@ const HeroSection = () => {
       <div className="container mx-auto px-4">
         <div className="flex flex-col-reverse md:flex-row items-center">
           <div className="w-full md:w-1/2 mt-10 md:mt-0 text-center md:text-left">
-            <div className="inline-block px-3 py-1 mb-6 bg-primary/10 text-primary text-sm font-medium rounded-full animate-fade-in">
-              Pendaftaran Awal Tahun Ajaran 2024/2025
-            </div>
+            <div className="inline-block px-3 py-1 mb-6 bg-primary/10 text-primary text-sm font-medium rounded-full animate-fade-in">Pendaftaran Awal Tahun Ajaran 2025/2026</div>
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 animate-fade-in">
               Sistem Penjaringan <span className="text-primary">Murid Baru</span>
             </h1>
