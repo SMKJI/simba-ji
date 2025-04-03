@@ -81,6 +81,7 @@ const GroupJoinConfirmation = () => {
 
   // Use a consistent way to get member count, handling both properties
   const memberCount = assignedGroup.member_count || assignedGroup.count || 0;
+  const inviteLink = assignedGroup.invite_link || assignedGroup.link || "https://chat.whatsapp.com/example";
 
   return (
     <Card className="border-0 shadow-lg rounded-xl overflow-hidden">
@@ -116,14 +117,14 @@ const GroupJoinConfirmation = () => {
             <div className="flex items-center space-x-2">
               <input
                 type="text"
-                value={assignedGroup.invite_link || assignedGroup.link || "https://chat.whatsapp.com/example"}
+                value={inviteLink}
                 readOnly
                 className="flex-1 p-2 border rounded bg-white text-sm"
               />
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => copyToClipboard(assignedGroup.invite_link || assignedGroup.link || "https://chat.whatsapp.com/example")}
+                onClick={() => copyToClipboard(inviteLink)}
                 className={copySuccess ? "bg-green-100 text-green-600" : ""}
               >
                 {copySuccess ? (
@@ -144,7 +145,7 @@ const GroupJoinConfirmation = () => {
               variant="default"
               size="lg"
               className="bg-green-600 hover:bg-green-700 text-white flex-1"
-              onClick={() => window.open(assignedGroup.invite_link || assignedGroup.link || "https://chat.whatsapp.com/example", '_blank')}
+              onClick={() => window.open(inviteLink, '_blank')}
             >
               <ExternalLink className="h-4 w-4 mr-2" />
               Buka Grup WhatsApp
