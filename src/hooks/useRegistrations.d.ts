@@ -45,4 +45,14 @@ export interface RegistrationsContextType {
   getHelpdeskOperators: () => HelpdeskOperator[];
   resetOperatorPassword: (operatorId: string, newPassword: string) => { success: boolean; password?: string };
   sendOperatorCredentials: (operatorId: string) => boolean;
+  getUserAssignedGroup: () => Group | null;
+  confirmGroupJoin: () => Promise<{ success: boolean; error?: string }>;
+  createGroup: (groupData: { name: string; capacity: number; link: string }) => boolean;
+  updateGroup: (id: string, groupData: { name?: string; capacity?: number; link?: string }) => boolean;
+  deleteGroup: (id: string) => boolean;
+  getApplicants: () => any[];
+  updateApplicant: (id: string, data: any) => boolean;
+  deleteApplicant: (id: string) => boolean;
+  resetUserPassword: (id: string) => boolean;
+  updateUserRole: (userId: string, newRole: UserRole) => boolean;
 }

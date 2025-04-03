@@ -7,7 +7,7 @@ import GroupInfoCard from '@/components/groups/GroupInfoCard';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useRegistrations } from '@/hooks/useRegistrations';
-import { Group } from '@/types/supabase'; // Updated import to use types directly from supabase.ts
+import { Group } from '@/types/supabase';
 
 const GroupDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,9 +17,13 @@ const GroupDetail = () => {
 
   useEffect(() => {
     if (id && stats.groups) {
-      const groupId = id; // Use string ID directly, no parsing needed
+      const groupId = id; // Use string ID directly
       const foundGroup = stats.groups.find(g => g.id === groupId);
-      setGroup(foundGroup || null);
+      if (foundGroup) {
+        setGroup(foundGroup);
+      } else {
+        setGroup(null);
+      }
     }
   }, [id, stats.groups]);
 

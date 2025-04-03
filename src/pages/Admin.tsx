@@ -8,6 +8,7 @@ import ApplicantsTable from '@/components/admin/ApplicantsTable';
 import StatsPanel from '@/components/admin/StatsPanel';
 import GroupsManager from '@/components/admin/GroupsManager';
 import { useRegistrations } from '@/hooks/useRegistrations';
+import { Group } from '@/types/supabase';
 
 const Admin = () => {
   const { toast } = useToast();
@@ -70,7 +71,7 @@ const Admin = () => {
             </TabsContent>
             
             <TabsContent value="groups">
-              <GroupsManager groups={stats.groups} />
+              <GroupsManager groups={stats.groups as Group[]} />
             </TabsContent>
             
             <TabsContent value="stats">

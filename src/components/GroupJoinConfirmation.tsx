@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useRegistrations } from '@/hooks/useRegistrations';
-import { Group } from '@/types/supabase'; // Updated import
+import { Group } from '@/types/supabase';
 import { Check, Copy, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -141,7 +141,7 @@ const GroupJoinConfirmation = () => {
               variant="default"
               size="lg"
               className="bg-green-600 hover:bg-green-700 text-white flex-1"
-              onClick={() => window.open(assignedGroup.link || "https://chat.whatsapp.com/example", '_blank')}
+              onClick={() => window.open(assignedGroup.invite_link || assignedGroup.link || "https://chat.whatsapp.com/example", '_blank')}
             >
               <ExternalLink className="h-4 w-4 mr-2" />
               Buka Grup WhatsApp

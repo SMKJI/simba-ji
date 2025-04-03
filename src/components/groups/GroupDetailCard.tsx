@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRegistrations } from '@/hooks/useRegistrations';
-import { Group } from '@/types/supabase'; // Updated import
+import { Group } from '@/types/supabase';
 import { useToast } from '@/hooks/use-toast';
 
 interface GroupDetailCardProps {

@@ -113,7 +113,7 @@ const GroupsManager = ({ groups }: GroupsManagerProps) => {
     setCurrentGroup(group);
     setNewGroupName(group.name);
     setNewGroupCapacity(group.capacity.toString());
-    setNewGroupLink(group.invite_link || '');
+    setNewGroupLink(group.invite_link || group.link || '');
     setIsEditDialogOpen(true);
   };
 

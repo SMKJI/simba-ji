@@ -10,6 +10,8 @@ export interface User {
   email: string;
   role: UserRole;
   avatarUrl?: string;
+  assignedGroupId?: number | string;
+  joinConfirmed?: boolean;
 }
 
 export interface Group {
@@ -21,6 +23,8 @@ export interface Group {
   member_count: number;
   is_active: boolean;
   isFull: boolean; // Computed property
+  count?: number; // For backward compatibility
+  link?: string; // For backward compatibility
 }
 
 export interface StatsData {
