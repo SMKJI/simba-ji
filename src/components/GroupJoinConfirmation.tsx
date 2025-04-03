@@ -79,6 +79,9 @@ const GroupJoinConfirmation = () => {
     }
   };
 
+  // Use a consistent way to get member count, handling both properties
+  const memberCount = assignedGroup.member_count || assignedGroup.count || 0;
+
   return (
     <Card className="border-0 shadow-lg rounded-xl overflow-hidden">
       <CardHeader className="bg-primary/5 border-b p-6">
@@ -98,10 +101,10 @@ const GroupJoinConfirmation = () => {
             </div>
             <div className="flex items-center justify-between text-sm mb-1">
               <span>Kapasitas</span>
-              <span>{assignedGroup.member_count || assignedGroup.count || 0} / {assignedGroup.capacity}</span>
+              <span>{memberCount} / {assignedGroup.capacity}</span>
             </div>
             <Progress 
-              value={((assignedGroup.member_count || assignedGroup.count || 0) / assignedGroup.capacity) * 100} 
+              value={(memberCount / assignedGroup.capacity) * 100} 
               className={`h-2 ${assignedGroup.isFull ? 'bg-secondary/20' : 'bg-primary/20'}`}
             />
           </div>

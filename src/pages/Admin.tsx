@@ -43,6 +43,20 @@ const Admin = () => {
     }
   };
 
+  // Ensure groups have all required properties by mapping them to the proper Group type
+  const typedGroups: Group[] = stats.groups.map(group => ({
+    id: group.id,
+    name: group.name,
+    description: group.description || null,
+    invite_link: group.invite_link || group.link || '',
+    capacity: group.capacity,
+    member_count: group.member_count || group.count || 0,
+    is_active: group.is_active !== undefined ? group.is_active : true,
+    isFull: group.isFull,
+    count: group.count,
+    link: group.link
+  }));
+
   return (
     <DashboardLayout>
       <div className="space-y-4 sm:space-y-6 px-4 sm:px-0">
@@ -71,7 +85,7 @@ const Admin = () => {
             </TabsContent>
             
             <TabsContent value="groups">
-              <GroupsManager groups={stats.groups as unknown as Group[]} />
+              <GroupsManager groups={typedGroups} />
             </TabsContent>
             
             <TabsContent value="stats">

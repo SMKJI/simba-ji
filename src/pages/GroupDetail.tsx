@@ -17,9 +17,18 @@ const GroupDetail = () => {
 
   useEffect(() => {
     if (id && stats.groups) {
+      // Convert both ids to strings for comparison to handle both number and string types
       const foundGroup = stats.groups.find(g => g.id.toString() === id);
       if (foundGroup) {
-        setGroup(foundGroup);
+        // Create a new Group object that matches the expected type
+        const typedGroup: Group = {
+          ...foundGroup,
+          description: foundGroup.description || null,
+          invite_link: foundGroup.invite_link || foundGroup.link || '',
+          member_count: foundGroup.member_count || foundGroup.count || 0,
+          is_active: foundGroup.is_active !== undefined ? foundGroup.is_active : true
+        };
+        setGroup(typedGroup);
       } else {
         setGroup(null);
       }
