@@ -402,12 +402,12 @@ const RegisterForm = ({ onRegistrationSuccess }: RegisterFormProps) => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="tkj">Teknik Komputer dan Jaringan</SelectItem>
-                        <SelectItem value="rpl">Rekayasa Perangkat Lunak</SelectItem>
-                        <SelectItem value="mm">Multimedia</SelectItem>
                         <SelectItem value="akl">Akuntansi dan Keuangan Lembaga</SelectItem>
-                        <SelectItem value="otkp">Otomatisasi dan Tata Kelola Perkantoran</SelectItem>
-                        <SelectItem value="bdp">Bisnis Daring dan Pemasaran</SelectItem>
+                        <SelectItem value="bp">Broadcast dan Perfilman</SelectItem>
+                        <SelectItem value="bus">Busana</SelectItem>
+                        <SelectItem value="dkv">Desain Komunikasi Visual</SelectItem>
+                        <SelectItem value="mplb">Menejemen Perkantoran dan Layanan Bisnis</SelectItem>
+                        <SelectItem value="pm">Pemasaran</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
