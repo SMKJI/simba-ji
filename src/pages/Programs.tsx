@@ -1,48 +1,54 @@
 
-import MainLayout from '@/components/layouts/MainLayout';
-import ContentDisplay from '@/components/content/ContentDisplay';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
+import PageLayout from '@/components/PageLayout';
+import ProgramCard from '@/components/programs/ProgramCard';
 import { programs } from '@/data/programData';
-import { Card, CardContent } from '@/components/ui/card';
 
-// Update to make sure the image property exists
 const Programs = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  const handleRegisterClick = () => {
+    toast({
+      title: "Mengarahkan ke pendaftaran",
+      description: "Anda akan diarahkan ke halaman pendaftaran",
+    });
+    
+    // Delay navigation to allow toast to be seen
+    setTimeout(() => {
+      navigate('/register');
+    }, 500);
+  };
+
   return (
-    <MainLayout>
-      <div className="container mx-auto px-4 py-12">
-        <div className="mb-8">
-          <ContentDisplay slug="programs" className="mx-auto max-w-3xl" />
+    <PageLayout>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+        <div className="text-center mb-10 sm:mb-14">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+            Program Keahlian
+          </h1>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            SMKN 1 Kendal menawarkan berbagai program keahlian yang dirancang untuk mempersiapkan siswa menghadapi dunia kerja dan industri
+          </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-          {programs.map((program) => (
-            <Card key={program.id} className="overflow-hidden border shadow-md hover:shadow-lg transition-shadow">
-              <div className="aspect-video bg-muted flex items-center justify-center">
-                {/* Use optional chaining to safely access the image property */}
-                <img 
-                  src={program.image || '/placeholder.svg'} 
-                  alt={program.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <CardContent className="p-5">
-                <h3 className="text-xl font-bold mb-2">{program.name}</h3>
-                <p className="text-muted-foreground mb-4">{program.description}</p>
-                <div className="flex flex-wrap gap-2">
-                  {program.skills.map((skill, index) => (
-                    <span 
-                      key={index}
-                      className="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          {programs.map((program, index) => (
+            <ProgramCard 
+              key={index} 
+              program={program} 
+              onRegisterClick={handleRegisterClick}
+            />
           ))}
         </div>
       </div>
-    </MainLayout>
+    </PageLayout>
   );
 };
 

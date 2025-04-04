@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import PageTitle from '@/components/ui/PageTitle';
 import DashboardHome from '@/components/Dashboard';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
 import { useRegistrations } from '@/hooks/useRegistrations';
 import { useToast } from '@/hooks/use-toast';
@@ -12,20 +11,13 @@ import GroupJoinConfirmation from '@/components/GroupJoinConfirmation';
 import TicketList from '@/components/TicketList';
 import DashboardInfoPanel from '@/components/dashboard/DashboardInfoPanel';
 import DashboardAnnouncements from '@/components/dashboard/DashboardAnnouncements';
-// Import the component with default export
-import QueueDisplay from '@/components/helpdesk/QueueDisplay';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { QueueDisplay } from '@/components/helpdesk/QueueDisplay';
 
-const Dashboard = () => {
+const DashboardPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { 
-    stats, 
-    loading, 
-    currentUser, 
-    authenticated, 
-    fetchStats 
-  } = useRegistrations();
-  
+  const { stats, loading, currentUser, authenticated, fetchStats } = useRegistrations();
   const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
@@ -47,8 +39,8 @@ const Dashboard = () => {
     } else {
       // Welcome message
       toast({
-        title: `Selamat datang, ${currentUser?.name}`,
-        description: "Anda telah berhasil masuk ke dashboard.",
+        title: `Selamat Datang, ${currentUser?.name}`,
+        description: "Selamat datang di dashboard Anda"
       });
     }
   }, [authenticated, navigate, loading, currentUser, toast, fetchStats]);
@@ -56,21 +48,26 @@ const Dashboard = () => {
   // Don't render anything while checking authentication
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[40vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex justify-center items-center min-h-[40vh] sm:min-h-[50vh]">
+        <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin text-primary" />
       </div>
     );
+  }
+
+  // Also don't render if not authenticated
+  if (!authenticated || !currentUser) {
+    return null;
   }
 
   return (
     <DashboardLayout>
       <div className="max-w-6xl mx-auto px-4 sm:px-0">
         <PageTitle 
-          title={`Selamat Datang, ${currentUser?.name}`}
-          description="Panel dashboard sistem penerimaan murid baru SMKN 1 Kendal"
+          title={`Selamat Datang, ${currentUser.name}`}
+          description="Panel dashboard penjaringan awal calon murid baru SMKN 1 Kendal"
         />
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="mb-6 w-full justify-start flex-wrap">
             <TabsTrigger value="overview">Beranda</TabsTrigger>
             <TabsTrigger value="group">Grup WhatsApp</TabsTrigger>
@@ -109,4 +106,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default DashboardPage;

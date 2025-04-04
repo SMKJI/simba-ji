@@ -1,24 +1,30 @@
 
-import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
 import MainLayout from '@/components/layouts/MainLayout';
 import HeroSection from '@/components/home/HeroSection';
 import FeatureSection from '@/components/home/FeatureSection';
 import CounterSection from '@/components/home/CounterSection';
+import FAQSection from '@/components/FAQSection';
 import ContactSection from '@/components/home/ContactSection';
-import ContentDisplay from '@/components/content/ContentDisplay';
 
 const Index = () => {
+  useEffect(() => {
+    // Smooth scroll to top on page load
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }, []);
+
   return (
     <MainLayout>
-      <HeroSection />
-      
-      <div className="container mx-auto px-4 py-12">
-        <ContentDisplay slug="home" className="mx-auto max-w-3xl mb-16" />
+      <div className="page-transition">
+        <HeroSection />
+        <CounterSection />
+        <FeatureSection />
+        <FAQSection />
+        <ContactSection />
       </div>
-      
-      <FeatureSection />
-      <CounterSection />
-      <ContactSection />
     </MainLayout>
   );
 };

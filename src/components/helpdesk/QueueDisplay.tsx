@@ -6,10 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Clock, AlertTriangle, Users, ArrowRight } from 'lucide-react';
 import { useRegistrations } from '@/hooks/useRegistrations';
-import { QueueTicket, HelpdeskOperator } from '@/types/supabase';
+import { QueueTicket } from '@/types/supabase';
 
-// Changed from export const QueueDisplay to export default function QueueDisplay
-export default function QueueDisplay() {
+export const QueueDisplay = () => {
   const { 
     fetchQueueTickets, 
     queueTickets, 
@@ -100,7 +99,7 @@ export default function QueueDisplay() {
     navigate('/offline-helpdesk');
   };
   
-  // Get capacity percentage
+  // Get capacity usage percentage
   const getCapacityPercentage = () => {
     if (!todayCapacity) return 0;
     
@@ -211,7 +210,7 @@ export default function QueueDisplay() {
                 <ul className="space-y-2">
                   <li className="flex items-start">
                     <span className="h-5 w-5 bg-primary/20 rounded-full flex items-center justify-center text-xs text-primary mr-2 mt-0.5">1</span>
-                    <span>Kendala Pembuatan Akun PMB (Registrasi Resmi dari Dinas Pendidikan)</span>
+                    <span>Kendala Pembuatan Akun PMB (Registrasi Resmi dari Dinas Pendidikan Provinsi Jawa Tengah)</span>
                   </li>
                   <li className="flex items-start">
                     <span className="h-5 w-5 bg-primary/20 rounded-full flex items-center justify-center text-xs text-primary mr-2 mt-0.5">2</span>
@@ -306,4 +305,4 @@ export default function QueueDisplay() {
       </CardContent>
     </Card>
   );
-}
+};

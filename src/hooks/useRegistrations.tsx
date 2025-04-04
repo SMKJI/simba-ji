@@ -1,3 +1,4 @@
+
 import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -111,16 +112,14 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           }
           
           if (profileData) {
-            // Create a custom user object with optional properties
             const user: User = {
-              id: profile.id,
-              name: profile.name,
-              email: profile.email,
-              role: profile.role as UserRole,
-              avatarUrl: profile.avatar_url,
-              // Provide default values for potentially missing properties
-              assignedGroupId: ((profile as any).assigned_group_id as string) || undefined,
-              joinConfirmed: Boolean((profile as any).join_confirmed) || false
+              id: profileData.id,
+              name: profileData.name,
+              email: profileData.email,
+              role: profileData.role as UserRole,
+              avatarUrl: profileData.avatar_url,
+              assignedGroupId: profileData.assigned_group_id as string || undefined,
+              joinConfirmed: profileData.join_confirmed as boolean || false
             };
             
             setCurrentUser(user);
@@ -161,16 +160,14 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           }
           
           if (profileData) {
-            // Create a custom user object with optional properties
             const user: User = {
-              id: profile.id,
-              name: profile.name,
-              email: profile.email,
-              role: profile.role as UserRole,
-              avatarUrl: profile.avatar_url,
-              // Provide default values for potentially missing properties
-              assignedGroupId: ((profile as any).assigned_group_id as string) || undefined,
-              joinConfirmed: Boolean((profile as any).join_confirmed) || false
+              id: profileData.id,
+              name: profileData.name,
+              email: profileData.email,
+              role: profileData.role as UserRole,
+              avatarUrl: profileData.avatar_url,
+              assignedGroupId: profileData.assigned_group_id as string || undefined,
+              joinConfirmed: profileData.join_confirmed as boolean || false
             };
             
             setCurrentUser(user);
@@ -294,15 +291,14 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           return { success: false, error: 'Profil pengguna tidak ditemukan' };
         }
         
-        // Create a custom user object with optional properties
         const user: User = {
           id: profile.id,
           name: profile.name,
           email: profile.email,
           role: profile.role as UserRole,
           avatarUrl: profile.avatar_url,
-          assignedGroupId: ((profile as any).assigned_group_id as string) || undefined,
-          joinConfirmed: Boolean((profile as any).join_confirmed) || false
+          assignedGroupId: profile.assigned_group_id as string || undefined,
+          joinConfirmed: profile.join_confirmed as boolean || false
         };
         
         setCurrentUser(user);
@@ -362,8 +358,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
             email: profile.email,
             role: profile.role as UserRole,
             avatarUrl: profile.avatar_url,
-            assignedGroupId: ((profile as any).assigned_group_id as string) || undefined,
-            joinConfirmed: Boolean((profile as any).join_confirmed) || false
+            assignedGroupId: profile.assigned_group_id as string || undefined,
+            joinConfirmed: profile.join_confirmed as boolean || false
           };
           
           setCurrentUser(user);
@@ -449,16 +445,16 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
-  // Add the following type casting for functions that use 'from' with table names
+  // Function to confirm user has joined the WhatsApp group
   const confirmGroupJoin = async () => {
     if (!currentUser) {
       return { success: false, error: "Pengguna belum masuk" };
     }
     
     try {
-      // Call the new DB function with type casting
-      const { data, error } = await (supabase as any)
-        .rpc('confirm_group_join', { user_id: currentUser.id as any });
+      // Call the new DB function
+      const { data, error } = await supabase
+        .rpc('confirm_group_join', { user_id: currentUser.id }) as any;
       
       if (error) {
         console.error('Error confirming group join:', error);
@@ -487,9 +483,9 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
   // Function to assign a user to a WhatsApp group
   const assignUserToGroup = async (userId: string, groupId: string): Promise<boolean> => {
     try {
-      // Use the new function with type casting
-      const { data, error } = await (supabase as any)
-        .rpc('assign_user_to_group', { user_id: userId, group_id: groupId as any });
+      // Use the new function
+      const { data, error } = await supabase
+        .rpc('assign_user_to_group', { user_id: userId, group_id: groupId });
       
       if (error) {
         console.error('Error assigning user to group:', error);
@@ -519,9 +515,9 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
   // Function to update user role
   const updateUserRole = async (userId: string, newRole: UserRole): Promise<boolean> => {
     try {
-      // Use the new function with type casting
-      const { data, error } = await (supabase as any)
-        .rpc('update_user_role', { user_id: userId, new_role: newRole as any });
+      // Use the new function
+      const { data, error } = await supabase
+        .rpc('update_user_role', { user_id: userId, new_role: newRole });
       
       if (error) {
         console.error('Error updating user role:', error);
@@ -744,7 +740,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         .eq('id', ticketId);
       
       return { success: true };
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error in addTicketAttachment:', err);
       return { success: false, error: err.message || "Gagal menambahkan lampiran" };
     }
@@ -1059,13 +1055,92 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
-  // Expose methods and state to components
+  // Function to add a new helpdesk operator
+  const addHelpdeskOperator = async (
+    userId: string, 
+    isOffline: boolean = false
+  ): Promise<boolean> => {
+    if (!currentUser || currentUser.role !== 'admin') {
+      return false;
+    }
+    
+    try {
+      // First, update the user's role
+      const { error: roleError } = await supabase
+        .from('profiles')
+        .update({ 
+          role: isOffline ? 'helpdesk_offline' : 'helpdesk',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId);
+      
+      if (roleError) {
+        console.error('Error updating user role:', roleError);
+        return false;
+      }
+      
+      // Then, add them as an operator
+      const { error } = await supabase
+        .from('helpdesk_operators')
+        .insert({
+          user_id: userId,
+          is_active: true,
+          is_offline: isOffline
+        });
+      
+      if (error) {
+        console.error('Error adding operator:', error);
+        return false;
+      }
+      
+      // Refresh operators list
+      await fetchHelpdeskOperators();
+      return true;
+    } catch (err) {
+      console.error('Error in addHelpdeskOperator:', err);
+      return false;
+    }
+  };
+
+  // Function to update operator status
+  const updateOperatorStatus = async (
+    operatorId: string, 
+    isActive: boolean
+  ): Promise<boolean> => {
+    if (!currentUser || currentUser.role !== 'admin') {
+      return false;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('helpdesk_operators')
+        .update({ 
+          is_active: isActive,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', operatorId);
+      
+      if (error) {
+        console.error('Error updating operator status:', error);
+        return false;
+      }
+      
+      // Refresh operators list
+      await fetchHelpdeskOperators();
+      return true;
+    } catch (err) {
+      console.error('Error in updateOperatorStatus:', err);
+      return false;
+    }
+  };
+
+  // Create a value object with all context functions
   const value = {
     loading,
     error,
+    stats,
     currentUser,
     authenticated,
-    stats,
     tickets,
     categories,
     operators,
@@ -1076,7 +1151,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     register,
     logout,
     hasRole,
-    fetchStats,
     getUserAssignedGroup,
     confirmGroupJoin,
     assignUserToGroup,
@@ -1084,14 +1158,19 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     getApplicants,
     createTicket,
     addTicketMessage,
-    getUserTickets: fetchUserTickets,
+    addTicketAttachment,
+    getTicketAttachments,
+    getFileUrl,
+    fetchUserTickets,
     updateTicketStatus,
     updateTicketPriority,
     assignTicket,
     fetchHelpdeskOperators,
-    addTicketAttachment,
-    getTicketAttachments,
-    getFileUrl
+    addHelpdeskOperator,
+    updateOperatorStatus,
+    fetchStats,
+    fetchCategories,
+    DEMO_ACCOUNTS
   };
 
   return (
@@ -1101,6 +1180,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
   );
 };
 
+// Custom hook to use the registration context
 export const useRegistrations = () => {
   const context = useContext(RegistrationsContext);
   if (context === null) {

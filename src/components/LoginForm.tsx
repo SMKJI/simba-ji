@@ -1,191 +1,264 @@
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { supabase } from '@/integrations/supabase/client';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useRegistrations } from '@/hooks/useRegistrations';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Form, FormControl, FormField, FormItem, FormLabel, FormMessage 
-} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2, EyeIcon, EyeOffIcon, UserCheck, Info, ChevronLeft } from 'lucide-react';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { 
-  ArrowRight, UserCheck, Info, Loader2, Mail, KeyRound 
-} from 'lucide-react';
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { supabase } from '@/integrations/supabase/client';
 
-// Define the form schema using zod
 const formSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
-  rememberMe: z.boolean().default(false),
+  email: z.string().email({ message: 'Email tidak valid' }),
+  password: z.string().min(6, { message: 'Password minimal 6 karakter' }),
 });
 
-// Define the form values type based on the schema
 type FormValues = z.infer<typeof formSchema>;
 
-const LoginForm = () => {
-  const { login } = useRegistrations();
+interface LoginFormProps {
+  prefilledEmail?: string;
+  onLoginSuccess?: (role: string) => void;
+}
+
+const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const location = useLocation();
+  const { DEMO_ACCOUNTS } = useRegistrations();
+  const emailFromState = location.state?.email || prefilledEmail || '';
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Initialize the form with react-hook-form
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
+      email: emailFromState,
       password: '',
-      rememberMe: false,
     },
   });
 
-  // Handle form submission
-  const onSubmit = async (data: FormValues) => {
-    setLoading(true);
-    setErrorMessage(null);
+  const loginWithSupabase = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    try {
-      // Call the login function from useRegistrations
-      const { error, user } = await login(data.email, data.password);
-
-      if (error) {
-        if (error.includes('credentials')) {
-          setErrorMessage('Invalid email or password. Please try again.');
-        } else if (error.includes('not found')) {
-          setErrorMessage('User not found. Please check your email or register.');
-        } else {
-          setErrorMessage(`Login failed: ${error}`);
-        }
-        return;
+    if (error) {
+      if (error.message.includes('Email not confirmed') || error.message.includes('Invalid login credentials')) {
+        return tryDemoLogin(email, password);
       }
+      return { success: false, error: error.message };
+    }
+    
+    if (data.user) {
+      const demoUser = DEMO_ACCOUNTS.find(account => account.email === email);
+      
+      if (demoUser) {
+        return { 
+          success: true, 
+          user: demoUser 
+        };
+      }
+      
+      return { 
+        success: true, 
+        user: {
+          id: data.user.id,
+          name: data.user.email?.split('@')[0] || 'User',
+          email: data.user.email || '',
+          role: 'applicant',
+          avatarUrl: undefined
+        }
+      };
+    }
+    
+    return { success: false, error: 'Unknown error occurred' };
+  };
 
-      // If login successful, show toast and redirect
+  const tryDemoLogin = (email: string, password: string) => {
+    const demoUser = DEMO_ACCOUNTS.find(u => u.email === email);
+    
+    if (demoUser && password === 'password123') {
+      sessionStorage.setItem('currentUser', JSON.stringify(demoUser));
+      return { success: true, user: demoUser };
+    }
+    
+    return { success: false, error: 'Email atau password salah' };
+  };
+
+  const onSubmit = async (data: FormValues) => {
+    setIsSubmitting(true);
+    
+    try {
+      const result = await loginWithSupabase(data.email, data.password);
+      
+      if (result.success) {
+        toast({
+          title: 'Login Berhasil',
+          description: `Selamat datang, ${result.user?.name}`,
+        });
+        
+        if (onLoginSuccess && result.user?.role) {
+          onLoginSuccess(result.user.role);
+        }
+        
+        switch (result.user?.role) {
+          case 'admin':
+            navigate('/admin');
+            break;
+          case 'helpdesk':
+            navigate('/helpdesk');
+            break;
+          case 'helpdesk_offline':
+            navigate('/offline-helpdesk');
+            break;
+          case 'content':
+            navigate('/content');
+            break;
+          default:
+            navigate('/dashboard');
+        }
+      } else {
+        const errorMessage = 'error' in result ? result.error : 'Email atau password salah';
+        toast({
+          title: 'Login Gagal',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
       toast({
-        title: 'Login Successful',
-        description: `Welcome back${user?.name ? ', ' + user.name : ''}!`,
+        title: 'Login Gagal',
+        description: 'Terjadi kesalahan saat login. Silakan coba lagi.',
+        variant: 'destructive',
       });
-
-      // Redirect to dashboard
-      navigate('/dashboard');
-    } catch (error: any) {
-      console.error('Login error:', error);
-      setErrorMessage(error.message || 'An unexpected error occurred');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
+  const fillDemoAccount = (email: string) => {
+    form.setValue('email', email);
+    form.setValue('password', 'password123');
+  };
+
   return (
-    <div className="space-y-4">
-      {errorMessage && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertDescription>{errorMessage}</AlertDescription>
-        </Alert>
-      )}
-
-      <Card className="border-0 shadow-sm">
-        <CardContent className="pt-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel htmlFor="email">Email</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                        <Input
-                          id="email"
-                          placeholder="youremail@example.com"
-                          className="pl-10"
-                          {...field}
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel htmlFor="password">Password</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <KeyRound className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                        <Input
-                          id="password"
-                          type="password"
-                          placeholder="Enter your password"
-                          className="pl-10"
-                          {...field}
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="rememberMe"
-                render={({ field }) => (
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="rememberMe"
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                    <label
-                      htmlFor="rememberMe"
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      Remember me
-                    </label>
-                  </div>
-                )}
-              />
-
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Logging in...
-                  </>
-                ) : (
-                  <>
-                    <UserCheck className="mr-2 h-4 w-4" />
-                    Login
-                  </>
-                )}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-
-      <div className="text-center">
-        <div className="p-4 bg-blue-50 rounded-md border border-blue-100">
-          <Info className="h-5 w-5 text-blue-500 mx-auto mb-2" />
-          <p className="text-sm text-blue-700">
-            Belum memiliki akun? Silahkan daftar melalui halaman pendaftaran.
-          </p>
+    <Card className="w-full max-w-md mx-auto border-0 shadow-lg rounded-xl overflow-hidden animate-scale-in">
+      <CardHeader className="bg-primary/5 border-b p-6">
+        <div className="flex items-center mb-2">
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 mr-2" asChild>
+            <Link to="/">
+              <ChevronLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <CardTitle className="text-2xl font-bold text-primary">Login</CardTitle>
         </div>
-      </div>
-    </div>
+        <CardDescription>
+          Masuk ke sistem pendaftaran SMKN 1 Kendal
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="p-6">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="Masukkan email" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="Masukkan password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <Button 
+              type="submit" 
+              className="w-full bg-primary hover:bg-primary/90"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Memproses...
+                </>
+              ) : (
+                <>
+                  <UserCheck className="mr-2 h-4 w-4" />
+                  Masuk
+                </>
+              )}
+            </Button>
+          </form>
+        </Form>
+      </CardContent>
+      
+      <CardFooter className="bg-muted/50 p-6 block">
+        <Accordion type="single" collapsible className="w-full">
+          <AccordionItem value="demo-accounts">
+            <AccordionTrigger className="text-sm">
+              <div className="flex items-center text-primary">
+                <Info className="w-4 h-4 mr-2" />
+                Akun Demo untuk Testing
+              </div>
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="space-y-3 text-sm mt-2">
+                <p className="font-medium text-muted-foreground mb-2">
+                  Klik pada akun untuk mengisi form otomatis (password: password123)
+                </p>
+                
+                {DEMO_ACCOUNTS.map((account) => (
+                  <div 
+                    key={account.id}
+                    className="p-2 border rounded-md hover:bg-muted cursor-pointer"
+                    onClick={() => fillDemoAccount(account.email)}
+                  >
+                    <p className="font-semibold">{account.name}</p>
+                    <p className="text-xs text-muted-foreground">Email: {account.email}</p>
+                    <p className="text-xs text-muted-foreground">Role: {account.role}</p>
+                  </div>
+                ))}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </CardFooter>
+    </Card>
   );
 };
 
