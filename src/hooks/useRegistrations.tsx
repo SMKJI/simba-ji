@@ -35,7 +35,6 @@ export type {
   TicketAttachment
 };
 
-// Add DEMO_ACCOUNTS for development
 export const DEMO_ACCOUNTS = [
   {
     id: '1',
@@ -69,10 +68,8 @@ export const DEMO_ACCOUNTS = [
   }
 ];
 
-// Create context
 const RegistrationsContext = createContext<any>(null);
 
-// Provider component
 export const RegistrationsProvider = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -87,15 +84,12 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
   const [queueTickets, setQueueTickets] = useState<QueueTicket[]>([]);
   const [dailyCapacities, setDailyCapacities] = useState<DailyCapacity[]>([]);
 
-  // Check for Supabase session and user on mount
   useEffect(() => {
     const fetchUserAndSession = async () => {
       try {
-        // Check for existing session
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session) {
-          // Get user profile from profiles table
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -126,7 +120,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           }
         }
         
-        // Fetch stats data for the dashboard
         await fetchStats();
         await fetchCategories();
         
@@ -140,11 +133,9 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
 
     fetchUserAndSession();
     
-    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
-          // Get user profile from profiles table
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -173,7 +164,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
             setAuthenticated(true);
           }
           
-          // Refresh stats
           await fetchStats();
           await fetchCategories();
         } else if (event === 'SIGNED_OUT') {
@@ -188,10 +178,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     };
   }, []);
 
-  // Fetch stats data for the dashboard
   const fetchStats = async () => {
     try {
-      // Get all WhatsApp groups
       const { data: groups, error: groupsError } = await supabase
         .from('whatsapp_groups')
         .select('*')
@@ -202,7 +190,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         return;
       }
       
-      // Get total registrations count (users with role 'applicant')
       const { count: totalCount, error: countError } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true })
@@ -213,7 +200,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         return;
       }
       
-      // Transform groups to match our interface
       const formattedGroups: Group[] = groups.map(group => ({
         id: group.id,
         name: group.name,
@@ -234,7 +220,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
-  // Fetch ticket categories
   const fetchCategories = async () => {
     try {
       const { data, error } = await supabase
@@ -260,12 +245,10 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
-  // Function for Supabase login
   const login = async (email: string, password: string): Promise<LoginResult> => {
     setLoading(true);
     
     try {
-      // Try to sign in with Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -276,9 +259,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         return { success: false, error: error.message };
       }
       
-      // Successfully logged in with Supabase
       if (data.user) {
-        // Get user profile
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -315,12 +296,10 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
-  // Function to register a new user
   const register = async (email: string, password: string, name: string): Promise<LoginResult> => {
     setLoading(true);
     
     try {
-      // Register with Supabase
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -337,9 +316,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
       }
       
       if (data.user) {
-        // Check if we need to wait for email confirmation
         if (data.session) {
-          // User is already confirmed, get their profile
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -367,7 +344,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           return { success: true, user };
         }
         
-        // User needs to confirm email
         setLoading(false);
         return { 
           success: true, 
@@ -389,7 +365,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
-  // Function to logout
   const logout = async () => {
     const { error } = await supabase.auth.signOut();
     
@@ -401,7 +376,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
-  // Function to check if user has a specific role
   const hasRole = (role: UserRole | UserRole[]): boolean => {
     if (!currentUser) return false;
     
@@ -412,7 +386,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     return currentUser.role === role;
   };
 
-  // Function to get assigned group for current user
   const getUserAssignedGroup = async (): Promise<Group | null> => {
     if (!currentUser || !currentUser.assignedGroupId) return null;
 
@@ -444,54 +417,44 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
-  // Function to confirm user has joined the WhatsApp group
   const confirmGroupJoin = async () => {
     if (!currentUser) {
       return { success: false, error: "Pengguna belum masuk" };
     }
     
     try {
-      // Call the new DB function
       const { data, error } = await supabase
-        .rpc('confirm_group_join', { user_id: currentUser.id }) as any;
+        .rpc('confirm_group_join', { user_id: currentUser.id });
       
       if (error) {
         console.error('Error confirming group join:', error);
         return { success: false, error: error.message };
       }
       
-      if (data) {
-        // Update the current user state
-        setCurrentUser(prev => {
-          if (prev) {
-            return { ...prev, joinConfirmed: true };
-          }
-          return prev;
-        });
-        
-        return { success: true };
-      } else {
-        return { success: false, error: "Tidak dapat mengkonfirmasi bergabung dengan grup" };
-      }
+      setCurrentUser(prev => {
+        if (prev) {
+          return { ...prev, joinConfirmed: true };
+        }
+        return prev;
+      });
+      
+      return { success: true };
     } catch (err: any) {
       console.error('Error in confirmGroupJoin:', err);
       return { success: false, error: err.message || "Gagal memperbarui status bergabung" };
     }
   };
 
-  // Function to assign a user to a WhatsApp group
   const assignUserToGroup = async (userId: string, groupId: string): Promise<boolean> => {
     try {
-      // Use the new function
       const { data, error } = await supabase
-        .rpc('assign_user_to_group', { user_id: userId, group_id: groupId }) as any;
+        .rpc('assign_user_to_group', { user_id: userId, group_id: groupId });
       
       if (error) {
         console.error('Error assigning user to group:', error);
         return false;
       }
       
-      // If the current user is being assigned, update the local state
       if (currentUser && currentUser.id === userId) {
         setCurrentUser(prev => {
           if (prev) {
@@ -501,7 +464,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         });
       }
       
-      // Fetch fresh stats to update group counts
       await fetchStats();
       
       return !!data;
@@ -511,19 +473,16 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
-  // Function to update user role
   const updateUserRole = async (userId: string, newRole: UserRole): Promise<boolean> => {
     try {
-      // Use the new function
       const { data, error } = await supabase
-        .rpc('update_user_role', { user_id: userId, new_role: newRole }) as any;
+        .rpc('update_user_role', { user_id: userId, new_role: newRole });
       
       if (error) {
         console.error('Error updating user role:', error);
         return false;
       }
       
-      // If the current user's role is being updated, update local state
       if (currentUser && currentUser.id === userId) {
         setCurrentUser(prev => {
           if (prev) {
@@ -540,14 +499,12 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
-  // Fetch all applicants for admin management
   const getApplicants = async () => {
     if (!currentUser || currentUser.role !== 'admin') {
       return [];
     }
     
     try {
-      // Use the user_management view
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -565,7 +522,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
-  // Function to create a new helpdesk ticket
   const createTicket = async (
     subject: string, 
     message: string, 
@@ -577,14 +533,13 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
     
     try {
-      // Insert ticket
       const { data: ticketData, error: ticketError } = await supabase
         .from('tickets')
         .insert({
           user_id: currentUser.id,
           subject,
           status: 'open',
-          priority: 'low', // Default priority
+          priority: 'low',
           category_id: categoryId,
           is_offline: isOffline
         })
@@ -596,7 +551,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         return { success: false, error: ticketError?.message || "Gagal membuat tiket" };
       }
       
-      // Insert initial message
       const { error: messageError } = await supabase
         .from('ticket_messages')
         .insert({
@@ -608,10 +562,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
       
       if (messageError) {
         console.error('Error creating ticket message:', messageError);
-        // Don't return an error here, as the ticket was created successfully
       }
       
-      // Refresh tickets list
       await fetchUserTickets();
       
       return { success: true, ticketId: ticketData.id };
@@ -621,7 +573,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
-  // Function to add message to existing ticket
   const addTicketMessage = async (
     ticketId: string, 
     message: string
@@ -631,7 +582,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
     
     try {
-      // Insert message
       const { error } = await supabase
         .from('ticket_messages')
         .insert({
@@ -646,10 +596,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         return { success: false, error: error.message };
       }
       
-      // Update ticket last update time and status
       let newStatus = undefined;
       
-      // If helpdesk replies to a closed ticket, reopen it as in-progress
       if (currentUser.role === 'helpdesk' || currentUser.role === 'helpdesk_offline' || currentUser.role === 'admin') {
         const { data: ticket } = await supabase
           .from('tickets')
@@ -672,7 +620,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         .update(updateData)
         .eq('id', ticketId);
       
-      // Refresh tickets list
       await fetchUserTickets();
       
       return { success: true };
@@ -682,7 +629,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
-  // Function to add attachment to a ticket
   const addTicketAttachment = async (
     ticketId: string, 
     file: File
@@ -692,7 +638,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
     
     try {
-      // Upload file to storage
       const filePath = `${currentUser.id}/${ticketId}/${file.name}`;
       const { error: uploadError } = await supabase.storage
         .from('ticket-attachments')
@@ -711,12 +656,10 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         return { success: false, error: uploadError.message };
       }
       
-      // Get the file URL
       const { data: fileUrl } = supabase.storage
         .from('ticket-attachments')
         .getPublicUrl(filePath);
       
-      // Add record to ticket_attachments table
       const { error: attachmentError } = await supabase
         .from('ticket_attachments')
         .insert({
@@ -732,7 +675,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         return { success: false, error: attachmentError.message };
       }
       
-      // Update ticket last update time
       await supabase
         .from('tickets')
         .update({ updated_at: new Date().toISOString() })
@@ -745,7 +687,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
-  // Function to get attachments for a ticket
   const getTicketAttachments = async (ticketId: string): Promise<TicketAttachment[]> => {
     try {
       const { data, error } = await supabase
@@ -774,7 +715,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
-  // Function to get a signed URL for a file
   const getFileUrl = (filePath: string): string => {
     const { data } = supabase.storage
       .from('ticket-attachments')
@@ -783,7 +723,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     return data.publicUrl;
   };
 
-  // Function to fetch tickets for the current user or all tickets for helpdesk/admin
   const fetchUserTickets = async (): Promise<HelpdeskTicket[]> => {
     if (!currentUser) {
       setTickets([]);
@@ -808,22 +747,17 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           profiles (name, role)
         `);
       
-      // Filter based on role
       if (currentUser.role === 'applicant') {
-        // Applicants only see their own tickets
         query = query.eq('user_id', currentUser.id);
       } else if (currentUser.role === 'helpdesk') {
-        // Helpdesk operators see only online tickets assigned to them or unassigned
         query = query
           .eq('is_offline', false)
           .or(`assigned_to.is.null,assigned_to.eq.${currentUser.id}`);
       } else if (currentUser.role === 'helpdesk_offline') {
-        // Offline helpdesk operators see only offline tickets assigned to them or unassigned
         query = query
           .eq('is_offline', true)
           .or(`assigned_to.is.null,assigned_to.eq.${currentUser.id}`);
       }
-      // Admins see all tickets (no filter)
       
       const { data, error } = await query.order('updated_at', { ascending: false });
       
@@ -833,7 +767,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         return [];
       }
       
-      // For each ticket, get its messages
       const ticketsWithMessages: HelpdeskTicket[] = [];
       
       for (const ticket of data) {
@@ -889,7 +822,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
-  // Function to update ticket status
   const updateTicketStatus = async (
     ticketId: string, 
     status: 'open' | 'in-progress' | 'closed'
@@ -914,7 +846,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         return false;
       }
       
-      // Refresh tickets list
       await fetchUserTickets();
       return true;
     } catch (err) {
@@ -923,7 +854,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
-  // Function to update ticket priority
   const updateTicketPriority = async (
     ticketId: string, 
     priority: 'low' | 'medium' | 'high'
@@ -948,7 +878,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         return false;
       }
       
-      // Refresh tickets list
       await fetchUserTickets();
       return true;
     } catch (err) {
@@ -957,7 +886,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
-  // Function to assign a ticket to an operator
   const assignTicket = async (
     ticketId: string, 
     operatorId: string
@@ -980,7 +908,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         return false;
       }
       
-      // Refresh tickets list
       await fetchUserTickets();
       return true;
     } catch (err) {
@@ -989,7 +916,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
-  // Function to fetch helpdesk operators
   const fetchHelpdeskOperators = async (): Promise<HelpdeskOperator[]> => {
     try {
       const { data, error } = await supabase
@@ -1008,7 +934,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         return [];
       }
       
-      // Count assigned tickets for each operator
       const operatorsWithTickets: HelpdeskOperator[] = [];
       
       for (const op of data) {
@@ -1022,10 +947,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           console.error(`Error counting tickets for operator ${op.id}:`, countError);
         }
         
-        // Make sure profiles data exists
         const profileData = op.profiles || { name: 'Unknown', email: 'no-email' };
         
-        // Check if profileData is a Supabase error object and handle accordingly
         const name = typeof profileData === 'object' && 'name' in profileData 
           ? profileData.name as string 
           : 'Unknown';
@@ -1054,7 +977,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
-  // Function to add a new helpdesk operator
   const addHelpdeskOperator = async (
     userId: string, 
     isOffline: boolean = false
@@ -1064,19 +986,17 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
     
     try {
-      // First, update the user's role
       const { error: roleError } = await supabase
         .rpc('update_user_role', { 
           user_id: userId, 
           new_role: isOffline ? 'helpdesk_offline' : 'helpdesk'
-        }) as any;
+        });
       
       if (roleError) {
         console.error('Error updating user role:', roleError);
         return false;
       }
       
-      // Then, add the user to the helpdesk_operators table
       const { error: operatorError } = await supabase
         .from('helpdesk_operators')
         .insert({
@@ -1090,7 +1010,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         return false;
       }
       
-      // Refresh operators list
       await fetchHelpdeskOperators();
       return true;
     } catch (err) {
@@ -1099,7 +1018,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
-  // Create provider value object with all functions and state
   const value = {
     currentUser,
     authenticated,
@@ -1134,7 +1052,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     assignTicket,
     fetchHelpdeskOperators,
     addHelpdeskOperator
-    // Add more functions as needed
   };
 
   return (
@@ -1144,7 +1061,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
   );
 };
 
-// Hook for using the registrations context
 export const useRegistrations = () => {
   const context = useContext(RegistrationsContext);
   if (context === null) {

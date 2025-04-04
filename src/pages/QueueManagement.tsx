@@ -272,7 +272,7 @@ const QueueManagement = () => {
                 )}
                 {servingTicket && (
                   <div className="flex space-x-2">
-                    <Button onClick={handleComplete} variant="success">
+                    <Button onClick={handleComplete} variant="default">
                       Complete
                     </Button>
                     <Button onClick={handleSkip} variant="destructive">

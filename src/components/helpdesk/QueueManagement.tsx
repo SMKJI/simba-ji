@@ -247,11 +247,27 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
       
       if (error) throw error;
       
-      setCurrentTicket({
-        ...data,
-        categoryName: data.category?.name,
-        counterName: data.counter?.name
-      });
+      if (data) {
+        const status = data.status as 'waiting' | 'called' | 'serving' | 'completed' | 'skipped';
+        
+        const queueTicket: QueueTicket = {
+          id: data.id,
+          user_id: data.user_id,
+          queue_number: data.queue_number,
+          category_id: data.category_id,
+          categoryName: data.category?.name,
+          status: status,
+          counter_id: data.counter_id,
+          counterName: data.counter?.name,
+          operator_id: data.operator_id,
+          created_at: data.created_at,
+          served_at: data.served_at,
+          completed_at: data.completed_at,
+          updated_at: data.updated_at
+        };
+        
+        setCurrentTicket(queueTicket);
+      }
       
       setQueueTickets(prev => prev.filter(t => t.id !== nextTicket.id));
       

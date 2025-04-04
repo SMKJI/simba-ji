@@ -19,7 +19,6 @@ const OfflineHelpdesk = () => {
   const [selectedCounter, setSelectedCounter] = useState<Counter | null>(null);
 
   useEffect(() => {
-    // If user is not logged in or doesn't have the right role, redirect
     if (!user) {
       navigate('/login');
     } else if (user.role !== 'helpdesk_offline' && user.role !== 'admin') {
@@ -32,7 +31,6 @@ const OfflineHelpdesk = () => {
     }
   }, [user, navigate, toast]);
 
-  // Find counter assigned to current user
   useEffect(() => {
     if (user && counters) {
       const userCounter = counters.find(counter => 
