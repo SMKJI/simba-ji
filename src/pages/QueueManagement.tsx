@@ -322,7 +322,7 @@ const QueueManagement = () => {
                 {queue.length > 0 ? (
                   <div className="flex flex-col space-y-2">
                     {queue.map((ticket) => (
-                      <Badge key={ticket.id} variant="secondary">
+                      <Badge key={ticket.id} variant="default">
                         {ticket.name} - {ticket.program}
                       </Badge>
                     ))}

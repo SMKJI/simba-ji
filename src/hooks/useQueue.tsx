@@ -37,8 +37,7 @@ export const useQueue = () => {
           status,
           created_at,
           user_id,
-          profiles:user_id(name),
-          purpose
+          profiles:user_id(name)
         `)
         .eq('operator_id', user.id)
         .in('status', ['called', 'serving'])
@@ -60,7 +59,7 @@ export const useQueue = () => {
             id: data.user_id,
             name: data.profiles?.name || 'Unknown'
           },
-          purpose: data.purpose
+          purpose: ''  // Default empty string since purpose column doesn't exist
         });
       } else {
         setCurrentTicket(null);
@@ -89,8 +88,7 @@ export const useQueue = () => {
           status,
           created_at,
           user_id,
-          profiles:user_id(name),
-          purpose
+          profiles:user_id(name)
         `)
         .eq('status', 'waiting')
         .order('created_at', { ascending: true })
@@ -134,7 +132,7 @@ export const useQueue = () => {
           id: updatedTicket.user_id,
           name: nextTicket.profiles?.name || 'Unknown'
         },
-        purpose: nextTicket.purpose
+        purpose: ''  // Default empty string since purpose column doesn't exist
       });
 
       return updatedTicket;

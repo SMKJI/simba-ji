@@ -4,7 +4,7 @@ import { Shell } from '@/components/Shell';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useCounters } from '@/hooks/useCounters';
 import { useQueue } from '@/hooks/useQueue';

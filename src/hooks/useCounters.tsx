@@ -26,9 +26,8 @@ export const useCounters = () => {
           .select(`
             id, 
             name, 
-            description, 
             is_active,
-            operators:operator_id (
+            operator_id (
               id:user_id, 
               profiles:user_id (name)
             )
@@ -43,11 +42,11 @@ export const useCounters = () => {
         const formattedCounters: Counter[] = data.map(counter => ({
           id: counter.id,
           name: counter.name,
-          description: counter.description || '',
+          description: counter.name, // Using name as description since description doesn't exist
           is_active: counter.is_active,
-          operators: counter.operators ? [{
-            id: counter.operators.id,
-            name: counter.operators.profiles?.name || 'Unknown'
+          operators: counter.operator_id ? [{
+            id: counter.operator_id.id,
+            name: counter.operator_id.profiles?.name || 'Unknown'
           }] : undefined
         }));
 

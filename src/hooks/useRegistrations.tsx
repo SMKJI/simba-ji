@@ -424,7 +424,9 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     
     try {
       const { data, error } = await supabase
-        .rpc('confirm_group_join', { user_id: currentUser.id });
+        .rpc('confirm_group_join', { 
+          user_id: currentUser.id as any 
+        });
       
       if (error) {
         console.error('Error confirming group join:', error);
@@ -448,7 +450,10 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
   const assignUserToGroup = async (userId: string, groupId: string): Promise<boolean> => {
     try {
       const { data, error } = await supabase
-        .rpc('assign_user_to_group', { user_id: userId, group_id: groupId });
+        .rpc('assign_user_to_group', { 
+          user_id: userId as any, 
+          group_id: groupId as any 
+        });
       
       if (error) {
         console.error('Error assigning user to group:', error);
@@ -476,7 +481,10 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
   const updateUserRole = async (userId: string, newRole: UserRole): Promise<boolean> => {
     try {
       const { data, error } = await supabase
-        .rpc('update_user_role', { user_id: userId, new_role: newRole });
+        .rpc('update_user_role', { 
+          user_id: userId as any, 
+          new_role: newRole as any 
+        });
       
       if (error) {
         console.error('Error updating user role:', error);
@@ -988,8 +996,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     try {
       const { error: roleError } = await supabase
         .rpc('update_user_role', { 
-          user_id: userId, 
-          new_role: isOffline ? 'helpdesk_offline' : 'helpdesk'
+          user_id: userId as any, 
+          new_role: (isOffline ? 'helpdesk_offline' : 'helpdesk') as any 
         });
       
       if (roleError) {
