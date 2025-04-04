@@ -425,7 +425,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     try {
       const { data, error } = await supabase
         .rpc('confirm_group_join', { 
-          user_id: currentUser.id as any 
+          user_id: currentUser.id 
         });
       
       if (error) {
@@ -451,8 +451,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     try {
       const { data, error } = await supabase
         .rpc('assign_user_to_group', { 
-          user_id: userId as any, 
-          group_id: groupId as any 
+          user_id: userId,
+          group_id: groupId 
         });
       
       if (error) {
@@ -482,8 +482,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     try {
       const { data, error } = await supabase
         .rpc('update_user_role', { 
-          user_id: userId as any, 
-          new_role: newRole as any 
+          user_id: userId,
+          new_role: newRole 
         });
       
       if (error) {
@@ -996,8 +996,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     try {
       const { error: roleError } = await supabase
         .rpc('update_user_role', { 
-          user_id: userId as any, 
-          new_role: (isOffline ? 'helpdesk_offline' : 'helpdesk') as any 
+          user_id: userId,
+          new_role: (isOffline ? 'helpdesk_offline' : 'helpdesk') 
         });
       
       if (roleError) {

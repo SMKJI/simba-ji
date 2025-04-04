@@ -50,9 +50,10 @@ export const useQueue = () => {
       }
 
       if (data) {
-        // Check if profiles exists and has the expected structure before accessing
+        // Fixed: Added proper null checking for profiles
         const applicantName = data.profiles && 
-          typeof data.profiles === 'object' ? 
+          typeof data.profiles === 'object' && 
+          data.profiles.name ? 
           data.profiles.name : 'Unknown';
 
         setCurrentTicket({
@@ -127,9 +128,10 @@ export const useQueue = () => {
         throw updateError;
       }
 
-      // Check if profiles exists and has the expected structure before accessing
+      // Fixed: Added proper null checking for profiles
       const applicantName = nextTicket.profiles && 
-        typeof nextTicket.profiles === 'object' ? 
+        typeof nextTicket.profiles === 'object' && 
+        nextTicket.profiles.name ? 
         nextTicket.profiles.name : 'Unknown';
 
       // Set current ticket

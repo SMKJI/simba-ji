@@ -14,6 +14,13 @@ import {
   PauseCircle, RefreshCw, UserCheck
 } from 'lucide-react';
 
+const formatVariant = (variant: string): "link" | "default" | "destructive" | "outline" | "secondary" | "ghost" => {
+  if (variant === "success") {
+    return "default";
+  }
+  return variant as "link" | "default" | "destructive" | "outline" | "secondary" | "ghost";
+};
+
 export const QueueManagement = ({ currentUser }: { currentUser: User | null }) => {
   const { toast } = useToast();
   const [queueTickets, setQueueTickets] = useState<QueueTicket[]>([]);
@@ -273,7 +280,8 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
       
       toast({
         title: "Antrian berhasil dipanggil",
-        description: `Nomor antrian ${nextTicket.queue_number} dipanggil ke ${userCounter.name}`
+        description: `Nomor antrian ${nextTicket.queue_number} dipanggil ke ${userCounter.name}`,
+        variant: formatVariant("default")
       });
     } catch (error) {
       console.error('Error calling next ticket:', error);
@@ -443,7 +451,8 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
       
       toast({
         title: "Loket dipilih",
-        description: `Anda sekarang mengoperasikan ${data.name}`
+        description: `Anda sekarang mengoperasikan ${data.name}`,
+        variant: formatVariant("default")
       });
       
     } catch (error) {
