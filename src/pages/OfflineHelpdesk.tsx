@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
@@ -76,9 +77,7 @@ const OfflineHelpdesk = () => {
         name: counter.name,
         is_active: counter.is_active,
         operator_id: counter.operator_id,
-        operatorName: counter.operators && typeof counter.operators === 'object' && 'name' in counter.operators
-          ? counter.operators.name 
-          : null
+        operatorName: counter.operators?.name || null
       }));
       
       setCounters(formattedCounters);
