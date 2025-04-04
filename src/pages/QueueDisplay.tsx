@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useRegistrations } from '@/hooks/useRegistrations';
 import { supabase } from '@/integrations/supabase/client';
