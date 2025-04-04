@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -5,12 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { CheckCircle2 } from 'lucide-react';
 import StudentRegistrationForm from '@/components/registration/StudentRegistrationForm';
+
 const Register = () => {
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const [success, setSuccess] = useState(false);
+
   const handleRegistrationSuccess = () => {
     setSuccess(true);
 
@@ -19,8 +20,10 @@ const Register = () => {
       navigate('/dashboard');
     }, 3000);
   };
+
   if (success) {
-    return <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
         <div className="max-w-md w-full space-y-8">
           <Card className="border-0 shadow-lg rounded-xl overflow-hidden">
             <CardHeader className="bg-green-50 border-b p-6">
@@ -41,15 +44,18 @@ const Register = () => {
             </CardContent>
           </Card>
         </div>
-      </div>;
+      </div>
+    );
   }
-  return <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <img src="/lovable-uploads/f5ba977f-fb10-430c-b426-68c3389cee2c.png" alt="SMKN 1 Kendal" className="mx-auto h-16 w-auto" />
           <h1 className="mt-4 text-3xl font-bold">SMKN 1 Kendal</h1>
           <p className="mt-2 text-sm text-gray-600">
-            Pendaftaran Akun PPDB
+            Pendaftaran Akun PMB
           </p>
         </div>
         
@@ -80,6 +86,8 @@ const Register = () => {
           </p>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default Register;

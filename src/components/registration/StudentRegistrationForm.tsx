@@ -6,6 +6,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2, EyeIcon, EyeOffIcon } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 
 interface StudentRegistrationFormProps {
   onSuccess?: () => void;
@@ -24,6 +26,13 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [parentName, setParentName] = useState('');
   const [parentWhatsapp, setParentWhatsapp] = useState('');
+  const [birthPlace, setBirthPlace] = useState('');
+  const [birthDate, setBirthDate] = useState('');
+  const [gender, setGender] = useState('');
+  const [address, setAddress] = useState('');
+  const [preferredProgram, setPreferredProgram] = useState('');
+  const [programReason, setProgramReason] = useState('');
+  
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,14 +41,32 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
     setShowPassword(prev => !prev);
   };
   
+  const isFormValid = () => {
+    return (
+      name.trim() !== '' && 
+      email.trim() !== '' && 
+      password.trim() !== '' && 
+      confirmPassword.trim() !== '' && 
+      previousSchool.trim() !== '' && 
+      whatsappNumber.trim() !== '' && 
+      parentName.trim() !== '' && 
+      parentWhatsapp.trim() !== '' &&
+      birthPlace.trim() !== '' &&
+      birthDate.trim() !== '' &&
+      gender.trim() !== '' &&
+      address.trim() !== '' &&
+      preferredProgram.trim() !== ''
+    );
+  };
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
     
     // Validation
-    if (!name || !email || !password || !confirmPassword || !previousSchool || !whatsappNumber || !parentName || !parentWhatsapp) {
-      setError('Semua kolom harus diisi');
+    if (!isFormValid()) {
+      setError('Semua kolom harus diisi kecuali alasan memilih program keahlian');
       setIsSubmitting(false);
       return;
     }
@@ -79,7 +106,13 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
           previousSchool,
           whatsappNumber,
           parentName,
-          parentWhatsapp
+          parentWhatsapp,
+          birthPlace,
+          birthDate,
+          gender,
+          address,
+          preferredProgram,
+          programReason
         }));
         
         toast({
@@ -126,6 +159,67 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
+        />
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label htmlFor="birthPlace" className="block text-sm font-medium">
+            Tempat Lahir
+          </label>
+          <Input
+            id="birthPlace"
+            type="text"
+            placeholder="Tempat lahir"
+            value={birthPlace}
+            onChange={(e) => setBirthPlace(e.target.value)}
+            required
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <label htmlFor="birthDate" className="block text-sm font-medium">
+            Tanggal Lahir
+          </label>
+          <Input
+            id="birthDate"
+            type="date"
+            value={birthDate}
+            onChange={(e) => setBirthDate(e.target.value)}
+            required
+          />
+        </div>
+      </div>
+      
+      <div className="space-y-2">
+        <label htmlFor="gender" className="block text-sm font-medium">
+          Jenis Kelamin
+        </label>
+        <Select
+          value={gender}
+          onValueChange={setGender}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Pilih jenis kelamin" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="laki-laki">Laki-laki</SelectItem>
+            <SelectItem value="perempuan">Perempuan</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div className="space-y-2">
+        <label htmlFor="address" className="block text-sm font-medium">
+          Alamat Lengkap
+        </label>
+        <Textarea
+          id="address"
+          placeholder="Alamat lengkap Anda"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          required
+          className="min-h-[80px]"
         />
       </div>
       
@@ -200,6 +294,41 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
       </div>
       
       <div className="space-y-2">
+        <label htmlFor="preferredProgram" className="block text-sm font-medium">
+          Program Keahlian yang Diminati
+        </label>
+        <Select
+          value={preferredProgram}
+          onValueChange={setPreferredProgram}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Pilih program keahlian" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="tkj">Teknik Komputer dan Jaringan</SelectItem>
+            <SelectItem value="rpl">Rekayasa Perangkat Lunak</SelectItem>
+            <SelectItem value="mm">Multimedia</SelectItem>
+            <SelectItem value="akl">Akuntansi dan Keuangan Lembaga</SelectItem>
+            <SelectItem value="otkp">Otomatisasi dan Tata Kelola Perkantoran</SelectItem>
+            <SelectItem value="bdp">Bisnis Daring dan Pemasaran</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div className="space-y-2">
+        <label htmlFor="programReason" className="block text-sm font-medium">
+          Alasan Memilih Program Keahlian
+        </label>
+        <Textarea
+          id="programReason"
+          placeholder="Jelaskan alasan memilih program keahlian tersebut (opsional)"
+          value={programReason}
+          onChange={(e) => setProgramReason(e.target.value)}
+          className="min-h-[80px]"
+        />
+      </div>
+      
+      <div className="space-y-2">
         <label htmlFor="password" className="block text-sm font-medium">
           Kata Sandi
         </label>
@@ -243,7 +372,7 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
       <Button
         type="submit"
         className="w-full"
-        disabled={isSubmitting || loading}
+        disabled={isSubmitting || loading || !isFormValid()}
       >
         {isSubmitting ? (
           <>
