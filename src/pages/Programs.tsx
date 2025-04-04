@@ -4,6 +4,7 @@ import ContentDisplay from '@/components/content/ContentDisplay';
 import { programs } from '@/data/programData';
 import { Card, CardContent } from '@/components/ui/card';
 
+// Update to make sure the image property exists
 const Programs = () => {
   return (
     <MainLayout>
@@ -16,8 +17,9 @@ const Programs = () => {
           {programs.map((program) => (
             <Card key={program.id} className="overflow-hidden border shadow-md hover:shadow-lg transition-shadow">
               <div className="aspect-video bg-muted flex items-center justify-center">
+                {/* Use optional chaining to safely access the image property */}
                 <img 
-                  src={program.image} 
+                  src={program.image || '/placeholder.svg'} 
                   alt={program.name}
                   className="w-full h-full object-cover"
                 />

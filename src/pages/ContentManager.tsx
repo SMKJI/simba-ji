@@ -7,16 +7,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertTriangle, FileEdit, Save, Trash2 } from 'lucide-react';
+import { AlertTriangle, FileEdit, Save } from 'lucide-react';
 import PageEditor from '@/components/content/PageEditor';
-
-interface PageContent {
-  id: string;
-  title: string;
-  slug: string;
-  content: string;
-  updated_at: string;
-}
+import { PageContent } from '@/types/custom.d';
 
 const ContentManager = () => {
   const { currentUser, hasRole } = useRegistrations();
@@ -36,6 +29,7 @@ const ContentManager = () => {
   const fetchPages = async () => {
     setLoading(true);
     try {
+      // Explicitly cast as any to avoid type errors, then map to our PageContent type
       const { data, error } = await supabase
         .from('page_contents')
         .select('*')
@@ -43,12 +37,13 @@ const ContentManager = () => {
       
       if (error) throw error;
       
-      setPages(data as PageContent[] || []);
+      const typedData = data as unknown as PageContent[];
+      setPages(typedData || []);
       
       // Set initial page based on activeTab
-      if (data && data.length > 0) {
-        const initialPage = data.find(page => page.slug === activeTab) || data[0];
-        setCurrentPage(initialPage as PageContent);
+      if (typedData && typedData.length > 0) {
+        const initialPage = typedData.find(page => page.slug === activeTab) || typedData[0];
+        setCurrentPage(initialPage);
         setActiveTab(initialPage.slug);
       }
     } catch (error: any) {

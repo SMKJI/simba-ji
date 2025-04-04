@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { 
   Bold, Italic, List, ListOrdered, Heading1, Heading2, 
-  Image, Link, Code, Undo, Redo, PanelLeft, FileText, Eye
+  Image, Link, Code, Undo, Redo, PanelLeft, Eye
 } from 'lucide-react';
 
 // Define interface for editor props
@@ -35,19 +36,19 @@ const PageEditor = ({ content, onChange }: PageEditorProps) => {
   
   // Generate preview HTML when content changes or tab changes
   useEffect(() => {
-    if (selectedTab === 'preview') {
+    if (selectedTab === 'preview' && typeof window !== 'undefined') {
       // Use the markdownit library from the window object
-      const md = (window as any).markdownit?.();
-      if (md) {
-        try {
+      try {
+        if (window.markdownit) {
+          const md = window.markdownit();
           const rendered = md.render(editorContent);
           setPreviewHtml(rendered);
-        } catch (error) {
-          console.error('Markdown rendering error:', error);
-          setPreviewHtml('<p>Error rendering markdown</p>');
+        } else {
+          setPreviewHtml('<p>Markdown library not loaded. Please refresh the page.</p>');
         }
-      } else {
-        setPreviewHtml('<p>Markdown library not available</p>');
+      } catch (error) {
+        console.error('Markdown rendering error:', error);
+        setPreviewHtml('<p>Error rendering markdown</p>');
       }
     }
   }, [editorContent, selectedTab]);

@@ -1,53 +1,55 @@
 
-export type Program = {
+interface Program {
   id: string;
   name: string;
   description: string;
   skills: string[];
-  prospects: string[];
-};
+  image?: string; // Make image property optional
+}
 
 export const programs: Program[] = [
   {
-    id: 'tkj',
+    id: '1',
     name: 'Teknik Komputer dan Jaringan',
-    description: 'Program keahlian yang mempelajari tentang instalasi jaringan komputer, perakitan komputer, dan troubleshooting perangkat keras & jaringan.',
-    skills: ['Instalasi jaringan', 'Perakitan komputer', 'Troubleshooting', 'Network security'],
-    prospects: ['IT Support', 'Network Administrator', 'System Administrator', 'Network Engineer']
+    description: 'Program yang mempelajari tentang perakitan komputer, troubleshooting hardware, instalasi jaringan, dan administrasi server.',
+    skills: ['Networking', 'Hardware', 'Server Administration', 'Troubleshooting'],
+    image: '/lovable-uploads/f5ba977f-fb10-430c-b426-68c3389cee2c.png'
   },
   {
-    id: 'rpl',
+    id: '2',
     name: 'Rekayasa Perangkat Lunak',
-    description: 'Program keahlian yang mempelajari tentang pengembangan perangkat lunak, pemrograman, dan manajemen basis data.',
-    skills: ['Pemrograman', 'Basis Data', 'Web Development', 'Mobile Development'],
-    prospects: ['Programmer', 'Software Developer', 'Web Developer', 'Database Administrator']
+    description: 'Program yang mempelajari tentang pengembangan aplikasi, pemrograman, database, dan metodologi pengembangan software.',
+    skills: ['Programming', 'Web Development', 'Database', 'Software Engineering'],
+    image: '/lovable-uploads/a6c5cdf7-de60-4835-b170-c3f5fb173dd9.png'
   },
   {
-    id: 'mm',
+    id: '3',
     name: 'Multimedia',
-    description: 'Program keahlian yang mempelajari tentang desain grafis, animasi, editing video, dan pengembangan media interaktif.',
-    skills: ['Desain Grafis', 'Animasi', 'Video Editing', 'Photography'],
-    prospects: ['Graphic Designer', 'Video Editor', 'Animator', 'Content Creator']
+    description: 'Program yang mempelajari tentang desain grafis, animasi, editing video, dan produksi konten digital.',
+    skills: ['Graphic Design', 'Animation', 'Video Editing', 'Digital Marketing'],
+    image: '/lovable-uploads/dd215b4c-67a6-49e0-a4f9-0b5b40ae757e.jpg'
   },
   {
-    id: 'akl',
-    name: 'Akuntansi dan Keuangan Lembaga',
-    description: 'Program keahlian yang mempelajari tentang akuntansi, keuangan, perpajakan, dan aplikasi komputer akuntansi.',
-    skills: ['Akuntansi Dasar', 'Perpajakan', 'Komputer Akuntansi', 'Administrasi Keuangan'],
-    prospects: ['Staff Accounting', 'Tax Consultant', 'Finance Staff', 'Auditor']
+    id: '4',
+    name: 'Teknik Elektronika',
+    description: 'Program yang mempelajari tentang rangkaian elektronika, mikrokontroler, robotika, dan sistem otomasi.',
+    skills: ['Electronics', 'Microcontroller', 'Robotics', 'Automation'],
+    image: '/lovable-uploads/f80cfd6d-02d6-4eb0-87f9-8098e1f98c56.png'
   },
   {
-    id: 'otkp',
-    name: 'Otomatisasi dan Tata Kelola Perkantoran',
-    description: 'Program keahlian yang mempelajari tentang administrasi perkantoran, kesekretariatan, dan manajemen kantor.',
-    skills: ['Administrasi Perkantoran', 'Kesekretariatan', 'Korespondensi', 'Kearsipan'],
-    prospects: ['Secretary', 'Administrative Staff', 'Office Manager', 'Customer Service']
+    id: '5',
+    name: 'Akuntansi',
+    description: 'Program yang mempelajari tentang pembukuan, perpajakan, audit keuangan, dan aplikasi akuntansi.',
+    skills: ['Accounting', 'Taxation', 'Auditing', 'Financial Analysis'],
+    image: '/lovable-uploads/24659fba-05c4-4437-9fc8-aaa694a28a50.png'
   },
   {
-    id: 'bdp',
-    name: 'Bisnis Daring dan Pemasaran',
-    description: 'Program keahlian yang mempelajari tentang pemasaran, bisnis online, manajemen bisnis, dan komunikasi pemasaran.',
-    skills: ['Digital Marketing', 'E-commerce', 'Sales', 'Customer Relationship'],
-    prospects: ['Digital Marketer', 'Online Shop Owner', 'Sales Executive', 'Marketing Staff']
+    id: '6',
+    name: 'Administrasi Perkantoran',
+    description: 'Program yang mempelajari tentang manajemen kantor, korespondensi, kearsipan, dan administrasi bisnis.',
+    skills: ['Office Management', 'Correspondence', 'Filing', 'Business Administration'],
+    image: '/lovable-uploads/113dca04-6a33-4058-a2ba-d238187a8d97.jpg'
   }
 ];
+
+export type { Program };

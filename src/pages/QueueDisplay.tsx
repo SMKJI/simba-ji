@@ -1,53 +1,47 @@
-
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useRegistrations } from '@/hooks/useRegistrations';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Volume2 } from 'lucide-react';
-
-interface CurrentTicket {
-  number: number;
-  status: string;
-  counter: string;
-  operatorName: string;
-  categoryName: string;
-}
+import { supabase } from '@/integrations/supabase/client';
+import { 
+  QueueTicket, HelpdeskCounter, HelpdeskOperator, User
+} from '@/types/supabase';
+import { 
+  Volume2, PlayCircle, CheckCircle2, SkipForward, 
+  PauseCircle, RefreshCw, UserCheck
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 const QueueDisplay = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
-  const [currentTicket, setCurrentTicket] = useState<CurrentTicket | null>(null);
+  const [queueStatus, setQueueStatus] = useState<'waiting' | 'serving'>('waiting');
+  const [currentQueue, setCurrentQueue] = useState<
+    (QueueTicket & { operator?: HelpdeskOperator }) | null
+  >(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchCurrentTicket();
-
-    const channel = supabase
-      .channel('queue_updates')
+    fetchCurrentQueue();
+    
+    // Subscribe to queue changes
+    const queueChannel = supabase
+      .channel('queue_changes')
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
-        table: 'queue_tickets'
-      }, (payload: any) => {
-        if (payload.new && (payload.new.status === 'called' || payload.new.status === 'serving')) {
-          fetchCurrentTicket();
-        }
+        table: 'queue_tickets',
+      }, () => {
+        fetchCurrentQueue();
       })
       .subscribe();
-
+    
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(queueChannel);
     };
   }, []);
 
-  const playAnnouncement = (queueNumber: number, counterName: string) => {
-    const announcementText = `Nomor antrian ${queueNumber}, silahkan menuju ke loket ${counterName}`;
-    const utterance = new SpeechSynthesisUtterance(announcementText);
-    speechSynthesis.speak(utterance);
-  };
-
-  const fetchCurrentTicket = async () => {
+  const fetchCurrentQueue = async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -56,99 +50,107 @@ const QueueDisplay = () => {
           *,
           category:category_id(name),
           counter:counter_id(name),
-          operator:operator_id(name)
+          operator:operator_id(profiles(name))
         `)
         .in('status', ['called', 'serving'])
-        .order('updated_at', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(1)
         .single();
-
-    if (error) {
-      if (error.code === 'PGRST116') {
-        setCurrentTicket(null);
-      } else {
-        throw error;
-      }
-    } else {
-      // Safe type assertion or default value
-      const operatorName = data.operator && 
-        typeof data.operator === 'object' && 
-        'name' in data.operator ? 
-          data.operator.name || 'Operator' : 'Operator';
       
-      setCurrentTicket({
-        counter: data.counter ? data.counter.name || '' : '',
-        number: data.queue_number,
-        status: data.status,
-        operatorName,
-        categoryName: data.category ? data.category.name || '' : ''
-      });
-
-      if (data.status === 'called') {
-        playAnnouncement(data.queue_number, data.counter ? data.counter.name || '' : '');
+      if (error) throw error;
+      
+      if (data) {
+        const status = data.status as 'waiting' | 'called' | 'serving' | 'completed' | 'skipped';
+        
+        const queueTicket: QueueTicket & { operator?: HelpdeskOperator } = {
+          id: data.id,
+          user_id: data.user_id,
+          queue_number: data.queue_number,
+          category_id: data.category_id,
+          categoryName: data.category?.name,
+          status: status,
+          counter_id: data.counter_id,
+          counterName: data.counter?.name,
+          operator_id: data.operator_id,
+          operator: data.operator,
+          created_at: data.created_at,
+          served_at: data.served_at,
+          completed_at: data.completed_at,
+          updated_at: data.updated_at
+        };
+        
+        setCurrentQueue(queueTicket);
+        setQueueStatus(status === 'serving' ? 'serving' : 'waiting');
+      } else {
+        setCurrentQueue(null);
+        setQueueStatus('waiting');
       }
+      
+    } catch (error) {
+      console.error('Error fetching current queue:', error);
+      toast({
+        title: "Terjadi kesalahan",
+        description: "Gagal mengambil antrian saat ini",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Error fetching current ticket:', error);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 py-24">
-      <div className="container mx-auto px-4">
-        <Card className="max-w-3xl mx-auto border-0 shadow-lg rounded-xl overflow-hidden">
-          <CardHeader className="bg-primary/5 border-b p-6">
-            <CardTitle className="text-2xl font-bold text-primary">
-              Tampilan Antrian
-            </CardTitle>
-            <CardDescription>
-              Informasi antrian terkini
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-8">
-            {loading ? (
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-                <p className="mt-4 text-gray-500">Memuat data antrian...</p>
-              </div>
-            ) : currentTicket ? (
-              <div className="space-y-6">
-                <div className="text-center">
-                  <div className="text-6xl font-extrabold text-primary">{currentTicket.number}</div>
-                  <p className="text-lg text-gray-600">
-                    Silakan menuju ke <span className="font-semibold">{currentTicket.counter}</span>
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Kategori: {currentTicket.categoryName}
-                  </p>
+    <div className="container mx-auto p-8">
+      <h1 className="text-3xl font-bold text-center mb-8">
+        Tampilan Antrian
+      </h1>
+      
+      {loading ? (
+        <div className="flex justify-center items-center min-h-[200px]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      ) : (
+        <>
+          {queueStatus === 'waiting' && (
+            <div className="bg-yellow-50 border border-yellow-200 p-8 rounded-lg text-center">
+              <h2 className="text-2xl font-medium mb-4">
+                Tidak ada antrian yang sedang dilayani
+              </h2>
+              <p className="text-muted-foreground">
+                Silakan menunggu hingga nomor antrian Anda dipanggil
+              </p>
+            </div>
+          )}
+          
+          {queueStatus === 'serving' && currentQueue && (
+            <div className="bg-primary/10 border border-primary p-8 rounded-lg text-center">
+              <div className="flex justify-between items-center mb-6">
+                <div className="text-left">
+                  <Badge variant="secondary" className="text-base px-4 py-1 font-normal mb-2">
+                    {currentQueue.categoryName || 'General'}
+                  </Badge>
+                  <h3 className="text-2xl font-medium">
+                    {currentQueue.counterName || 'Counter'}
+                  </h3>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="text-gray-700">
-                    Status: <Badge variant="secondary">{currentTicket.status}</Badge>
-                  </div>
-                  <div className="text-gray-700">
-                    Operator: {currentTicket.operatorName}
-                  </div>
+                <div className="text-5xl font-bold text-primary">
+                  {currentQueue.queue_number}
                 </div>
-                {currentTicket.status === 'called' && (
-                  <div className="text-center">
-                    <Volume2 className="mx-auto h-6 w-6 text-primary mb-2" />
-                    <p className="text-sm text-gray-500">
-                      Dipanggil, mohon segera menuju loket.
-                    </p>
-                  </div>
-                )}
               </div>
-            ) : (
-              <div className="text-center">
-                <p className="text-gray-500">Tidak ada antrian yang sedang berlangsung.</p>
+              
+              <div className="mt-4 text-lg">
+                <div className="flex items-center justify-center">
+                  <UserCheck className="mr-2 h-5 w-5 text-primary" />
+                  <span>
+                    {currentQueue.operator && currentQueue.operator.name ? 
+                      `Dilayani oleh: ${currentQueue.operator.name}` : 
+                      'Sedang dilayani'}
+                  </span>
+                </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };

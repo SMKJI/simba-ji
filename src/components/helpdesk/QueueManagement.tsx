@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { 
   Card, CardContent, CardHeader, CardTitle, CardDescription 
@@ -251,10 +250,13 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
       
       if (error) throw error;
       
+      const typedStatus = data.status as 'waiting' | 'called' | 'serving' | 'completed' | 'skipped';
+      
       setCurrentTicket({
         ...data,
         categoryName: data.category?.name,
-        counterName: data.counter?.name
+        counterName: data.counter?.name,
+        status: typedStatus
       });
       
       setQueueTickets(prev => prev.filter(t => t.id !== nextTicket.id));

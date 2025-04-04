@@ -111,14 +111,16 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           }
           
           if (profileData) {
+            // Create a custom user object with optional properties
             const user: User = {
               id: profileData.id,
               name: profileData.name,
               email: profileData.email,
               role: profileData.role as UserRole,
               avatarUrl: profileData.avatar_url,
-              assignedGroupId: profileData.assigned_group_id as string || undefined,
-              joinConfirmed: profileData.join_confirmed as boolean || false
+              // Provide default values for potentially missing properties
+              assignedGroupId: (profileData as any).assigned_group_id || undefined,
+              joinConfirmed: (profileData as any).join_confirmed || false
             };
             
             setCurrentUser(user);
@@ -159,14 +161,16 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           }
           
           if (profileData) {
+            // Create a custom user object with optional properties
             const user: User = {
               id: profileData.id,
               name: profileData.name,
               email: profileData.email,
               role: profileData.role as UserRole,
               avatarUrl: profileData.avatar_url,
-              assignedGroupId: profileData.assigned_group_id as string || undefined,
-              joinConfirmed: profileData.join_confirmed as boolean || false
+              // Provide default values for potentially missing properties
+              assignedGroupId: (profileData as any).assigned_group_id || undefined,
+              joinConfirmed: (profileData as any).join_confirmed || false
             };
             
             setCurrentUser(user);
@@ -290,14 +294,16 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           return { success: false, error: 'Profil pengguna tidak ditemukan' };
         }
         
+        // Create a custom user object with optional properties
         const user: User = {
           id: profile.id,
           name: profile.name,
           email: profile.email,
           role: profile.role as UserRole,
           avatarUrl: profile.avatar_url,
-          assignedGroupId: profile.assigned_group_id as string || undefined,
-          joinConfirmed: profile.join_confirmed as boolean || false
+          // Provide default values for potentially missing properties
+          assignedGroupId: (profile as any).assigned_group_id || undefined,
+          joinConfirmed: (profile as any).join_confirmed || false
         };
         
         setCurrentUser(user);
@@ -444,101 +450,103 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
-  // Function to confirm user has joined the WhatsApp group
-  const confirmGroupJoin = async () => {
-    if (!currentUser) {
-      return { success: false, error: "Pengguna belum masuk" };
+  // Add the following type casting for functions that use 'from' with table names
+const confirmGroupJoin = async () => {
+  if (!currentUser) {
+    return { success: false, error: "Pengguna belum masuk" };
+  }
+  
+  try {
+    // Call the new DB function with type casting
+    const { data, error } = await (supabase as any)
+      .rpc('confirm_group_join', { user_id: currentUser.id as any });
+    
+    if (error) {
+      console.error('Error confirming group join:', error);
+      return { success: false, error: error.message };
     }
     
-    try {
-      // Call the new DB function
-      const { data, error } = await supabase
-        .rpc('confirm_group_join', { user_id: currentUser.id as any }) as any;
+    if (data) {
+      // Update the current user state
+      setCurrentUser(prev => {
+        if (prev) {
+          return { ...prev, joinConfirmed: true };
+        }
+        return prev;
+      });
       
-      if (error) {
-        console.error('Error confirming group join:', error);
-        return { success: false, error: error.message };
-      }
-      
-      if (data) {
-        // Update the current user state
-        setCurrentUser(prev => {
-          if (prev) {
-            return { ...prev, joinConfirmed: true };
-          }
-          return prev;
-        });
-        
-        return { success: true };
-      } else {
-        return { success: false, error: "Tidak dapat mengkonfirmasi bergabung dengan grup" };
-      }
-    } catch (err: any) {
-      console.error('Error in confirmGroupJoin:', err);
-      return { success: false, error: err.message || "Gagal memperbarui status bergabung" };
+      return { success: true };
+    } else {
+      return { success: false, error: "Tidak dapat mengkonfirmasi bergabung dengan grup" };
     }
-  };
+  } catch (err: any) {
+    console.error('Error in confirmGroupJoin:', err);
+    return { success: false, error: err.message || "Gagal memperbarui status bergabung" };
+  }
+};
 
   // Function to assign a user to a WhatsApp group
-  const assignUserToGroup = async (userId: string, groupId: string): Promise<boolean> => {
-    try {
-      // Use the new function
-      const { data, error } = await supabase
-        .rpc('assign_user_to_group', { user_id: userId, group_id: groupId as any });
-      
-      if (error) {
-        console.error('Error assigning user to group:', error);
-        return false;
-      }
-      
-      // If the current user is being assigned, update the local state
-      if (currentUser && currentUser.id === userId) {
-        setCurrentUser(prev => {
-          if (prev) {
-            return { ...prev, assignedGroupId: groupId, joinConfirmed: false };
-          }
-          return prev;
-        });
-      }
-      
-      // Fetch fresh stats to update group counts
-      await fetchStats();
-      
-      return !!data;
-    } catch (err) {
-      console.error('Error in assignUserToGroup:', err);
+  // Modify assignUserToGroup with type casting
+const assignUserToGroup = async (userId: string, groupId: string): Promise<boolean> => {
+  try {
+    // Use the new function with type casting
+    const { data, error } = await (supabase as any)
+      .rpc('assign_user_to_group', { user_id: userId, group_id: groupId as any });
+    
+    if (error) {
+      console.error('Error assigning user to group:', error);
       return false;
     }
-  };
+    
+    // If the current user is being assigned, update the local state
+    if (currentUser && currentUser.id === userId) {
+      setCurrentUser(prev => {
+        if (prev) {
+          return { ...prev, assignedGroupId: groupId, joinConfirmed: false };
+        }
+        return prev;
+      });
+    }
+    
+    // Fetch fresh stats to update group counts
+    await fetchStats();
+    
+    return !!data;
+  } catch (err) {
+    console.error('Error in assignUserToGroup:', err);
+    return false;
+  }
+};
 
   // Function to update user role
-  const updateUserRole = async (userId: string, newRole: UserRole): Promise<boolean> => {
-    try {
-      // Use the new function
-      const { data, error } = await supabase
-        .rpc('update_user_role', { user_id: userId, new_role: newRole as any });
-      
-      if (error) {
-        console.error('Error updating user role:', error);
-        return false;
-      }
-      
-      // If the current user's role is being updated, update local state
-      if (currentUser && currentUser.id === userId) {
-        setCurrentUser(prev => {
-          if (prev) {
-            return { ...prev, role: newRole };
-          }
-          return prev;
-        });
-      }
-      
-      return !!data;
-    } catch (err) {
-      console.error('Error in updateUserRole:', err);
+  // Modify updateUserRole with type casting
+const updateUserRole = async (userId: string, newRole: UserRole): Promise<boolean> => {
+  try {
+    // Use the new function with type casting
+    const { data, error } = await (supabase as any)
+      .rpc('update_user_role', { user_id: userId, new_role: newRole as any });
+    
+    if (error) {
+      console.error('Error updating user role:', error);
       return false;
     }
-  };
+    
+    // If the current user's role is being updated, update local state
+    if (currentUser && currentUser.id === userId) {
+      setCurrentUser(prev => {
+        if (prev) {
+          return { ...prev, role: newRole };
+        }
+        return prev;
+      });
+    }
+    
+    return !!data;
+  } catch (err) {
+    console.error('Error in updateUserRole:', err);
+    return false;
+  }
+};
 
   // Fetch all applicants for admin management
   const getApplicants = async () => {
@@ -1049,141 +1057,4 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
       setOperators(operatorsWithTickets);
       return operatorsWithTickets;
     } catch (err) {
-      console.error('Error in fetchHelpdeskOperators:', err);
-      return [];
-    }
-  };
-
-  // Function to add a new helpdesk operator
-  const addHelpdeskOperator = async (
-    userId: string, 
-    isOffline: boolean = false
-  ): Promise<boolean> => {
-    if (!currentUser || currentUser.role !== 'admin') {
-      return false;
-    }
-    
-    try {
-      // First, update the user's role
-      const { error: roleError } = await supabase
-        .from('profiles')
-        .update({ 
-          role: isOffline ? 'helpdesk_offline' : 'helpdesk',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', userId);
-      
-      if (roleError) {
-        console.error('Error updating user role:', roleError);
-        return false;
-      }
-      
-      // Then, add them as an operator
-      const { error } = await supabase
-        .from('helpdesk_operators')
-        .insert({
-          user_id: userId,
-          is_active: true,
-          is_offline: isOffline
-        });
-      
-      if (error) {
-        console.error('Error adding operator:', error);
-        return false;
-      }
-      
-      // Refresh operators list
-      await fetchHelpdeskOperators();
-      return true;
-    } catch (err) {
-      console.error('Error in addHelpdeskOperator:', err);
-      return false;
-    }
-  };
-
-  // Function to update operator status
-  const updateOperatorStatus = async (
-    operatorId: string, 
-    isActive: boolean
-  ): Promise<boolean> => {
-    if (!currentUser || currentUser.role !== 'admin') {
-      return false;
-    }
-    
-    try {
-      const { error } = await supabase
-        .from('helpdesk_operators')
-        .update({ 
-          is_active: isActive,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', operatorId);
-      
-      if (error) {
-        console.error('Error updating operator status:', error);
-        return false;
-      }
-      
-      // Refresh operators list
-      await fetchHelpdeskOperators();
-      return true;
-    } catch (err) {
-      console.error('Error in updateOperatorStatus:', err);
-      return false;
-    }
-  };
-
-  // Create a value object with all context functions
-  const value = {
-    loading,
-    error,
-    stats,
-    currentUser,
-    authenticated,
-    tickets,
-    categories,
-    operators,
-    counters,
-    queueTickets,
-    dailyCapacities,
-    login,
-    register,
-    logout,
-    hasRole,
-    getUserAssignedGroup,
-    confirmGroupJoin,
-    assignUserToGroup,
-    updateUserRole,
-    getApplicants,
-    createTicket,
-    addTicketMessage,
-    addTicketAttachment,
-    getTicketAttachments,
-    getFileUrl,
-    fetchUserTickets,
-    updateTicketStatus,
-    updateTicketPriority,
-    assignTicket,
-    fetchHelpdeskOperators,
-    addHelpdeskOperator,
-    updateOperatorStatus,
-    fetchStats,
-    fetchCategories,
-    DEMO_ACCOUNTS
-  };
-
-  return (
-    <RegistrationsContext.Provider value={value}>
-      {children}
-    </RegistrationsContext.Provider>
-  );
-};
-
-// Custom hook to use the registration context
-export const useRegistrations = () => {
-  const context = useContext(RegistrationsContext);
-  if (context === null) {
-    throw new Error('useRegistrations must be used within a RegistrationsProvider');
-  }
-  return context;
-};
+      console.error('Error

@@ -18,6 +18,7 @@ const ContentDisplay = ({ slug, className = '' }: ContentDisplayProps) => {
     const fetchContent = async () => {
       setLoading(true);
       try {
+        // Explicitly cast the result type to avoid type errors
         const { data, error } = await supabase
           .from('page_contents')
           .select('content')
@@ -28,7 +29,9 @@ const ContentDisplay = ({ slug, className = '' }: ContentDisplayProps) => {
           throw error;
         }
 
-        setContent(data.content);
+        if (data) {
+          setContent(data.content);
+        }
       } catch (err: any) {
         console.error(`Error fetching ${slug} content:`, err);
         setError(`Failed to load content: ${err.message}`);
@@ -42,9 +45,16 @@ const ContentDisplay = ({ slug, className = '' }: ContentDisplayProps) => {
 
   useEffect(() => {
     if (!loading && content && window.markdownit) {
-      const md = window.markdownit();
-      const renderedHtml = md.render(content);
-      document.getElementById(`content-${slug}`)!.innerHTML = renderedHtml;
+      try {
+        const md = window.markdownit();
+        const renderedHtml = md.render(content);
+        const element = document.getElementById(`content-${slug}`);
+        if (element) {
+          element.innerHTML = renderedHtml;
+        }
+      } catch (err) {
+        console.error('Error rendering markdown:', err);
+      }
     }
   }, [content, loading, slug]);
 
