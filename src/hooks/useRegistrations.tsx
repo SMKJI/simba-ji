@@ -425,7 +425,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     try {
       const params = { user_id: currentUser.id };
       const { data, error } = await supabase
-        .rpc('confirm_group_join', params as any);
+        .rpc('confirm_group_join', params as unknown as any);
       
       if (error) {
         console.error('Error confirming group join:', error);
@@ -450,7 +450,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     try {
       const params = { user_id: userId, group_id: groupId };
       const { data, error } = await supabase
-        .rpc('assign_user_to_group', params as any);
+        .rpc('assign_user_to_group', params as unknown as any);
       
       if (error) {
         console.error('Error assigning user to group:', error);
@@ -479,7 +479,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     try {
       const params = { user_id: userId, new_role: newRole };
       const { data, error } = await supabase
-        .rpc('update_user_role', params as any);
+        .rpc('update_user_role', params as unknown as any);
       
       if (error) {
         console.error('Error updating user role:', error);
@@ -991,7 +991,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     try {
       const params = { user_id: userId, new_role: (isOffline ? 'helpdesk_offline' : 'helpdesk') };
       const { error: roleError } = await supabase
-        .rpc('update_user_role', params as any);
+        .rpc('update_user_role', params as unknown as any);
       
       if (roleError) {
         console.error('Error updating user role:', roleError);
@@ -1023,7 +1023,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     try {
       const params = { user_id: userId, new_role: (isOffline ? 'helpdesk_offline' : 'helpdesk') };
       const { error: roleError } = await supabase
-        .rpc('update_user_role', params as any);
+        .rpc('update_user_role', params as unknown as any);
       
       if (roleError) {
         console.error('Error updating user role:', roleError);
