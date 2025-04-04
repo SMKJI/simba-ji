@@ -22,8 +22,6 @@ export interface Group {
   member_count: number;
   is_active: boolean;
   isFull: boolean; // Computed property
-  count?: number; // For backward compatibility
-  link?: string; // For backward compatibility
 }
 
 export interface StatsData {
@@ -38,7 +36,7 @@ export interface LoginResult {
 }
 
 export interface RegistrationResult {
-  registrationId: number;
+  id: number;
   assignedGroup: string;
   groupLink: string;
   timestamp: string;
@@ -47,8 +45,8 @@ export interface RegistrationResult {
 export interface HelpdeskOperator {
   id: string;
   user_id: string;
-  name: string; // Computed from profiles
-  email: string; // Computed from profiles
+  name: string;
+  email: string;
   assignedTickets: number; // Computed
   status: 'active' | 'inactive';
   is_offline: boolean;
@@ -61,7 +59,7 @@ export interface HelpdeskCounter {
   is_active: boolean;
   operator_id: string | null;
   operatorName?: string; // Computed
-  operators?: HelpdeskOperator[] | null; // Add operators property for relation queries
+  operators?: HelpdeskOperator[] | null; // Add operators property
 }
 
 export interface HelpdeskTicket {
@@ -115,8 +113,8 @@ export interface QueueTicket {
 export interface DailyCapacity {
   id: string;
   date: string;
-  online_capacity: number;
   offline_capacity: number;
+  online_capacity: number;
 }
 
 export interface TicketAttachment {

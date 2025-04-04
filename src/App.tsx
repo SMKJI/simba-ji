@@ -12,6 +12,7 @@ import Programs from '@/pages/Programs';
 import FAQ from '@/pages/FAQ';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
+import QueueDisplay from '@/pages/QueueDisplay'; // Fixed import
 import Dashboard from '@/pages/Dashboard';
 import Success from '@/pages/Success';
 import GroupDetail from '@/pages/GroupDetail';
@@ -19,7 +20,6 @@ import Profile from '@/pages/Profile';
 import Helpdesk from '@/pages/Helpdesk';
 import StudentHelpdesk from '@/pages/StudentHelpdesk';
 import OfflineHelpdesk from '@/pages/OfflineHelpdesk';
-import QueueDisplay from '@/pages/QueueDisplay';
 import Admin from '@/pages/Admin';
 import Content from '@/pages/Content';
 import ContentManager from '@/pages/ContentManager';

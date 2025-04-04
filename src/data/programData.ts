@@ -46,7 +46,7 @@ export const programs: Program[] = [
     name: 'Akuntansi',
     description: 'Program yang mempelajari tentang pembukuan, perpajakan, audit keuangan, dan aplikasi akuntansi.',
     skills: ['Accounting', 'Taxation', 'Auditing', 'Financial Analysis'],
-    image: '/lovable-uploads/24659fba-05c4-4437-9fc8-aaa694a28a50.png',
+    image: '/lovable-uploads/24659fba-05c4-4437-9fc8-aaa28a94a28a50.png',
     prospects: ['Accountant', 'Tax Consultant', 'Financial Auditor', 'Finance Staff']
   },
   {
