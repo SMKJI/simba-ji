@@ -1,4 +1,3 @@
-
 import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -424,10 +423,10 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
     
     try {
-      // Explicitly cast the entire parameter object to any to avoid TypeScript errors
-      const params = { user_id: currentUser.id } as Record<string, any>;
       const { data, error } = await supabase
-        .rpc('confirm_group_join', params);
+        .rpc('confirm_group_join', { 
+          user_id: currentUser.id
+        } as unknown as never);
       
       if (error) {
         console.error('Error confirming group join:', error);
@@ -450,10 +449,11 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
 
   const assignUserToGroup = async (userId: string, groupId: string): Promise<boolean> => {
     try {
-      // Explicitly cast the entire parameter object to any to avoid TypeScript errors
-      const params = { user_id: userId, group_id: groupId } as Record<string, any>;
       const { data, error } = await supabase
-        .rpc('assign_user_to_group', params);
+        .rpc('assign_user_to_group', { 
+          user_id: userId,
+          group_id: groupId
+        } as unknown as never);
       
       if (error) {
         console.error('Error assigning user to group:', error);
@@ -480,10 +480,11 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
 
   const updateUserRole = async (userId: string, newRole: UserRole): Promise<boolean> => {
     try {
-      // Explicitly cast the entire parameter object to any to avoid TypeScript errors
-      const params = { user_id: userId, new_role: newRole } as Record<string, any>;
       const { data, error } = await supabase
-        .rpc('update_user_role', params);
+        .rpc('update_user_role', { 
+          user_id: userId,
+          new_role: newRole
+        } as unknown as never);
       
       if (error) {
         console.error('Error updating user role:', error);
@@ -993,14 +994,11 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
     
     try {
-      // Explicitly cast the entire parameter object to any to avoid TypeScript errors
-      const params = { 
-        user_id: userId,
-        new_role: (isOffline ? 'helpdesk_offline' : 'helpdesk') 
-      } as Record<string, any>;
-      
       const { error: roleError } = await supabase
-        .rpc('update_user_role', params);
+        .rpc('update_user_role', { 
+          user_id: userId,
+          new_role: (isOffline ? 'helpdesk_offline' : 'helpdesk') 
+        } as unknown as never);
       
       if (roleError) {
         console.error('Error updating user role:', roleError);
@@ -1030,14 +1028,11 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
 
   const toggleOperatorType = async (userId: string, isOffline: boolean): Promise<boolean> => {
     try {
-      // Explicitly cast the entire parameter object to any to avoid TypeScript errors
-      const params = { 
-        user_id: userId,
-        new_role: (isOffline ? 'helpdesk_offline' : 'helpdesk')
-      } as Record<string, any>;
-      
       const { error: roleError } = await supabase
-        .rpc('update_user_role', params);
+        .rpc('update_user_role', { 
+          user_id: userId,
+          new_role: (isOffline ? 'helpdesk_offline' : 'helpdesk')
+        } as unknown as never);
       
       if (roleError) {
         console.error('Error updating user role:', roleError);
