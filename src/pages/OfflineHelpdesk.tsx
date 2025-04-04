@@ -1,334 +1,255 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import DashboardLayout from '@/components/layouts/DashboardLayout';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useRegistrations } from '@/hooks/useRegistrations';
-import type { QueueTicket, TicketCategory, HelpdeskCounter, User } from '@/hooks/useRegistrations';
-import { 
-  Volume2, PlayCircle, CheckCircle2, SkipForward, 
-  PauseCircle, RefreshCw, UserCheck, AlertTriangle
-} from 'lucide-react';
-import { 
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
-} from "@/components/ui/select";
+import { Shell } from '@/components/Shell';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { useCounters } from '@/hooks/useCounters';
+import { useQueue } from '@/hooks/useQueue';
+import { Counter } from '@/types/counter';
 
 const OfflineHelpdesk = () => {
-  const navigate = useNavigate();
+  const { user } = useAuth();
   const { toast } = useToast();
-  const { currentUser, authenticated } = useRegistrations();
-  const [userTicket, setUserTicket] = useState<QueueTicket | null>(null);
-  const [categories, setCategories] = useState<TicketCategory[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [counters, setCounters] = useState<HelpdeskCounter[]>([]);
-  const [creatingTicket, setCreatingTicket] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { counters, loading: countersLoading } = useCounters();
+  const { currentTicket, callNextTicket, completeTicket, skipTicket } = useQueue();
+  const [selectedCounter, setSelectedCounter] = useState<Counter | null>(null);
 
   useEffect(() => {
-    if (!currentUser) {
+    // If user is not logged in or doesn't have the right role, redirect
+    if (!user) {
       navigate('/login');
-    }
-    
-    fetchCategories();
-    fetchCounters();
-    fetchUserTicket();
-  }, [currentUser, navigate]);
-
-  const fetchCategories = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('ticket_categories')
-        .select('*')
-        .eq('is_offline', true)
-        .order('name');
-      
-      if (error) throw error;
-      setCategories(data as TicketCategory[]);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
+    } else if (user.role !== 'helpdesk_offline' && user.role !== 'admin') {
       toast({
-        title: 'Error',
-        description: 'Failed to load ticket categories',
-        variant: 'destructive'
+        title: 'Akses Ditolak',
+        description: 'Anda tidak memiliki akses ke halaman ini.',
+        variant: 'destructive',
       });
+      navigate('/dashboard');
     }
-  };
+  }, [user, navigate, toast]);
 
-  const fetchCounters = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('helpdesk_counters')
-        .select(`
-          *,
-          operators:operator_id(name)
-        `);
-      
-      if (error) throw error;
-      
-      const formattedCounters = data.map(counter => ({
-        id: counter.id,
-        name: counter.name,
-        is_active: counter.is_active,
-        operator_id: counter.operator_id,
-        operatorName: counter.operators && typeof counter.operators === 'object' && 'name' in counter.operators 
-          ? counter.operators.name 
-          : null
-      }));
-      
-      setCounters(formattedCounters);
-    } catch (error) {
-      console.error('Error fetching counters:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load counters',
-        variant: 'destructive'
-      });
-    }
-  };
-
-  const fetchUserTicket = async () => {
-    if (!currentUser) return;
-    
-    setLoading(true);
-    
-    try {
-      const { data, error } = await supabase
-        .from('queue_tickets')
-        .select(`
-          *,
-          category:category_id(name)
-        `)
-        .eq('user_id', currentUser.id)
-        .not('status', 'in', ['completed', 'skipped'])
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-      
-      if (error) {
-        if (error.code !== 'PGRST116') {
-          throw error;
-        }
-        setUserTicket(null);
-      } else {
-        const ticketStatus = data.status as 'waiting' | 'called' | 'serving' | 'completed' | 'skipped';
-        
-        setUserTicket({
-          id: data.id,
-          user_id: data.user_id,
-          queue_number: data.queue_number,
-          category_id: data.category_id,
-          categoryName: data.category?.name,
-          status: ticketStatus,
-          counter_id: data.counter_id,
-          operator_id: data.operator_id,
-          created_at: data.created_at,
-          served_at: data.served_at,
-          completed_at: data.completed_at
-        });
+  // Find counter assigned to current user
+  useEffect(() => {
+    if (user && counters) {
+      const userCounter = counters.find(counter => 
+        counter.operators && counter.operators.some(op => op.id === user.id)
+      );
+      if (userCounter) {
+        setSelectedCounter(userCounter);
       }
-    } catch (error) {
-      console.error('Error fetching user ticket:', error);
+    }
+  }, [user, counters]);
+
+  const handleCallNext = async () => {
+    if (!selectedCounter) {
       toast({
         title: 'Error',
-        description: 'Failed to load your ticket',
-        variant: 'destructive'
+        description: 'Anda belum memilih loket.',
+        variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
+      return;
     }
-  };
 
-  const createQueueTicket = async () => {
-    if (!selectedCategory || !currentUser) return;
-    
-    setCreatingTicket(true);
-    
     try {
-      // Queue number will be auto-generated via database trigger
-      const { data, error } = await supabase
-        .from('queue_tickets')
-        .insert({
-          user_id: currentUser.id,
-          category_id: selectedCategory,
-          status: 'waiting',
-          queue_number: 0 // This will be overridden by the trigger
-        })
-        .select()
-        .single();
-    
-      if (error) throw error;
-    
-      // Format the ticket data correctly
-      const ticketStatus = data.status as 'waiting' | 'called' | 'serving' | 'completed' | 'skipped';
-      
-      const ticket: QueueTicket = {
-        id: data.id,
-        user_id: data.user_id,
-        queue_number: data.queue_number,
-        category_id: data.category_id,
-        status: ticketStatus,
-        counter_id: data.counter_id,
-        operator_id: data.operator_id,
-        created_at: data.created_at,
-        served_at: data.served_at,
-        completed_at: data.completed_at
-      };
-    
-      setUserTicket(ticket);
-    
+      await callNextTicket(selectedCounter.id);
       toast({
         title: 'Sukses',
-        description: `Nomor antrian Anda: ${data.queue_number}`,
+        description: 'Berhasil memanggil antrian berikutnya.',
       });
     } catch (error) {
-      console.error('Error creating ticket:', error);
       toast({
         title: 'Error',
-        description: 'Gagal membuat tiket antrian',
-        variant: 'destructive'
+        description: 'Gagal memanggil antrian berikutnya.',
+        variant: 'destructive',
       });
-    } finally {
-      setCreatingTicket(false);
     }
   };
 
-  const cancelQueueTicket = async () => {
-    if (!userTicket) return;
-    
+  const handleComplete = async () => {
+    if (!currentTicket) {
+      toast({
+        title: 'Error',
+        description: 'Tidak ada antrian yang sedang dilayani.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
-      const { error } = await supabase
-        .from('queue_tickets')
-        .delete()
-        .eq('id', userTicket.id);
-      
-      if (error) throw error;
-      
-      setUserTicket(null);
+      await completeTicket(currentTicket.id);
       toast({
         title: 'Sukses',
-        description: 'Antrian Anda telah dibatalkan',
+        description: 'Berhasil menyelesaikan antrian.',
       });
     } catch (error) {
-      console.error('Error cancelling ticket:', error);
       toast({
         title: 'Error',
-        description: 'Gagal membatalkan antrian',
-        variant: 'destructive'
+        description: 'Gagal menyelesaikan antrian.',
+        variant: 'destructive',
       });
     }
   };
 
-  if (!authenticated || !currentUser) {
+  const handleSkip = async () => {
+    if (!currentTicket) {
+      toast({
+        title: 'Error',
+        description: 'Tidak ada antrian yang sedang dilayani.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      await skipTicket(currentTicket.id);
+      toast({
+        title: 'Sukses',
+        description: 'Berhasil melewati antrian.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Gagal melewati antrian.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  if (countersLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <AlertTriangle className="mr-2 h-4 w-4" />
-        Anda harus login untuk mengakses halaman ini.
-      </div>
+      <Shell>
+        <div className="container py-10">
+          <div className="flex justify-center items-center h-64">
+            <p>Loading...</p>
+          </div>
+        </div>
+      </Shell>
     );
   }
 
   return (
-    <DashboardLayout>
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-4">Helpdesk Tatap Muka</h1>
-        <p className="text-muted-foreground mb-4">
-          Ambil nomor antrian untuk mendapatkan bantuan secara langsung.
-        </p>
+    <Shell>
+      <div className="container py-10">
+        <h1 className="text-2xl font-bold mb-6">Helpdesk Offline</h1>
         
-        <Card className="border-0 shadow-md">
-          <CardHeader>
-            <CardTitle>Antrian Anda</CardTitle>
-            <CardDescription>
-              Status antrian Anda saat ini.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-6">
-            {loading ? (
-              <div className="flex justify-center">
-                <RefreshCw className="animate-spin h-6 w-6" />
-              </div>
-            ) : userTicket ? (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="text-lg font-semibold">
-                    Nomor Antrian: {userTicket.queue_number}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-1">
+            <Card>
+              <CardHeader>
+                <CardTitle>Loket Anda</CardTitle>
+                <CardDescription>
+                  Informasi loket yang Anda layani
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {selectedCounter ? (
+                  <div>
+                    <h3 className="font-semibold text-lg">{selectedCounter.name}</h3>
+                    <p className="text-sm text-gray-500 mb-2">{selectedCounter.description}</p>
+                    <div className="mt-4">
+                      <h4 className="text-sm font-medium mb-1">Operator:</h4>
+                      {selectedCounter.operators && selectedCounter.operators.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {selectedCounter.operators.map(op => (
+                            <Badge key={op.id} variant="outline" className="bg-green-50">
+                              {op.name}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 text-sm">Tidak ada operator</p>
+                      )}
+                    </div>
                   </div>
-                  <Badge variant="secondary">
-                    {userTicket.status}
-                  </Badge>
-                </div>
-                <div>
-                  Kategori: {userTicket.categoryName}
-                </div>
-                <div>
-                  Waktu Daftar: {new Date(userTicket.created_at).toLocaleString()}
-                </div>
-                <Button 
-                  variant="destructive"
-                  onClick={cancelQueueTicket}
-                >
-                  Batalkan Antrian
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <p>Anda belum memiliki antrian. Silakan buat antrian baru.</p>
-                <Select onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Pilih Kategori" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map(category => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button 
-                  onClick={createQueueTicket}
-                  disabled={!selectedCategory || creatingTicket}
-                >
-                  {creatingTicket ? (
-                    <>
-                      Membuat Antrian...
-                      <RefreshCw className="animate-spin h-4 w-4 ml-2" />
-                    </>
-                  ) : (
-                    "Buat Antrian"
-                  )}
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        
-        <div className="mt-8">
-          <h2 className="text-xl font-bold mb-4">Loket yang Tersedia</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {counters.map(counter => (
-              <Card key={counter.id} className="shadow-sm">
-                <CardContent className="p-4">
-                  <div className="font-semibold">{counter.name}</div>
-                  <div className="text-sm text-muted-foreground">
-                    Operator: {counter.operatorName || 'Belum ada'}
+                ) : (
+                  <p className="text-yellow-600">
+                    Anda belum ditugaskan ke loket manapun. Hubungi administrator.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="md:col-span-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Antrian Saat Ini</CardTitle>
+                <CardDescription>
+                  Kelola antrian yang sedang Anda layani
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {currentTicket ? (
+                  <div className="bg-primary/5 p-4 rounded-lg">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-semibold text-lg">Nomor: {currentTicket.number}</h3>
+                        <p className="text-sm text-gray-500">
+                          {currentTicket.applicant?.name || 'Nama tidak tersedia'}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          ID: {currentTicket.id}
+                        </p>
+                      </div>
+                      <Badge 
+                        className={
+                          currentTicket.status === 'serving' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                        }
+                      >
+                        {currentTicket.status === 'serving' ? 'Sedang Dilayani' : 'Dipanggil'}
+                      </Badge>
+                    </div>
+                    
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <h4 className="text-sm font-medium mb-2">Keperluan:</h4>
+                      <p className="text-sm">{currentTicket.purpose || 'Tidak ada keterangan'}</p>
+                    </div>
                   </div>
-                  <Badge className="mt-2">
-                    {counter.is_active ? 'Buka' : 'Tutup'}
-                  </Badge>
-                </CardContent>
-              </Card>
-            ))}
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">Tidak ada antrian yang sedang dilayani</p>
+                    <p className="text-sm text-gray-400 mt-1">Klik tombol "Panggil Berikutnya" untuk memanggil antrian</p>
+                  </div>
+                )}
+              </CardContent>
+              <CardFooter className="flex flex-col sm:flex-row gap-3 justify-end">
+                <Button 
+                  onClick={handleCallNext} 
+                  disabled={!selectedCounter}
+                  className="w-full sm:w-auto"
+                >
+                  Panggil Berikutnya
+                </Button>
+                {currentTicket && (
+                  <>
+                    <Button 
+                      onClick={handleSkip} 
+                      variant="outline" 
+                      className="w-full sm:w-auto"
+                    >
+                      Lewati
+                    </Button>
+                    <Button 
+                      onClick={handleComplete} 
+                      variant="default" 
+                      className="w-full sm:w-auto"
+                    >
+                      Selesai
+                    </Button>
+                  </>
+                )}
+              </CardFooter>
+            </Card>
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </Shell>
   );
 };
 
