@@ -1,4 +1,3 @@
-
 import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -118,8 +117,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
               email: profileData.email,
               role: profileData.role as UserRole,
               avatarUrl: profileData.avatar_url,
-              assignedGroupId: profileData.assigned_group_id as string || undefined,
-              joinConfirmed: profileData.join_confirmed as boolean || false
+              assignedGroupId: (profileData as any).assigned_group_id as string || undefined,
+              joinConfirmed: (profileData as any).join_confirmed as boolean || false
             };
             
             setCurrentUser(user);
@@ -166,8 +165,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
               email: profileData.email,
               role: profileData.role as UserRole,
               avatarUrl: profileData.avatar_url,
-              assignedGroupId: profileData.assigned_group_id as string || undefined,
-              joinConfirmed: profileData.join_confirmed as boolean || false
+              assignedGroupId: (profileData as any).assigned_group_id as string || undefined,
+              joinConfirmed: (profileData as any).join_confirmed as boolean || false
             };
             
             setCurrentUser(user);
@@ -189,7 +188,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     };
   }, []);
 
-  // Fetch WhatsApp groups and registration stats
+  // Fetch stats data for the dashboard
   const fetchStats = async () => {
     try {
       // Get all WhatsApp groups
@@ -297,8 +296,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           email: profile.email,
           role: profile.role as UserRole,
           avatarUrl: profile.avatar_url,
-          assignedGroupId: profile.assigned_group_id as string || undefined,
-          joinConfirmed: profile.join_confirmed as boolean || false
+          assignedGroupId: (profile as any).assigned_group_id as string || undefined,
+          joinConfirmed: (profile as any).join_confirmed as boolean || false
         };
         
         setCurrentUser(user);
@@ -358,8 +357,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
             email: profile.email,
             role: profile.role as UserRole,
             avatarUrl: profile.avatar_url,
-            assignedGroupId: profile.assigned_group_id as string || undefined,
-            joinConfirmed: profile.join_confirmed as boolean || false
+            assignedGroupId: (profile as any).assigned_group_id as string || undefined,
+            joinConfirmed: (profile as any).join_confirmed as boolean || false
           };
           
           setCurrentUser(user);
@@ -485,7 +484,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     try {
       // Use the new function
       const { data, error } = await supabase
-        .rpc('assign_user_to_group', { user_id: userId, group_id: groupId });
+        .rpc('assign_user_to_group', { user_id: userId, group_id: groupId }) as any;
       
       if (error) {
         console.error('Error assigning user to group:', error);
@@ -517,7 +516,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     try {
       // Use the new function
       const { data, error } = await supabase
-        .rpc('update_user_role', { user_id: userId, new_role: newRole });
+        .rpc('update_user_role', { user_id: userId, new_role: newRole }) as any;
       
       if (error) {
         console.error('Error updating user role:', error);
@@ -1070,7 +1069,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         .rpc('update_user_role', { 
           user_id: userId, 
           new_role: isOffline ? 'helpdesk_offline' : 'helpdesk'
-        });
+        }) as any;
       
       if (roleError) {
         console.error('Error updating user role:', roleError);
