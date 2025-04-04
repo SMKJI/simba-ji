@@ -50,9 +50,11 @@ export const useQueue = () => {
       }
 
       if (data) {
-        // Safely extract the name with proper null checking
+        // Safely extract the name with proper null checking and type guarding
         const profileData = data.profiles;
-        const applicantName = profileData?.name ?? 'Unknown';
+        const applicantName = typeof profileData === 'object' && profileData 
+          ? (profileData as any)?.name ?? 'Unknown' 
+          : 'Unknown';
 
         setCurrentTicket({
           id: data.id,
@@ -124,9 +126,11 @@ export const useQueue = () => {
         throw updateError;
       }
 
-      // Safely extract the name with proper null checking
+      // Safely extract the name with proper null checking and type guarding
       const profileData = nextTicket.profiles;
-      const applicantName = profileData?.name ?? 'Unknown';
+      const applicantName = typeof profileData === 'object' && profileData 
+        ? (profileData as any)?.name ?? 'Unknown' 
+        : 'Unknown';
 
       setCurrentTicket({
         id: updatedTicket.id,

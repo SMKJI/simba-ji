@@ -44,7 +44,10 @@ export const useCounters = () => {
           // Using optional chaining throughout with nullish coalescing
           const operatorInfo = counter.operator_id;
           const profilesInfo = operatorInfo?.profiles;
-          const operatorName = profilesInfo?.name ?? 'Unknown';
+          // Add type checking to ensure we're not accessing properties on an error object
+          const operatorName = typeof profilesInfo === 'object' && profilesInfo 
+            ? (profilesInfo as any)?.name ?? 'Unknown' 
+            : 'Unknown';
           
           return {
             id: counter.id,
