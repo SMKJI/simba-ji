@@ -369,7 +369,7 @@ const QueueManagement = () => {
                 {completedTickets.length > 0 ? (
                   <div className="flex flex-col space-y-2">
                     {completedTickets.map((ticket) => (
-                      <Badge key={ticket.id} variant="success">
+                      <Badge variant="secondary" className="bg-green-100 text-green-800">
                         {ticket.name} - {ticket.program}
                       </Badge>
                     ))}

@@ -39,16 +39,25 @@ export const useCounters = () => {
         }
 
         // Format the data to match our Counter interface
-        const formattedCounters: Counter[] = data.map(counter => ({
-          id: counter.id,
-          name: counter.name,
-          description: counter.name, // Using name as description since description doesn't exist
-          is_active: counter.is_active,
-          operators: counter.operator_id ? [{
-            id: counter.operator_id.id,
-            name: counter.operator_id.profiles?.name || 'Unknown'
-          }] : undefined
-        }));
+        const formattedCounters: Counter[] = data.map(counter => {
+          // Check if operator_id exists and has the expected structure before accessing
+          const operatorName = counter.operator_id && 
+            typeof counter.operator_id === 'object' && 
+            counter.operator_id.profiles && 
+            typeof counter.operator_id.profiles === 'object' ? 
+            counter.operator_id.profiles.name : 'Unknown';
+
+          return {
+            id: counter.id,
+            name: counter.name,
+            description: counter.name, // Using name as description since description doesn't exist
+            is_active: counter.is_active,
+            operators: counter.operator_id ? [{
+              id: counter.operator_id.id,
+              name: operatorName
+            }] : undefined
+          };
+        });
 
         setCounters(formattedCounters);
         setLoading(false);

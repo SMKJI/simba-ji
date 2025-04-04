@@ -1,15 +1,20 @@
 
-import React from "react";
-import { cn } from "@/lib/utils";
+import React, { ReactNode } from 'react';
+import MainLayout from '@/components/layouts/MainLayout';
 
-interface ShellProps extends React.HTMLAttributes<HTMLDivElement> {}
+interface ShellProps {
+  children: ReactNode;
+  className?: string;
+}
 
-export function Shell({ className, children, ...props }: ShellProps) {
+export const Shell = ({ children, className = '' }: ShellProps) => {
   return (
-    <div className={cn("min-h-screen bg-background", className)} {...props}>
-      <div className="container py-6">
+    <MainLayout className={className}>
+      <div className="container mx-auto py-8">
         {children}
       </div>
-    </div>
+    </MainLayout>
   );
-}
+};
+
+export default Shell;

@@ -43,7 +43,7 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  const { DEMO_ACCOUNTS } = useRegistrations();
+  const { DEMO_ACCOUNTS = [] } = useRegistrations();
   const emailFromState = location.state?.email || prefilledEmail || '';
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -242,17 +242,21 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
                   Klik pada akun untuk mengisi form otomatis (password: password123)
                 </p>
                 
-                {DEMO_ACCOUNTS.map((account) => (
-                  <div 
-                    key={account.id}
-                    className="p-2 border rounded-md hover:bg-muted cursor-pointer"
-                    onClick={() => fillDemoAccount(account.email)}
-                  >
-                    <p className="font-semibold">{account.name}</p>
-                    <p className="text-xs text-muted-foreground">Email: {account.email}</p>
-                    <p className="text-xs text-muted-foreground">Role: {account.role}</p>
-                  </div>
-                ))}
+                {DEMO_ACCOUNTS && DEMO_ACCOUNTS.length > 0 ? (
+                  DEMO_ACCOUNTS.map((account) => (
+                    <div 
+                      key={account.id}
+                      className="p-2 border rounded-md hover:bg-muted cursor-pointer"
+                      onClick={() => fillDemoAccount(account.email)}
+                    >
+                      <p className="font-semibold">{account.name}</p>
+                      <p className="text-xs text-muted-foreground">Email: {account.email}</p>
+                      <p className="text-xs text-muted-foreground">Role: {account.role}</p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-muted-foreground">No demo accounts available</p>
+                )}
               </div>
             </AccordionContent>
           </AccordionItem>

@@ -50,6 +50,11 @@ export const useQueue = () => {
       }
 
       if (data) {
+        // Check if profiles exists and has the expected structure before accessing
+        const applicantName = data.profiles && 
+          typeof data.profiles === 'object' ? 
+          data.profiles.name : 'Unknown';
+
         setCurrentTicket({
           id: data.id,
           number: data.queue_number,
@@ -57,7 +62,7 @@ export const useQueue = () => {
           created_at: data.created_at,
           applicant: {
             id: data.user_id,
-            name: data.profiles?.name || 'Unknown'
+            name: applicantName
           },
           purpose: ''  // Default empty string since purpose column doesn't exist
         });
@@ -122,6 +127,11 @@ export const useQueue = () => {
         throw updateError;
       }
 
+      // Check if profiles exists and has the expected structure before accessing
+      const applicantName = nextTicket.profiles && 
+        typeof nextTicket.profiles === 'object' ? 
+        nextTicket.profiles.name : 'Unknown';
+
       // Set current ticket
       setCurrentTicket({
         id: updatedTicket.id,
@@ -130,7 +140,7 @@ export const useQueue = () => {
         created_at: updatedTicket.created_at,
         applicant: {
           id: updatedTicket.user_id,
-          name: nextTicket.profiles?.name || 'Unknown'
+          name: applicantName
         },
         purpose: ''  // Default empty string since purpose column doesn't exist
       });
