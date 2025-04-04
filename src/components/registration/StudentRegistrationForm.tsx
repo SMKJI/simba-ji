@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, EyeIcon, EyeOffIcon } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { programData } from '@/data/programData';
 
 interface StudentRegistrationFormProps {
   onSuccess?: () => void;
@@ -98,7 +99,9 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
     }
     
     try {
+      console.log("Registering with:", email, password, name);
       const result = await register(email, password, name);
+      console.log("Registration result:", result);
       
       if (result.success) {
         // Store additional information to be used in the profile
@@ -134,6 +137,7 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
         setError(result.error || 'Pendaftaran gagal. Silakan coba lagi.');
       }
     } catch (err: any) {
+      console.error("Registration error:", err);
       setError(err.message || 'Terjadi kesalahan saat mendaftar');
     } finally {
       setIsSubmitting(false);
@@ -305,12 +309,11 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
             <SelectValue placeholder="Pilih program keahlian" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="akl">Akuntansi dan Keuangan Lembaga</SelectItem>
-            <SelectItem value="bp">Broadcast dan Perfilman</SelectItem>
-            <SelectItem value="bus">Busana</SelectItem>
-            <SelectItem value="dkv">Desain Komunikasi Visual</SelectItem>
-            <SelectItem value="mplb">Menejemen Perkantoran dan Layanan Bisnis</SelectItem>
-            <SelectItem value="pm">Pemasaran</SelectItem>
+            {programData.map(program => (
+              <SelectItem key={program.id} value={program.id}>
+                {program.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -372,7 +375,7 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
       <Button
         type="submit"
         className="w-full"
-        disabled={isSubmitting || loading || !isFormValid()}
+        disabled={isSubmitting || loading}
       >
         {isSubmitting ? (
           <>

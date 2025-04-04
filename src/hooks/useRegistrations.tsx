@@ -1,3 +1,4 @@
+
 import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase, RPCParams } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -424,6 +425,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     
     try {
       const params: RPCParams = { user_id: currentUser.id };
+      
       const { data, error } = await supabase
         .rpc('confirm_group_join', params);
       
@@ -449,6 +451,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
   const assignUserToGroup = async (userId: string, groupId: string): Promise<boolean> => {
     try {
       const params: RPCParams = { user_id: userId, group_id: groupId };
+      
       const { data, error } = await supabase
         .rpc('assign_user_to_group', params);
       
@@ -478,6 +481,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
   const updateUserRole = async (userId: string, newRole: UserRole): Promise<boolean> => {
     try {
       const params: RPCParams = { user_id: userId, new_role: newRole };
+      
       const { data, error } = await supabase
         .rpc('update_user_role', params);
       
@@ -990,6 +994,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     
     try {
       const params: RPCParams = { user_id: userId, new_role: (isOffline ? 'helpdesk_offline' : 'helpdesk') };
+      
       const { error: roleError } = await supabase
         .rpc('update_user_role', params);
       
@@ -1022,6 +1027,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
   const toggleOperatorType = async (userId: string, isOffline: boolean): Promise<boolean> => {
     try {
       const params: RPCParams = { user_id: userId, new_role: (isOffline ? 'helpdesk_offline' : 'helpdesk') };
+      
       const { error: roleError } = await supabase
         .rpc('update_user_role', params);
       

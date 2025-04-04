@@ -46,6 +46,7 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
   const { DEMO_ACCOUNTS = [] } = useRegistrations();
   const emailFromState = location.state?.email || prefilledEmail || '';
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -56,44 +57,80 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
   });
 
   const loginWithSupabase = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      if (error.message.includes('Email not confirmed') || error.message.includes('Invalid login credentials')) {
-        return tryDemoLogin(email, password);
+      if (error) {
+        console.error("Login error:", error.message);
+        
+        if (error.message.includes('Email not confirmed') || error.message.includes('Invalid login credentials')) {
+          // Try demo login if Supabase auth fails
+          return tryDemoLogin(email, password);
+        }
+        
+        return { success: false, error: error.message };
       }
-      return { success: false, error: error.message };
-    }
-    
-    if (data.user) {
-      const demoUser = DEMO_ACCOUNTS.find(account => account.email === email);
       
-      if (demoUser) {
+      if (data?.user) {
+        // Check for demo account first
+        const demoUser = DEMO_ACCOUNTS.find(account => account.email === email);
+        
+        if (demoUser) {
+          sessionStorage.setItem('currentUser', JSON.stringify(demoUser));
+          return { 
+            success: true, 
+            user: demoUser 
+          };
+        }
+        
+        // Fetch the user profile
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+        
+        if (profileError) {
+          console.error("Profile fetch error:", profileError.message);
+          return { 
+            success: false, 
+            error: 'Gagal mengambil profil. Silakan coba lagi.' 
+          };
+        }
+        
+        if (!profileData) {
+          return { 
+            success: false, 
+            error: 'Profil pengguna tidak ditemukan.' 
+          };
+        }
+        
         return { 
           success: true, 
-          user: demoUser 
+          user: {
+            id: profileData.id,
+            name: profileData.name || data.user.email?.split('@')[0] || 'User',
+            email: profileData.email || data.user.email || '',
+            role: profileData.role || 'applicant',
+            avatarUrl: profileData.avatar_url,
+            assignedGroupId: profileData.assigned_group_id,
+            joinConfirmed: profileData.join_confirmed
+          }
         };
       }
       
-      return { 
-        success: true, 
-        user: {
-          id: data.user.id,
-          name: data.user.email?.split('@')[0] || 'User',
-          email: data.user.email || '',
-          role: 'applicant',
-          avatarUrl: undefined
-        }
-      };
+      return { success: false, error: 'Unknown error occurred' };
+    } catch (error) {
+      console.error("Login exception:", error);
+      return { success: false, error: 'Terjadi kesalahan saat login. Silakan coba lagi.' };
     }
-    
-    return { success: false, error: 'Unknown error occurred' };
   };
 
   const tryDemoLogin = (email: string, password: string) => {
+    console.log("Trying demo login for:", email);
     const demoUser = DEMO_ACCOUNTS.find(u => u.email === email);
     
     if (demoUser && password === 'password123') {
@@ -108,13 +145,19 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
     setIsSubmitting(true);
     
     try {
+      console.log("Attempting login with:", data.email);
       const result = await loginWithSupabase(data.email, data.password);
       
-      if (result.success) {
+      if (result.success && result.user) {
+        console.log("Login successful:", result.user);
+        
         toast({
           title: 'Login Berhasil',
           description: `Selamat datang, ${result.user?.name}`,
         });
+        
+        // Save user in session storage for client-side persistence
+        sessionStorage.setItem('currentUser', JSON.stringify(result.user));
         
         if (onLoginSuccess && result.user?.role) {
           onLoginSuccess(result.user.role);
@@ -137,7 +180,8 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
             navigate('/dashboard');
         }
       } else {
-        const errorMessage = 'error' in result ? result.error : 'Email atau password salah';
+        console.error("Login failed:", result.error);
+        const errorMessage = result.error || 'Email atau password salah';
         toast({
           title: 'Login Gagal',
           description: errorMessage,
@@ -145,6 +189,7 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
         });
       }
     } catch (error) {
+      console.error("Login exception:", error);
       toast({
         title: 'Login Gagal',
         description: 'Terjadi kesalahan saat login. Silakan coba lagi.',
@@ -158,6 +203,10 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
   const fillDemoAccount = (email: string) => {
     form.setValue('email', email);
     form.setValue('password', 'password123');
+  };
+  
+  const togglePasswordVisibility = () => {
+    setShowPassword(prev => !prev);
   };
 
   return (
@@ -199,7 +248,26 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="Masukkan password" {...field} />
+                    <div className="relative">
+                      <Input 
+                        type={showPassword ? "text" : "password"} 
+                        placeholder="Masukkan password" 
+                        {...field} 
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-0 top-0 h-full px-3"
+                        onClick={togglePasswordVisibility}
+                      >
+                        {showPassword ? (
+                          <EyeOffIcon className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <EyeIcon className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -223,6 +291,15 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
                 </>
               )}
             </Button>
+            
+            <div className="text-center text-sm mt-4">
+              <p className="text-muted-foreground">
+                Belum memiliki akun?{' '}
+                <Link to="/register" className="text-primary font-medium hover:underline">
+                  Daftar
+                </Link>
+              </p>
+            </div>
           </form>
         </Form>
       </CardContent>

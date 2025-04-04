@@ -8,6 +8,7 @@ import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRegistrations } from '@/hooks/useRegistrations';
 import { supabase } from '@/integrations/supabase/client';
+import { programData } from '@/data/programData';
 
 import {
   Form,
@@ -90,6 +91,7 @@ const RegisterForm = ({ onRegistrationSuccess }: RegisterFormProps) => {
 
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
+    console.log("Registration data:", data);
     
     try {
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -104,6 +106,7 @@ const RegisterForm = ({ onRegistrationSuccess }: RegisterFormProps) => {
       });
       
       if (authError) {
+        console.error("Auth error:", authError);
         throw new Error(authError.message);
       }
 
@@ -402,12 +405,11 @@ const RegisterForm = ({ onRegistrationSuccess }: RegisterFormProps) => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="akl">Akuntansi dan Keuangan Lembaga</SelectItem>
-                        <SelectItem value="bp">Broadcast dan Perfilman</SelectItem>
-                        <SelectItem value="bus">Busana</SelectItem>
-                        <SelectItem value="dkv">Desain Komunikasi Visual</SelectItem>
-                        <SelectItem value="mplb">Menejemen Perkantoran dan Layanan Bisnis</SelectItem>
-                        <SelectItem value="pm">Pemasaran</SelectItem>
+                        {programData.map(program => (
+                          <SelectItem key={program.id} value={program.id}>
+                            {program.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
