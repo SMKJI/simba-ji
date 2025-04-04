@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -50,11 +49,7 @@ export const useQueue = () => {
       }
 
       if (data) {
-        // Fixed: Added proper null checking for profiles
-        const applicantName = data.profiles && 
-          typeof data.profiles === 'object' && 
-          data.profiles.name ? 
-          data.profiles.name : 'Unknown';
+        const applicantName = data.profiles?.name ?? 'Unknown';
 
         setCurrentTicket({
           id: data.id,
@@ -85,7 +80,6 @@ export const useQueue = () => {
     }
 
     try {
-      // Get the next waiting ticket
       const { data: nextTicket, error: fetchError } = await supabase
         .from('queue_tickets')
         .select(`
@@ -109,7 +103,6 @@ export const useQueue = () => {
         throw new Error('No tickets waiting');
       }
 
-      // Update the ticket status to 'called'
       const now = new Date().toISOString();
       const { data: updatedTicket, error: updateError } = await supabase
         .from('queue_tickets')
@@ -128,13 +121,8 @@ export const useQueue = () => {
         throw updateError;
       }
 
-      // Fixed: Added proper null checking for profiles
-      const applicantName = nextTicket.profiles && 
-        typeof nextTicket.profiles === 'object' && 
-        nextTicket.profiles.name ? 
-        nextTicket.profiles.name : 'Unknown';
+      const applicantName = nextTicket.profiles?.name ?? 'Unknown';
 
-      // Set current ticket
       setCurrentTicket({
         id: updatedTicket.id,
         number: updatedTicket.queue_number,

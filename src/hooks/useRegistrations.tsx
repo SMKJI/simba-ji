@@ -425,7 +425,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     try {
       const { data, error } = await supabase
         .rpc('confirm_group_join', { 
-          user_id: currentUser.id 
+          user_id: currentUser.id as string 
         });
       
       if (error) {
@@ -451,8 +451,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     try {
       const { data, error } = await supabase
         .rpc('assign_user_to_group', { 
-          user_id: userId,
-          group_id: groupId 
+          user_id: userId as string,
+          group_id: groupId as string 
         });
       
       if (error) {
@@ -482,8 +482,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     try {
       const { data, error } = await supabase
         .rpc('update_user_role', { 
-          user_id: userId,
-          new_role: newRole 
+          user_id: userId as string,
+          new_role: newRole as string 
         });
       
       if (error) {
@@ -1026,6 +1026,26 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
+  const toggleOperatorType = async (userId: string, isOffline: boolean): Promise<boolean> => {
+    try {
+      const { error: roleError } = await supabase
+        .rpc('update_user_role', { 
+          user_id: userId as string, 
+          new_role: (isOffline ? 'helpdesk_offline' : 'helpdesk') as string 
+        });
+      
+      if (roleError) {
+        console.error('Error updating user role:', roleError);
+        return false;
+      }
+      
+      return true;
+    } catch (err) {
+      console.error('Error in toggleOperatorType:', err);
+      return false;
+    }
+  };
+
   const value = {
     currentUser,
     authenticated,
@@ -1059,7 +1079,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     updateTicketPriority,
     assignTicket,
     fetchHelpdeskOperators,
-    addHelpdeskOperator
+    addHelpdeskOperator,
+    toggleOperatorType
   };
 
   return (

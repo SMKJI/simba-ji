@@ -40,14 +40,9 @@ export const useCounters = () => {
 
         // Format the data to match our Counter interface
         const formattedCounters: Counter[] = data.map(counter => {
-          // Fixed: Added proper null checking for nested properties
-          const operatorName = counter.operator_id && 
-            typeof counter.operator_id === 'object' && 
-            counter.operator_id.profiles && 
-            typeof counter.operator_id.profiles === 'object' && 
-            counter.operator_id.profiles.name ? 
-            counter.operator_id.profiles.name : 'Unknown';
-
+          // Enhanced null checking with optional chaining
+          const operatorName = counter.operator_id?.profiles?.name ?? 'Unknown';
+          
           return {
             id: counter.id,
             name: counter.name,
