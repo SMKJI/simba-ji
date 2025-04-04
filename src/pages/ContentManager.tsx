@@ -43,12 +43,12 @@ const ContentManager = () => {
       
       if (error) throw error;
       
-      setPages(data || []);
+      setPages(data as PageContent[] || []);
       
       // Set initial page based on activeTab
       if (data && data.length > 0) {
         const initialPage = data.find(page => page.slug === activeTab) || data[0];
-        setCurrentPage(initialPage);
+        setCurrentPage(initialPage as PageContent);
         setActiveTab(initialPage.slug);
       }
     } catch (error: any) {

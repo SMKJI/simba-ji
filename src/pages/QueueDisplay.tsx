@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useRegistrations } from '@/hooks/useRegistrations';
 import { supabase } from '@/integrations/supabase/client';
@@ -70,9 +71,10 @@ const QueueDisplay = () => {
       }
     } else {
       // Safe type assertion or default value
-      const operatorName = data.operator ? 
-        (typeof data.operator === 'object' && 'name' in data.operator ? 
-          data.operator.name : 'Operator') : 'Operator';
+      const operatorName = data.operator && 
+        typeof data.operator === 'object' && 
+        'name' in data.operator ? 
+          data.operator.name || 'Operator' : 'Operator';
       
       setCurrentTicket({
         counter: data.counter ? data.counter.name || '' : '',

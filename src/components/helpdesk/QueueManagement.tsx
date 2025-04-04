@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { 
   Card, CardContent, CardHeader, CardTitle, CardDescription 
@@ -161,21 +162,24 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
 
       if (error) throw error;
       
-      const formattedData = data.map(ticket => ({
-        id: ticket.id,
-        user_id: ticket.user_id,
-        queue_number: ticket.queue_number,
-        category_id: ticket.category_id,
-        categoryName: ticket.category?.name,
-        status: ticket.status as 'waiting' | 'called' | 'serving' | 'completed' | 'skipped',
-        counter_id: ticket.counter_id,
-        counterName: ticket.counter?.name,
-        operator_id: ticket.operator_id,
-        created_at: ticket.created_at,
-        served_at: ticket.served_at,
-        completed_at: ticket.completed_at,
-        updated_at: ticket.updated_at
-      }));
+      const formattedData = data.map(ticket => {
+        const status = ticket.status as 'waiting' | 'called' | 'serving' | 'completed' | 'skipped';
+        return {
+          id: ticket.id,
+          user_id: ticket.user_id,
+          queue_number: ticket.queue_number,
+          category_id: ticket.category_id,
+          categoryName: ticket.category?.name,
+          status: status,
+          counter_id: ticket.counter_id,
+          counterName: ticket.counter?.name,
+          operator_id: ticket.operator_id,
+          created_at: ticket.created_at,
+          served_at: ticket.served_at,
+          completed_at: ticket.completed_at,
+          updated_at: ticket.updated_at
+        };
+      });
       
       setQueueTickets(formattedData);
     } catch (error) {
@@ -523,7 +527,7 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
           <div>
             <CardTitle className="text-xl text-primary font-bold flex items-center">
               <UserCheck className="mr-2 h-5 w-5" />
-              {userCounter.name}
+              {userCounter?.name}
             </CardTitle>
             <CardDescription>
               Panel pengelolaan antrian helpdesk tatap muka

@@ -76,9 +76,8 @@ const OfflineHelpdesk = () => {
         name: counter.name,
         is_active: counter.is_active,
         operator_id: counter.operator_id,
-        operatorName: counter.operators ? 
-          (typeof counter.operators === 'object' && 'name' in counter.operators ? 
-            counter.operators.name : null) : null
+        operatorName: counter.operators && typeof counter.operators === 'object' && 'name' in counter.operators ? 
+          counter.operators.name : null
       }));
       
       setCounters(formattedCounters);

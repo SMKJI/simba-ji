@@ -1,325 +1,255 @@
-
-import { useState, useRef, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { useState, useEffect } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { 
-  Bold, Italic, List, ListOrdered, AlignLeft,
-  AlignCenter, AlignRight, Heading1, Heading2,
-  Link, Image, FileImage, Undo, Redo,
-  Code, Quote
+  Bold, Italic, List, ListOrdered, Heading1, Heading2, 
+  Image, Link, Code, Undo, Redo, PanelLeft, FileText, Eye
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 
+// Define interface for editor props
 interface PageEditorProps {
   content: string;
   onChange: (content: string) => void;
 }
 
+// Define markdown formatter type
+interface MarkdownFormatter {
+  icon: React.ReactNode;
+  label: string;
+  prefix: string;
+  suffix: string;
+  block?: boolean;
+}
+
 const PageEditor = ({ content, onChange }: PageEditorProps) => {
-  const [showPreview, setShowPreview] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
-
+  const [editorContent, setEditorContent] = useState(content);
+  const [previewHtml, setPreviewHtml] = useState<string>('');
+  const [selectedTab, setSelectedTab] = useState<string>('write');
+  const [textareaElement, setTextareaElement] = useState<HTMLTextAreaElement | null>(null);
+  
+  // Update local state when prop changes
   useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [content, showPreview]);
-
-  const handleButtonClick = (tag: string, placeholder?: string) => {
-    if (!textareaRef.current) return;
-    
-    const textarea = textareaRef.current;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = content.substring(start, end);
-    
-    let newText = '';
-    
-    switch(tag) {
-      case 'b':
-        newText = `**${selectedText || 'bold text'}**`;
-        break;
-      case 'i':
-        newText = `*${selectedText || 'italic text'}*`;
-        break;
-      case 'h1':
-        newText = `# ${selectedText || 'Heading 1'}\n`;
-        break;
-      case 'h2':
-        newText = `## ${selectedText || 'Heading 2'}\n`;
-        break;
-      case 'li':
-        newText = `- ${selectedText || 'List item'}\n`;
-        break;
-      case 'ol':
-        newText = `1. ${selectedText || 'Ordered list item'}\n`;
-        break;
-      case 'link':
-        newText = `[${selectedText || 'Link text'}](https://example.com)`;
-        break;
-      case 'img':
-        newText = `![${selectedText || 'Image alt text'}](image-url)`;
-        break;
-      case 'code':
-        newText = `\`\`\`\n${selectedText || 'Code block'}\n\`\`\``;
-        break;
-      case 'quote':
-        newText = `> ${selectedText || 'Blockquote'}\n`;
-        break;
-      case 'left':
-        newText = `<div style="text-align: left">${selectedText || 'Left aligned text'}</div>`;
-        break;
-      case 'center':
-        newText = `<div style="text-align: center">${selectedText || 'Center aligned text'}</div>`;
-        break;
-      case 'right':
-        newText = `<div style="text-align: right">${selectedText || 'Right aligned text'}</div>`;
-        break;
-      default:
-        newText = selectedText;
-    }
-    
-    const newContent = content.substring(0, start) + newText + content.substring(end);
-    onChange(newContent);
-    
-    // Set cursor position after insertion
-    setTimeout(() => {
-      textarea.focus();
-      textarea.selectionStart = start + newText.length;
-      textarea.selectionEnd = start + newText.length;
-    }, 0);
-  };
-
-  const handleUploadImage = async (file: File) => {
-    if (!file) return;
-    
-    setUploadingImage(true);
-    
-    try {
-      // Upload to Supabase storage
-      const filename = `${Date.now()}-${file.name}`;
-      const filePath = `page-images/${filename}`;
-      
-      const { data, error } = await supabase.storage
-        .from('content')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-      
-      if (error) throw error;
-      
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('content')
-        .getPublicUrl(filePath);
-      
-      // Insert into content
-      if (textareaRef.current) {
-        const textarea = textareaRef.current;
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        
-        const imageMarkdown = `![${file.name}](${publicUrl})`;
-        const newContent = content.substring(0, start) + imageMarkdown + content.substring(end);
-        onChange(newContent);
-        
-        toast({
-          title: 'Image uploaded',
-          description: 'Image has been uploaded and inserted',
-        });
+    setEditorContent(content);
+  }, [content]);
+  
+  // Generate preview HTML when content changes or tab changes
+  useEffect(() => {
+    if (selectedTab === 'preview') {
+      // Use the markdownit library from the window object
+      const md = (window as any).markdownit?.();
+      if (md) {
+        try {
+          const rendered = md.render(editorContent);
+          setPreviewHtml(rendered);
+        } catch (error) {
+          console.error('Markdown rendering error:', error);
+          setPreviewHtml('<p>Error rendering markdown</p>');
+        }
+      } else {
+        setPreviewHtml('<p>Markdown library not available</p>');
       }
-    } catch (error: any) {
-      console.error('Error uploading image:', error);
-      toast({
-        title: 'Upload error',
-        description: error.message || 'Failed to upload image',
-        variant: 'destructive'
-      });
-    } finally {
-      setUploadingImage(false);
+    }
+  }, [editorContent, selectedTab]);
+  
+  // Handle content change and notify parent
+  const handleChange = (value: string) => {
+    setEditorContent(value);
+    onChange(value);
+  };
+  
+  // Formatters configuration for toolbar buttons
+  const formatters: MarkdownFormatter[] = [
+    { 
+      icon: <Heading1 className="h-4 w-4" />, 
+      label: 'Heading 1', 
+      prefix: '# ', 
+      suffix: '\n',
+      block: true
+    },
+    { 
+      icon: <Heading2 className="h-4 w-4" />, 
+      label: 'Heading 2', 
+      prefix: '## ', 
+      suffix: '\n',
+      block: true
+    },
+    { 
+      icon: <Bold className="h-4 w-4" />, 
+      label: 'Bold', 
+      prefix: '**', 
+      suffix: '**' 
+    },
+    { 
+      icon: <Italic className="h-4 w-4" />, 
+      label: 'Italic', 
+      prefix: '_', 
+      suffix: '_' 
+    },
+    { 
+      icon: <List className="h-4 w-4" />, 
+      label: 'Bullet List', 
+      prefix: '- ', 
+      suffix: '\n',
+      block: true
+    },
+    { 
+      icon: <ListOrdered className="h-4 w-4" />, 
+      label: 'Numbered List', 
+      prefix: '1. ', 
+      suffix: '\n',
+      block: true
+    },
+    { 
+      icon: <Link className="h-4 w-4" />, 
+      label: 'Link', 
+      prefix: '[', 
+      suffix: '](https://)' 
+    },
+    { 
+      icon: <Image className="h-4 w-4" />, 
+      label: 'Image', 
+      prefix: '![alt text](', 
+      suffix: ')' 
+    },
+    { 
+      icon: <Code className="h-4 w-4" />, 
+      label: 'Code', 
+      prefix: '```\n', 
+      suffix: '\n```' 
+    },
+  ];
+  
+  // Apply formatting to selected text or insert at cursor position
+  const applyFormatting = (prefix: string, suffix: string, block: boolean = false) => {
+    if (!textareaElement) return;
+    
+    const start = textareaElement.selectionStart;
+    const end = textareaElement.selectionEnd;
+    const selectedText = editorContent.substring(start, end);
+    
+    let newText;
+    
+    if (block) {
+      // For block elements, we need to ensure they start at the beginning of a line
+      const beforeSelection = editorContent.substring(0, start);
+      const afterSelection = editorContent.substring(end);
+      
+      // Check if we need to insert a newline before the prefix
+      const needsNewlineBefore = start > 0 && beforeSelection.charAt(beforeSelection.length - 1) !== '\n';
+      
+      // Format the text with proper newlines
+      newText = editorContent.substring(0, start) + 
+                (needsNewlineBefore ? '\n' : '') + 
+                prefix + selectedText + suffix + 
+                afterSelection;
+      
+      // Calculate new cursor position
+      const newCursorPos = start + prefix.length + (needsNewlineBefore ? 1 : 0) + selectedText.length;
+      
+      // Update the content
+      handleChange(newText);
+      
+      // Set the cursor position after the React update
+      setTimeout(() => {
+        if (textareaElement) {
+          textareaElement.focus();
+          textareaElement.setSelectionRange(newCursorPos, newCursorPos);
+        }
+      }, 0);
+    } else {
+      // For inline elements, simply wrap the selected text
+      newText = editorContent.substring(0, start) + 
+                prefix + selectedText + suffix + 
+                editorContent.substring(end);
+      
+      // Calculate new cursor position and selection
+      const newSelectionStart = start + prefix.length;
+      const newSelectionEnd = newSelectionStart + selectedText.length;
+      
+      // Update the content
+      handleChange(newText);
+      
+      // Set the cursor position or selection after the React update
+      setTimeout(() => {
+        if (textareaElement) {
+          textareaElement.focus();
+          
+          if (selectedText.length > 0) {
+            // If text was selected, keep the selection but with the formatting applied
+            textareaElement.setSelectionRange(newSelectionStart, newSelectionEnd);
+          } else {
+            // If no text was selected, place cursor between prefix and suffix
+            const cursorPos = start + prefix.length;
+            textareaElement.setSelectionRange(cursorPos, cursorPos);
+          }
+        }
+      }, 0);
     }
   };
-
-  const triggerFileInput = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
+  
+  // Reference to the textarea for formatting operations
+  const setTextareaRef = (textarea: HTMLTextAreaElement | null) => {
+    setTextareaElement(textarea);
   };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleUploadImage(file);
-    }
-  };
-
+  
   return (
-    <div className="space-y-4">
-      <div className="sticky top-0 z-10 bg-background border rounded-md p-2 flex flex-wrap gap-1">
-        <Button 
-          type="button" 
-          size="icon" 
-          variant="ghost" 
-          onClick={() => handleButtonClick('b')}
-          title="Bold"
-        >
-          <Bold className="h-4 w-4" />
-        </Button>
-        <Button 
-          type="button" 
-          size="icon" 
-          variant="ghost" 
-          onClick={() => handleButtonClick('i')}
-          title="Italic"
-        >
-          <Italic className="h-4 w-4" />
-        </Button>
-        <Button 
-          type="button" 
-          size="icon" 
-          variant="ghost" 
-          onClick={() => handleButtonClick('h1')}
-          title="Heading 1"
-        >
-          <Heading1 className="h-4 w-4" />
-        </Button>
-        <Button 
-          type="button" 
-          size="icon" 
-          variant="ghost" 
-          onClick={() => handleButtonClick('h2')}
-          title="Heading 2"
-        >
-          <Heading2 className="h-4 w-4" />
-        </Button>
-        <Button 
-          type="button" 
-          size="icon" 
-          variant="ghost" 
-          onClick={() => handleButtonClick('li')}
-          title="Bullet List"
-        >
-          <List className="h-4 w-4" />
-        </Button>
-        <Button 
-          type="button" 
-          size="icon" 
-          variant="ghost" 
-          onClick={() => handleButtonClick('ol')}
-          title="Numbered List"
-        >
-          <ListOrdered className="h-4 w-4" />
-        </Button>
-        <Button 
-          type="button" 
-          size="icon" 
-          variant="ghost" 
-          onClick={() => handleButtonClick('code')}
-          title="Code Block"
-        >
-          <Code className="h-4 w-4" />
-        </Button>
-        <Button 
-          type="button" 
-          size="icon" 
-          variant="ghost" 
-          onClick={() => handleButtonClick('quote')}
-          title="Quote"
-        >
-          <Quote className="h-4 w-4" />
-        </Button>
-        <div className="w-px h-6 bg-border mx-1"></div>
-        <Button 
-          type="button" 
-          size="icon" 
-          variant="ghost" 
-          onClick={() => handleButtonClick('left')}
-          title="Align Left"
-        >
-          <AlignLeft className="h-4 w-4" />
-        </Button>
-        <Button 
-          type="button" 
-          size="icon" 
-          variant="ghost" 
-          onClick={() => handleButtonClick('center')}
-          title="Align Center"
-        >
-          <AlignCenter className="h-4 w-4" />
-        </Button>
-        <Button 
-          type="button" 
-          size="icon" 
-          variant="ghost" 
-          onClick={() => handleButtonClick('right')}
-          title="Align Right"
-        >
-          <AlignRight className="h-4 w-4" />
-        </Button>
-        <div className="w-px h-6 bg-border mx-1"></div>
-        <Button 
-          type="button" 
-          size="icon" 
-          variant="ghost" 
-          onClick={() => handleButtonClick('link')}
-          title="Insert Link"
-        >
-          <Link className="h-4 w-4" />
-        </Button>
-        <Button 
-          type="button" 
-          size="icon" 
-          variant="ghost" 
-          onClick={triggerFileInput}
-          title="Upload Image"
-          disabled={uploadingImage}
-        >
-          {uploadingImage ? (
-            <div className="h-4 w-4 border-2 border-primary rounded-full border-t-transparent animate-spin"></div>
-          ) : (
-            <FileImage className="h-4 w-4" />
-          )}
-        </Button>
-        <input
-          type="file"
-          ref={fileInputRef}
-          className="hidden"
-          accept="image/*"
-          onChange={handleFileChange}
-        />
-        <div className="flex-grow"></div>
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          onClick={() => setShowPreview(!showPreview)}
-        >
-          {showPreview ? 'Edit' : 'Preview'}
-        </Button>
-      </div>
-
-      {showPreview ? (
-        <div 
-          className="border rounded-md p-4 min-h-[400px] prose prose-sm max-w-none" 
-          dangerouslySetInnerHTML={{ 
-            __html: window.markdownit ? window.markdownit().render(content) : content 
-          }}
-        ></div>
-      ) : (
-        <Textarea
-          ref={textareaRef}
-          value={content}
-          onChange={(e) => onChange(e.target.value)}
-          className="min-h-[400px] font-mono text-sm resize-none"
-          placeholder="Enter markdown content here..."
-        />
-      )}
+    <div className="border rounded-md">
+      <Tabs 
+        defaultValue="write" 
+        value={selectedTab} 
+        onValueChange={setSelectedTab}
+        className="w-full"
+      >
+        <div className="flex items-center justify-between border-b px-2 bg-muted/50">
+          <div className="flex flex-wrap gap-1 p-1">
+            {formatters.map((formatter, index) => (
+              <Button
+                key={index}
+                variant="ghost"
+                size="sm"
+                title={formatter.label}
+                onClick={() => applyFormatting(formatter.prefix, formatter.suffix, formatter.block)}
+              >
+                {formatter.icon}
+              </Button>
+            ))}
+          </div>
+          
+          <TabsList className="bg-transparent border">
+            <TabsTrigger value="write" className="data-[state=active]:bg-background">
+              <PanelLeft className="h-4 w-4 mr-2" />
+              Write
+            </TabsTrigger>
+            <TabsTrigger value="preview" className="data-[state=active]:bg-background">
+              <Eye className="h-4 w-4 mr-2" />
+              Preview
+            </TabsTrigger>
+          </TabsList>
+        </div>
+        
+        <TabsContent value="write" className="p-0 mt-0">
+          <Textarea
+            ref={setTextareaRef}
+            value={editorContent}
+            onChange={(e) => handleChange(e.target.value)}
+            className="min-h-[400px] font-mono text-sm p-4 resize-y rounded-none"
+            placeholder="Write your content in Markdown format..."
+          />
+        </TabsContent>
+        
+        <TabsContent value="preview" className="p-0 mt-0">
+          <div className="prose prose-sm max-w-none p-4 min-h-[400px] bg-white">
+            {previewHtml ? (
+              <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
+            ) : (
+              <div className="text-muted-foreground">
+                Preview will appear here when you write content.
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

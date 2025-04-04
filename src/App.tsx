@@ -47,52 +47,52 @@ function App() {
           
           {/* Protected Routes */}
           <Route path="/dashboard" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['admin', 'helpdesk', 'helpdesk_offline', 'content', 'applicant']}>
               <Dashboard />
             </ProtectedRoute>
           } />
           <Route path="/success" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['admin', 'helpdesk', 'helpdesk_offline', 'content', 'applicant']}>
               <Success />
             </ProtectedRoute>
           } />
           <Route path="/group/:id" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['admin', 'helpdesk', 'helpdesk_offline', 'content', 'applicant']}>
               <GroupDetail />
             </ProtectedRoute>
           } />
           <Route path="/profile" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['admin', 'helpdesk', 'helpdesk_offline', 'content', 'applicant']}>
               <Profile />
             </ProtectedRoute>
           } />
           <Route path="/helpdesk" element={
-            <ProtectedRoute roles={['helpdesk', 'admin']}>
+            <ProtectedRoute allowedRoles={['helpdesk', 'admin']}>
               <Helpdesk />
             </ProtectedRoute>
           } />
           <Route path="/student-helpdesk" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['admin', 'helpdesk', 'helpdesk_offline', 'content', 'applicant']}>
               <StudentHelpdesk />
             </ProtectedRoute>
           } />
           <Route path="/offline-helpdesk" element={
-            <ProtectedRoute roles={['helpdesk_offline', 'admin']}>
+            <ProtectedRoute allowedRoles={['helpdesk_offline', 'admin']}>
               <OfflineHelpdesk />
             </ProtectedRoute>
           } />
           <Route path="/admin" element={
-            <ProtectedRoute roles={['admin']}>
+            <ProtectedRoute allowedRoles={['admin']}>
               <Admin />
             </ProtectedRoute>
           } />
           <Route path="/content" element={
-            <ProtectedRoute roles={['content', 'admin']}>
+            <ProtectedRoute allowedRoles={['content', 'admin']}>
               <Content />
             </ProtectedRoute>
           } />
           <Route path="/content-manager" element={
-            <ProtectedRoute roles={['content', 'admin']}>
+            <ProtectedRoute allowedRoles={['content', 'admin']}>
               <ContentManager />
             </ProtectedRoute>
           } />
