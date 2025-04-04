@@ -9,12 +9,14 @@ interface Window {
 // Define interface for MarkdownIt
 interface MarkdownIt {
   render(text: string): string;
-  new(options?: any): MarkdownIt;
 }
 
 declare global {
   interface Window {
-    markdownit: MarkdownIt;
+    markdownit: {
+      (): MarkdownIt;
+      new(options?: any): MarkdownIt;
+    };
   }
 }
 

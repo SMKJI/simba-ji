@@ -1,4 +1,3 @@
-
 // Custom types to interface with Supabase data
 
 export type UserRole = 'admin' | 'helpdesk' | 'helpdesk_offline' | 'content' | 'applicant';
@@ -22,6 +21,8 @@ export interface Group {
   member_count: number;
   is_active: boolean;
   isFull: boolean; // Computed property
+  count?: number; // Added for compatibility
+  link?: string; // Added for compatibility with GroupDetailCard
 }
 
 export interface StatsData {

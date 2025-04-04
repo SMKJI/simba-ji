@@ -8,7 +8,7 @@ import { Clock, AlertTriangle, Users, ArrowRight } from 'lucide-react';
 import { useRegistrations } from '@/hooks/useRegistrations';
 import { QueueTicket } from '@/types/supabase';
 
-// Changed from export const QueueDisplay to export default function QueueDisplay
+// Changed to default export
 export default function QueueDisplay() {
   const { 
     fetchQueueTickets, 
