@@ -5,9 +5,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
-} from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { 
@@ -69,47 +66,73 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
         return;
       }
       
-      setOperator(operatorData);
-      
-      // Get counter info if operator exists
       if (operatorData) {
-        const { data: counterData, error: counterError } = await supabase
-          .from('helpdesk_counters')
-          .select('*')
-          .eq('operator_id', operatorData.id)
-          .single();
+        // Create a properly typed HelpdeskOperator object
+        const opObj: HelpdeskOperator = {
+          id: operatorData.id,
+          user_id: operatorData.user_id,
+          name: currentUser.name, // Use the current user's name
+          email: currentUser.email, // Use the current user's email
+          assignedTickets: 0, // We'll calculate this later if needed
+          status: operatorData.is_active ? 'active' : 'inactive',
+          is_offline: operatorData.is_offline,
+          lastActive: operatorData.updated_at
+        };
         
-        if (counterError && counterError.code !== 'PGRST116') {
-          throw counterError;
-        }
-        
-        setUserCounter(counterData || null);
-        
-        // Get current active ticket for this counter
-        if (counterData) {
-          const { data: ticketData, error: ticketError } = await supabase
-            .from('queue_tickets')
-            .select(`
-              *,
-              category:category_id(name),
-              counter:counter_id(name)
-            `)
-            .eq('counter_id', counterData.id)
-            .in('status', ['called', 'serving'])
-            .order('served_at', { ascending: false })
-            .limit(1)
+        setOperator(opObj);
+      
+        // Get counter info if operator exists
+        if (operatorData) {
+          const { data: counterData, error: counterError } = await supabase
+            .from('helpdesk_counters')
+            .select('*')
+            .eq('operator_id', operatorData.id)
             .single();
           
-          if (ticketError && ticketError.code !== 'PGRST116') {
-            throw ticketError;
+          if (counterError && counterError.code !== 'PGRST116') {
+            throw counterError;
           }
           
-          if (ticketData) {
-            setCurrentTicket({
-              ...ticketData,
-              categoryName: ticketData.category?.name,
-              counterName: ticketData.counter?.name
-            });
+          setUserCounter(counterData || null);
+          
+          // Get current active ticket for this counter
+          if (counterData) {
+            const { data: ticketData, error: ticketError } = await supabase
+              .from('queue_tickets')
+              .select(`
+                *,
+                category:category_id(name),
+                counter:counter_id(name)
+              `)
+              .eq('counter_id', counterData.id)
+              .in('status', ['called', 'serving'])
+              .order('served_at', { ascending: false })
+              .limit(1)
+              .single();
+            
+            if (ticketError && ticketError.code !== 'PGRST116') {
+              throw ticketError;
+            }
+            
+            if (ticketData) {
+              const queueTicket: QueueTicket = {
+                id: ticketData.id,
+                user_id: ticketData.user_id,
+                queue_number: ticketData.queue_number,
+                category_id: ticketData.category_id,
+                categoryName: ticketData.category?.name,
+                status: ticketData.status as 'waiting' | 'called' | 'serving' | 'completed' | 'skipped',
+                counter_id: ticketData.counter_id,
+                counterName: ticketData.counter?.name,
+                operator_id: ticketData.operator_id,
+                created_at: ticketData.created_at,
+                served_at: ticketData.served_at,
+                completed_at: ticketData.completed_at,
+                updated_at: ticketData.updated_at
+              };
+              
+              setCurrentTicket(queueTicket);
+            }
           }
         }
       }
@@ -143,10 +166,20 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
       if (error) throw error;
       
       const formattedData = data.map(ticket => ({
-        ...ticket,
+        id: ticket.id,
+        user_id: ticket.user_id,
+        queue_number: ticket.queue_number,
+        category_id: ticket.category_id,
         categoryName: ticket.category?.name,
-        counterName: ticket.counter?.name
-      })) as QueueTicket[];
+        status: ticket.status as 'waiting' | 'called' | 'serving' | 'completed' | 'skipped',
+        counter_id: ticket.counter_id,
+        counterName: ticket.counter?.name,
+        operator_id: ticket.operator_id,
+        created_at: ticket.created_at,
+        served_at: ticket.served_at,
+        completed_at: ticket.completed_at,
+        updated_at: ticket.updated_at
+      }));
       
       setQueueTickets(formattedData);
     } catch (error) {

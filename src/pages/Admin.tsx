@@ -1,154 +1,157 @@
-
 import { useEffect, useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import StatCards from '@/components/admin/StatCards';
-import ApplicantsTable from '@/components/admin/ApplicantsTable';
-import StatsPanel from '@/components/admin/StatsPanel';
-import GroupsManager from '@/components/admin/GroupsManager';
 import { useRegistrations } from '@/hooks/useRegistrations';
-import { Group } from '@/types/supabase';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import OperatorManagement from '@/components/helpdesk/OperatorManagement';
-import CounterManagement from '@/components/helpdesk/CounterManagement';
-import CapacityManagement from '@/components/helpdesk/CapacityManagement';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { CheckCircle, Loader2, UserPlus } from 'lucide-react';
+
+interface ApplicantsTableProps {
+  applicants: any[];
+  loading: boolean;
+  onPromoteToHelpdesk: (userId: string) => Promise<void>;
+}
+
+// Fix: Add the loading prop to ApplicantsTable component
+const ApplicantsTable: React.FC<ApplicantsTableProps> = ({ applicants, loading, onPromoteToHelpdesk }) => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Daftar Pendaftar</CardTitle>
+        <CardDescription>
+          Kelola akun pendaftar dan promosikan ke peran helpdesk
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="p-0">
+        <Table>
+          <TableCaption>Daftar semua akun pendaftar.</TableCaption>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[100px]">ID</TableHead>
+              <TableHead>Nama</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-4">
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading...
+                </TableCell>
+              </TableRow>
+            ) : applicants.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-4">
+                  Tidak ada pendaftar
+                </TableCell>
+              </TableRow>
+            ) : (
+              applicants.map((applicant) => (
+                <TableRow key={applicant.id}>
+                  <TableCell className="font-medium">{applicant.id}</TableCell>
+                  <TableCell>{applicant.name}</TableCell>
+                  <TableCell>{applicant.email}</TableCell>
+                  <TableCell>{applicant.role}</TableCell>
+                  <TableCell className="text-right">
+                    {applicant.role !== 'helpdesk' && applicant.role !== 'helpdesk_offline' && (
+                      <Button variant="ghost" onClick={() => onPromoteToHelpdesk(applicant.id)}>
+                        <UserPlus className="mr-2 h-4 w-4" />
+                        Promosikan ke Helpdesk
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+};
 
 const Admin = () => {
+  const { getApplicants, updateUserRole } = useRegistrations();
   const { toast } = useToast();
-  const { 
-    stats, 
-    getApplicants, 
-    updateUserRole, 
-    fetchStats,
-    fetchHelpdeskOperators,
-    fetchHelpdeskCounters,
-    fetchDailyCapacity,
-    loading
-  } = useRegistrations();
   const [applicants, setApplicants] = useState<any[]>([]);
-  const [loadingApplicants, setLoadingApplicants] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [promoting, setPromoting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-    
-    // Load all data
-    const loadData = async () => {
-      await fetchStats();
-      await fetchHelpdeskOperators();
-      await fetchHelpdeskCounters();
-      await fetchDailyCapacity();
-      
-      // Load applicants separately since it's a heavy operation
-      setLoadingApplicants(true);
-      const applicantsData = await getApplicants();
-      setApplicants(applicantsData);
-      setLoadingApplicants(false);
-    };
-    
-    loadData();
-    
-    // Welcome message for admin
-    toast({
-      title: "Panel Admin",
-      description: "Selamat datang di panel administrasi"
-    });
-  }, [toast, fetchStats, fetchHelpdeskOperators, fetchHelpdeskCounters, fetchDailyCapacity, getApplicants]);
+    fetchApplicants();
+  }, []);
 
-  // Function to update a user's role to helpdesk
+  const fetchApplicants = async () => {
+    setLoading(true);
+    const data = await getApplicants();
+    setApplicants(data);
+    setLoading(false);
+  };
+
   const handlePromoteToHelpdesk = async (userId: string) => {
-    const success = await updateUserRole(userId, 'helpdesk');
-    
-    if (success) {
-      toast({
-        title: "Berhasil",
-        description: "Pengguna telah dipromosikan menjadi Helpdesk"
-      });
-      
-      // Refresh applicants list
-      const applicantsData = await getApplicants();
-      setApplicants(applicantsData);
-    } else {
-      toast({
-        title: "Gagal",
-        description: "Tidak dapat mempromosikan pengguna",
-        variant: "destructive"
-      });
+    setPromoting(true);
+    try {
+      const success = await updateUserRole(userId, 'helpdesk');
+      if (success) {
+        toast({
+          title: "Sukses",
+          description: "Pengguna berhasil dipromosikan ke Helpdesk",
+        });
+        fetchApplicants(); // Refresh the list
+      } else {
+        toast({
+          title: "Error",
+          description: "Gagal mempromosikan pengguna ke Helpdesk",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setPromoting(false);
     }
   };
 
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="flex justify-center items-center min-h-[50vh]">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  const filteredApplicants = applicants.filter(applicant =>
+    applicant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    applicant.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <DashboardLayout>
       <div className="space-y-4 sm:space-y-6 px-4 sm:px-0">
         <div className="flex flex-col">
-          <h1 className="text-2xl sm:text-3xl font-bold">Panel Admin</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Admin Panel</h1>
           <p className="text-sm sm:text-base text-muted-foreground">
-            Kelola pendaftaran, grup WhatsApp, dan data pendaftar
+            Kelola Pengguna dan Konfigurasi Sistem
           </p>
         </div>
 
-        <StatCards stats={stats} />
+        <div className="mb-4">
+          <Input
+            type="text"
+            placeholder="Cari nama atau email"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
 
-        <ScrollArea className="w-full">
-          <div className="min-w-[800px]">
-            <Tabs defaultValue="applicants" className="w-full">
-              <TabsList className="mb-4 flex flex-wrap">
-                <TabsTrigger value="applicants" className="text-xs sm:text-sm">Pendaftar</TabsTrigger>
-                <TabsTrigger value="groups" className="text-xs sm:text-sm">Grup WhatsApp</TabsTrigger>
-                <TabsTrigger value="helpdesk" className="text-xs sm:text-sm">Manajemen Helpdesk</TabsTrigger>
-                <TabsTrigger value="stats" className="text-xs sm:text-sm">Statistik</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="applicants">
-                <ApplicantsTable 
-                  applicants={applicants} 
-                  loading={loadingApplicants}
-                  onPromoteToHelpdesk={handlePromoteToHelpdesk}
-                />
-              </TabsContent>
-              
-              <TabsContent value="groups">
-                <GroupsManager groups={stats.groups} />
-              </TabsContent>
-              
-              <TabsContent value="helpdesk">
-                <Tabs defaultValue="operators" className="w-full">
-                  <TabsList className="mb-4">
-                    <TabsTrigger value="operators">Operator</TabsTrigger>
-                    <TabsTrigger value="counters">Loket</TabsTrigger>
-                    <TabsTrigger value="capacity">Kapasitas Harian</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="operators">
-                    <OperatorManagement />
-                  </TabsContent>
-                  
-                  <TabsContent value="counters">
-                    <CounterManagement />
-                  </TabsContent>
-                  
-                  <TabsContent value="capacity">
-                    <CapacityManagement />
-                  </TabsContent>
-                </Tabs>
-              </TabsContent>
-              
-              <TabsContent value="stats">
-                <StatsPanel />
-              </TabsContent>
-            </Tabs>
-          </div>
-        </ScrollArea>
+        <ApplicantsTable
+          applicants={filteredApplicants}
+          loading={loading}
+          onPromoteToHelpdesk={handlePromoteToHelpdesk}
+        />
       </div>
     </DashboardLayout>
   );

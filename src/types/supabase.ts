@@ -108,6 +108,7 @@ export interface QueueTicket {
   created_at: string;
   served_at: string | null;
   completed_at: string | null;
+  updated_at?: string;
 }
 
 export interface DailyCapacity {

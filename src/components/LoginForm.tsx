@@ -1,24 +1,13 @@
-
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useRegistrations, DEMO_ACCOUNTS } from '@/hooks/useRegistrations';
+import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Loader2, EyeIcon, EyeOffIcon } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, UserCheck, Info } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { DEMO_ACCOUNTS } from '@/hooks/useRegistrations';
-import { supabase } from '@/integrations/supabase/client';
-
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import {
   Accordion,
@@ -68,7 +57,6 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
     }
     
     if (data.user) {
-      // We're using demo mode for now since the profiles table doesn't exist
       const demoUser = DEMO_ACCOUNTS.find(account => account.email === email);
       
       if (demoUser) {
@@ -78,7 +66,6 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
         };
       }
       
-      // Default user info without profile data
       return { 
         success: true, 
         user: {
@@ -135,7 +122,6 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
             navigate('/dashboard');
         }
       } else {
-        // Fixing the type error by checking if error exists
         const errorMessage = 'error' in result ? result.error : 'Email atau password salah';
         toast({
           title: 'Login Gagal',

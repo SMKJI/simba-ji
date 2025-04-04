@@ -1,4 +1,3 @@
-
 import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -35,6 +34,40 @@ export type {
   DailyCapacity,
   TicketAttachment
 };
+
+// Add DEMO_ACCOUNTS for development
+export const DEMO_ACCOUNTS = [
+  {
+    id: '1',
+    name: 'Admin User',
+    email: 'admin@example.com',
+    role: 'admin'
+  },
+  {
+    id: '2',
+    name: 'Helpdesk Operator',
+    email: 'helpdesk@example.com',
+    role: 'helpdesk'
+  },
+  {
+    id: '3',
+    name: 'Helpdesk Tatap Muka',
+    email: 'offline@example.com',
+    role: 'helpdesk_offline'
+  },
+  {
+    id: '4',
+    name: 'Content Manager',
+    email: 'content@example.com',
+    role: 'content'
+  },
+  {
+    id: '5',
+    name: 'Calon Murid',
+    email: 'murid@example.com',
+    role: 'applicant'
+  }
+];
 
 // Create context
 const RegistrationsContext = createContext<any>(null);
@@ -84,8 +117,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
               email: profileData.email,
               role: profileData.role as UserRole,
               avatarUrl: profileData.avatar_url,
-              assignedGroupId: profileData.assigned_group_id,
-              joinConfirmed: profileData.join_confirmed
+              assignedGroupId: profileData.assigned_group_id || undefined,
+              joinConfirmed: profileData.join_confirmed || false
             };
             
             setCurrentUser(user);
@@ -132,8 +165,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
               email: profileData.email,
               role: profileData.role as UserRole,
               avatarUrl: profileData.avatar_url,
-              assignedGroupId: profileData.assigned_group_id,
-              joinConfirmed: profileData.join_confirmed
+              assignedGroupId: profileData.assigned_group_id || undefined,
+              joinConfirmed: profileData.join_confirmed || false
             };
             
             setCurrentUser(user);
@@ -322,10 +355,10 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
             id: profile.id,
             name: profile.name,
             email: profile.email,
-            role: profile.role,
+            role: profile.role as UserRole,
             avatarUrl: profile.avatar_url,
-            assignedGroupId: profile.assigned_group_id,
-            joinConfirmed: profile.join_confirmed
+            assignedGroupId: profile.assigned_group_id || undefined,
+            joinConfirmed: profile.join_confirmed || false
           };
           
           setCurrentUser(user);
@@ -342,7 +375,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
             id: data.user.id,
             email: data.user.email || '',
             name: name,
-            role: 'applicant'
+            role: 'applicant' as UserRole
           } 
         };
       }
@@ -826,7 +859,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           id: msg.id,
           ticketId: ticket.id,
           sender: msg.sender,
-          senderRole: msg.sender_role,
+          senderRole: msg.sender_role as UserRole,
           message: msg.message,
           timestamp: msg.created_at
         }));
@@ -835,8 +868,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           id: ticket.id,
           userId: ticket.user_id,
           subject: ticket.subject,
-          status: ticket.status,
-          priority: ticket.priority,
+          status: ticket.status as 'open' | 'in-progress' | 'closed',
+          priority: ticket.priority as 'low' | 'medium' | 'high' | undefined,
           category_id: ticket.category_id,
           categoryName: ticket.ticket_categories?.name,
           is_offline: ticket.is_offline,
@@ -967,7 +1000,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           is_active,
           is_offline,
           updated_at,
-          profiles (name, email)
+          profiles:user_id (name, email)
         `);
       
       if (error) {
@@ -989,11 +1022,14 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           console.error(`Error counting tickets for operator ${op.id}:`, countError);
         }
         
+        // Make sure profiles data exists
+        const profileData = op.profiles || {};
+        
         operatorsWithTickets.push({
           id: op.id,
           user_id: op.user_id,
-          name: op.profiles.name,
-          email: op.profiles.email,
+          name: profileData.name || 'Unknown',
+          email: profileData.email || 'no-email',
           assignedTickets: count || 0,
           status: op.is_active ? 'active' : 'inactive',
           is_offline: op.is_offline,
