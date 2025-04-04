@@ -301,9 +301,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           email: profile.email,
           role: profile.role as UserRole,
           avatarUrl: profile.avatar_url,
-          // Provide default values for potentially missing properties
-          assignedGroupId: (profile as any).assigned_group_id || undefined,
-          joinConfirmed: (profile as any).join_confirmed || false
+          assignedGroupId: profile.assigned_group_id as string || undefined,
+          joinConfirmed: profile.join_confirmed as boolean || false
         };
         
         setCurrentUser(user);
@@ -451,102 +450,100 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
   };
 
   // Add the following type casting for functions that use 'from' with table names
-const confirmGroupJoin = async () => {
-  if (!currentUser) {
-    return { success: false, error: "Pengguna belum masuk" };
-  }
-  
-  try {
-    // Call the new DB function with type casting
-    const { data, error } = await (supabase as any)
-      .rpc('confirm_group_join', { user_id: currentUser.id as any });
-    
-    if (error) {
-      console.error('Error confirming group join:', error);
-      return { success: false, error: error.message };
+  const confirmGroupJoin = async () => {
+    if (!currentUser) {
+      return { success: false, error: "Pengguna belum masuk" };
     }
     
-    if (data) {
-      // Update the current user state
-      setCurrentUser(prev => {
-        if (prev) {
-          return { ...prev, joinConfirmed: true };
-        }
-        return prev;
-      });
+    try {
+      // Call the new DB function with type casting
+      const { data, error } = await (supabase as any)
+        .rpc('confirm_group_join', { user_id: currentUser.id as any });
       
-      return { success: true };
-    } else {
-      return { success: false, error: "Tidak dapat mengkonfirmasi bergabung dengan grup" };
+      if (error) {
+        console.error('Error confirming group join:', error);
+        return { success: false, error: error.message };
+      }
+      
+      if (data) {
+        // Update the current user state
+        setCurrentUser(prev => {
+          if (prev) {
+            return { ...prev, joinConfirmed: true };
+          }
+          return prev;
+        });
+        
+        return { success: true };
+      } else {
+        return { success: false, error: "Tidak dapat mengkonfirmasi bergabung dengan grup" };
+      }
+    } catch (err: any) {
+      console.error('Error in confirmGroupJoin:', err);
+      return { success: false, error: err.message || "Gagal memperbarui status bergabung" };
     }
-  } catch (err: any) {
-    console.error('Error in confirmGroupJoin:', err);
-    return { success: false, error: err.message || "Gagal memperbarui status bergabung" };
-  }
-};
+  };
 
   // Function to assign a user to a WhatsApp group
-  // Modify assignUserToGroup with type casting
-const assignUserToGroup = async (userId: string, groupId: string): Promise<boolean> => {
-  try {
-    // Use the new function with type casting
-    const { data, error } = await (supabase as any)
-      .rpc('assign_user_to_group', { user_id: userId, group_id: groupId as any });
-    
-    if (error) {
-      console.error('Error assigning user to group:', error);
+  const assignUserToGroup = async (userId: string, groupId: string): Promise<boolean> => {
+    try {
+      // Use the new function with type casting
+      const { data, error } = await (supabase as any)
+        .rpc('assign_user_to_group', { user_id: userId, group_id: groupId as any });
+      
+      if (error) {
+        console.error('Error assigning user to group:', error);
+        return false;
+      }
+      
+      // If the current user is being assigned, update the local state
+      if (currentUser && currentUser.id === userId) {
+        setCurrentUser(prev => {
+          if (prev) {
+            return { ...prev, assignedGroupId: groupId, joinConfirmed: false };
+          }
+          return prev;
+        });
+      }
+      
+      // Fetch fresh stats to update group counts
+      await fetchStats();
+      
+      return !!data;
+    } catch (err) {
+      console.error('Error in assignUserToGroup:', err);
       return false;
     }
-    
-    // If the current user is being assigned, update the local state
-    if (currentUser && currentUser.id === userId) {
-      setCurrentUser(prev => {
-        if (prev) {
-          return { ...prev, assignedGroupId: groupId, joinConfirmed: false };
-        }
-        return prev;
-      });
-    }
-    
-    // Fetch fresh stats to update group counts
-    await fetchStats();
-    
-    return !!data;
-  } catch (err) {
-    console.error('Error in assignUserToGroup:', err);
-    return false;
-  }
-};
+  };
 
   // Function to update user role
-  // Modify updateUserRole with type casting
-const updateUserRole = async (userId: string, newRole: UserRole): Promise<boolean> => {
-  try {
-    // Use the new function with type casting
-    const { data, error } = await (supabase as any)
-      .rpc('update_user_role', { user_id: userId, new_role: newRole as any });
-    
-    if (error) {
-      console.error('Error updating user role:', error);
+  const updateUserRole = async (userId: string, newRole: UserRole): Promise<boolean> => {
+    try {
+      // Use the new function with type casting
+      const { data, error } = await (supabase as any)
+        .rpc('update_user_role', { user_id: userId, new_role: newRole as any });
+      
+      if (error) {
+        console.error('Error updating user role:', error);
+        return false;
+      }
+      
+      // If the current user's role is being updated, update local state
+      if (currentUser && currentUser.id === userId) {
+        setCurrentUser(prev => {
+          if (prev) {
+            return { ...prev, role: newRole };
+          }
+          return prev;
+        });
+      }
+      
+      return !!data;
+    } catch (err) {
+      console.error('Error in updateUserRole:', err);
       return false;
     }
-    
-    // If the current user's role is being updated, update local state
-    if (currentUser && currentUser.id === userId) {
-      setCurrentUser(prev => {
-        if (prev) {
-          return { ...prev, role: newRole };
-        }
-        return prev;
-      });
-    }
-    
-    return !!data;
-  } catch (err) {
-    console.error('Error in updateUserRole:', err);
-    return false;
-  }
-};
+  };
 
   // Fetch all applicants for admin management
   const getApplicants = async () => {
@@ -1057,4 +1054,57 @@ const updateUserRole = async (userId: string, newRole: UserRole): Promise<boolea
       setOperators(operatorsWithTickets);
       return operatorsWithTickets;
     } catch (err) {
-      console.error('Error
+      console.error('Error in fetchHelpdeskOperators:', err);
+      return [];
+    }
+  };
+
+  // Expose methods and state to components
+  const value = {
+    loading,
+    error,
+    currentUser,
+    authenticated,
+    stats,
+    tickets,
+    categories,
+    operators,
+    counters,
+    queueTickets,
+    dailyCapacities,
+    login,
+    register,
+    logout,
+    hasRole,
+    fetchStats,
+    getUserAssignedGroup,
+    confirmGroupJoin,
+    assignUserToGroup,
+    updateUserRole,
+    getApplicants,
+    createTicket,
+    addTicketMessage,
+    getUserTickets: fetchUserTickets,
+    updateTicketStatus,
+    updateTicketPriority,
+    assignTicket,
+    fetchHelpdeskOperators,
+    addTicketAttachment,
+    getTicketAttachments,
+    getFileUrl
+  };
+
+  return (
+    <RegistrationsContext.Provider value={value}>
+      {children}
+    </RegistrationsContext.Provider>
+  );
+};
+
+export const useRegistrations = () => {
+  const context = useContext(RegistrationsContext);
+  if (context === null) {
+    throw new Error('useRegistrations must be used within a RegistrationsProvider');
+  }
+  return context;
+};
