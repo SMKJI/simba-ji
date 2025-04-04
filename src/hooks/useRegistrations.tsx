@@ -1,3 +1,4 @@
+
 import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -117,8 +118,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
               email: profileData.email,
               role: profileData.role as UserRole,
               avatarUrl: profileData.avatar_url,
-              assignedGroupId: profileData.assigned_group_id || undefined,
-              joinConfirmed: profileData.join_confirmed || false
+              assignedGroupId: profileData.assigned_group_id as string || undefined,
+              joinConfirmed: profileData.join_confirmed as boolean || false
             };
             
             setCurrentUser(user);
@@ -165,8 +166,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
               email: profileData.email,
               role: profileData.role as UserRole,
               avatarUrl: profileData.avatar_url,
-              assignedGroupId: profileData.assigned_group_id || undefined,
-              joinConfirmed: profileData.join_confirmed || false
+              assignedGroupId: profileData.assigned_group_id as string || undefined,
+              joinConfirmed: profileData.join_confirmed as boolean || false
             };
             
             setCurrentUser(user);
@@ -294,10 +295,10 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           id: profile.id,
           name: profile.name,
           email: profile.email,
-          role: profile.role,
+          role: profile.role as UserRole,
           avatarUrl: profile.avatar_url,
-          assignedGroupId: profile.assigned_group_id,
-          joinConfirmed: profile.join_confirmed
+          assignedGroupId: profile.assigned_group_id as string || undefined,
+          joinConfirmed: profile.join_confirmed as boolean || false
         };
         
         setCurrentUser(user);
@@ -357,8 +358,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
             email: profile.email,
             role: profile.role as UserRole,
             avatarUrl: profile.avatar_url,
-            assignedGroupId: profile.assigned_group_id || undefined,
-            joinConfirmed: profile.join_confirmed || false
+            assignedGroupId: profile.assigned_group_id as string || undefined,
+            joinConfirmed: profile.join_confirmed as boolean || false
           };
           
           setCurrentUser(user);
@@ -376,7 +377,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
             email: data.user.email || '',
             name: name,
             role: 'applicant' as UserRole
-          } 
+          } as User
         };
       }
       
@@ -453,7 +454,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     try {
       // Call the new DB function
       const { data, error } = await supabase
-        .rpc('confirm_group_join', { user_id: currentUser.id });
+        .rpc('confirm_group_join', { user_id: currentUser.id }) as any;
       
       if (error) {
         console.error('Error confirming group join:', error);
@@ -1025,11 +1026,20 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         // Make sure profiles data exists
         const profileData = op.profiles || { name: 'Unknown', email: 'no-email' };
         
+        // Check if profileData is a Supabase error object and handle accordingly
+        const name = typeof profileData === 'object' && 'name' in profileData 
+          ? profileData.name as string 
+          : 'Unknown';
+          
+        const email = typeof profileData === 'object' && 'email' in profileData 
+          ? profileData.email as string 
+          : 'no-email';
+        
         operatorsWithTickets.push({
           id: op.id,
           user_id: op.user_id,
-          name: profileData.name || 'Unknown',
-          email: profileData.email || 'no-email',
+          name: name,
+          email: email,
           assignedTickets: count || 0,
           status: op.is_active ? 'active' : 'inactive',
           is_offline: op.is_offline,

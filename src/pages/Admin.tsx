@@ -17,13 +17,12 @@ import {
 } from "@/components/ui/table"
 import { CheckCircle, Loader2, UserPlus } from 'lucide-react';
 
-interface ApplicantsTableProps {
+// Extract the ApplicantsTable to a separate component
+const ApplicantsTable = ({ applicants, loading = false, onPromoteToHelpdesk }: {
   applicants: any[];
-  loading?: boolean; // Make loading optional with a default value
+  loading?: boolean;
   onPromoteToHelpdesk: (userId: string) => Promise<void>;
-}
-
-const ApplicantsTable: React.FC<ApplicantsTableProps> = ({ applicants, loading = false, onPromoteToHelpdesk }) => {
+}) => {
   return (
     <Card>
       <CardHeader>

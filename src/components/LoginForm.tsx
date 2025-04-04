@@ -1,11 +1,11 @@
 
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useRegistrations } from '@/hooks/useRegistrations';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, EyeIcon, EyeOffIcon, UserCheck, Info } from 'lucide-react';
+import { Loader2, EyeIcon, EyeOffIcon, UserCheck, Info, ChevronLeft } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -127,6 +127,9 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
           case 'helpdesk':
             navigate('/helpdesk');
             break;
+          case 'helpdesk_offline':
+            navigate('/offline-helpdesk');
+            break;
           case 'content':
             navigate('/content');
             break;
@@ -160,7 +163,14 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
   return (
     <Card className="w-full max-w-md mx-auto border-0 shadow-lg rounded-xl overflow-hidden animate-scale-in">
       <CardHeader className="bg-primary/5 border-b p-6">
-        <CardTitle className="text-2xl font-bold text-primary">Login</CardTitle>
+        <div className="flex items-center mb-2">
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 mr-2" asChild>
+            <Link to="/">
+              <ChevronLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <CardTitle className="text-2xl font-bold text-primary">Login</CardTitle>
+        </div>
         <CardDescription>
           Masuk ke sistem pendaftaran SMKN 1 Kendal
         </CardDescription>
