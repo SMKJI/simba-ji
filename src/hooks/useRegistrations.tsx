@@ -1,3 +1,4 @@
+
 import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -1065,4 +1066,90 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     
     try {
       // First, update the user's role
-      const { error: roleError } = await
+      const { error: roleError } = await supabase
+        .rpc('update_user_role', { 
+          user_id: userId, 
+          new_role: isOffline ? 'helpdesk_offline' : 'helpdesk'
+        });
+      
+      if (roleError) {
+        console.error('Error updating user role:', roleError);
+        return false;
+      }
+      
+      // Then, add the user to the helpdesk_operators table
+      const { error: operatorError } = await supabase
+        .from('helpdesk_operators')
+        .insert({
+          user_id: userId,
+          is_offline: isOffline,
+          is_active: true
+        });
+      
+      if (operatorError) {
+        console.error('Error adding helpdesk operator:', operatorError);
+        return false;
+      }
+      
+      // Refresh operators list
+      await fetchHelpdeskOperators();
+      return true;
+    } catch (err) {
+      console.error('Error in addHelpdeskOperator:', err);
+      return false;
+    }
+  };
+
+  // Create provider value object with all functions and state
+  const value = {
+    currentUser,
+    authenticated,
+    loading,
+    stats,
+    tickets,
+    categories,
+    operators,
+    counters,
+    queueTickets,
+    dailyCapacities,
+    error,
+    login,
+    register,
+    logout,
+    fetchStats,
+    hasRole,
+    getUserAssignedGroup,
+    confirmGroupJoin,
+    assignUserToGroup,
+    updateUserRole,
+    getApplicants,
+    createTicket,
+    addTicketMessage,
+    addTicketAttachment,
+    getTicketAttachments,
+    getFileUrl,
+    fetchUserTickets: fetchUserTickets,
+    getUserTickets: () => tickets,
+    updateTicketStatus,
+    updateTicketPriority,
+    assignTicket,
+    fetchHelpdeskOperators,
+    addHelpdeskOperator
+    // Add more functions as needed
+  };
+
+  return (
+    <RegistrationsContext.Provider value={value}>
+      {children}
+    </RegistrationsContext.Provider>
+  );
+};
+
+// Hook for using the registrations context
+export const useRegistrations = () => {
+  const context = useContext(RegistrationsContext);
+  if (context === null) {
+    throw new Error('useRegistrations must be used within a RegistrationsProvider');
+  }
+  return context;
+};
