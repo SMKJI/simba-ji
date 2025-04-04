@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { 
   Card, CardContent, CardHeader, CardTitle, CardDescription 
@@ -29,7 +28,6 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
       fetchOperatorInfo();
       fetchQueueData();
       
-      // Set up real-time subscription for queue tickets
       const queueChannel = supabase
         .channel('queue_changes')
         .on('postgres_changes', {
@@ -51,7 +49,6 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
     if (!currentUser) return;
     
     try {
-      // Get operator info
       const { data: operatorData, error: operatorError } = await supabase
         .from('helpdesk_operators')
         .select('*')
@@ -60,20 +57,19 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
         .single();
       
       if (operatorError) {
-        if (operatorError.code !== 'PGRST116') { // No rows found
+        if (operatorError.code !== 'PGRST116') {
           throw operatorError;
         }
         return;
       }
       
       if (operatorData) {
-        // Create a properly typed HelpdeskOperator object
         const opObj: HelpdeskOperator = {
           id: operatorData.id,
           user_id: operatorData.user_id,
-          name: currentUser.name, // Use the current user's name
-          email: currentUser.email, // Use the current user's email
-          assignedTickets: 0, // We'll calculate this later if needed
+          name: currentUser.name,
+          email: currentUser.email,
+          assignedTickets: 0,
           status: operatorData.is_active ? 'active' : 'inactive',
           is_offline: operatorData.is_offline,
           lastActive: operatorData.updated_at
@@ -81,7 +77,6 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
         
         setOperator(opObj);
       
-        // Get counter info if operator exists
         if (operatorData) {
           const { data: counterData, error: counterError } = await supabase
             .from('helpdesk_counters')
@@ -95,7 +90,6 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
           
           setUserCounter(counterData || null);
           
-          // Get current active ticket for this counter
           if (counterData) {
             const { data: ticketData, error: ticketError } = await supabase
               .from('queue_tickets')
@@ -115,13 +109,15 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
             }
             
             if (ticketData) {
+              const status = ticketData.status as 'waiting' | 'called' | 'serving' | 'completed' | 'skipped';
+              
               const queueTicket: QueueTicket = {
                 id: ticketData.id,
                 user_id: ticketData.user_id,
                 queue_number: ticketData.queue_number,
                 category_id: ticketData.category_id,
                 categoryName: ticketData.category?.name,
-                status: ticketData.status as 'waiting' | 'called' | 'serving' | 'completed' | 'skipped',
+                status: status,
                 counter_id: ticketData.counter_id,
                 counterName: ticketData.counter?.name,
                 operator_id: ticketData.operator_id,
@@ -221,7 +217,6 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
     }
     
     try {
-      // Get next waiting ticket
       if (queueTickets.length === 0) {
         toast({
           title: "Tidak ada antrian",
@@ -232,7 +227,6 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
       
       const nextTicket = queueTickets[0];
       
-      // Update ticket status and assign counter
       const now = new Date().toISOString();
       const { data, error } = await supabase
         .from('queue_tickets')
@@ -253,25 +247,18 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
       
       if (error) throw error;
       
-      // Update local state
       setCurrentTicket({
         ...data,
         categoryName: data.category?.name,
         counterName: data.counter?.name
       });
       
-      // Remove from waiting queue
       setQueueTickets(prev => prev.filter(t => t.id !== nextTicket.id));
       
-      // Show success message
       toast({
         title: "Antrian berhasil dipanggil",
         description: `Nomor antrian ${nextTicket.queue_number} dipanggil ke ${userCounter.name}`
       });
-      
-      // Play announcement (this will actually be played on the QueueDisplay page)
-      // This is just for triggering the real-time event
-      
     } catch (error) {
       console.error('Error calling next ticket:', error);
       toast({
@@ -286,19 +273,17 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
     if (!currentTicket) return;
     
     try {
-      // Re-call same ticket (update timestamp to trigger notification)
       const now = new Date().toISOString();
       const { error } = await supabase
         .from('queue_tickets')
         .update({
-          status: 'called', // Keep as called
+          status: 'called',
           updated_at: now
         })
         .eq('id', currentTicket.id);
       
       if (error) throw error;
       
-      // Show success message
       toast({
         title: "Antrian dipanggil ulang",
         description: `Nomor antrian ${currentTicket.queue_number} dipanggil ulang`
@@ -318,7 +303,6 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
     if (!currentTicket) return;
     
     try {
-      // Update ticket status to serving
       const { data, error } = await supabase
         .from('queue_tickets')
         .update({
@@ -331,14 +315,13 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
       
       if (error) throw error;
       
-      // Update local state
+      const updatedStatus = 'serving' as 'waiting' | 'called' | 'serving' | 'completed' | 'skipped';
       setCurrentTicket({
         ...currentTicket,
         ...data,
-        status: 'serving'
+        status: updatedStatus
       });
       
-      // Show success message
       toast({
         title: "Mulai melayani",
         description: `Nomor antrian ${currentTicket.queue_number} sedang dilayani`
@@ -358,7 +341,6 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
     if (!currentTicket) return;
     
     try {
-      // Update ticket status to completed
       const now = new Date().toISOString();
       const { error } = await supabase
         .from('queue_tickets')
@@ -371,10 +353,8 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
       
       if (error) throw error;
       
-      // Reset current ticket
       setCurrentTicket(null);
       
-      // Show success message
       toast({
         title: "Antrian selesai",
         description: "Layanan untuk antrian ini telah selesai"
@@ -394,7 +374,6 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
     if (!currentTicket) return;
     
     try {
-      // Update ticket status to skipped
       const now = new Date().toISOString();
       const { error } = await supabase
         .from('queue_tickets')
@@ -407,10 +386,8 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
       
       if (error) throw error;
       
-      // Reset current ticket
       setCurrentTicket(null);
       
-      // Show success message
       toast({
         title: "Antrian dilewati",
         description: "Antrian ini telah dilewati"
@@ -437,7 +414,6 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
     }
     
     try {
-      // Update counter with operator id
       const { data, error } = await supabase
         .from('helpdesk_counters')
         .update({ operator_id: operator.id })
@@ -447,10 +423,8 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
       
       if (error) throw error;
       
-      // Update local state
       setUserCounter(data);
       
-      // Show success message
       toast({
         title: "Loket dipilih",
         description: `Anda sekarang mengoperasikan ${data.name}`
@@ -567,7 +541,6 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
       </CardHeader>
       <CardContent className="p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Current Ticket Panel */}
           <div>
             <h3 className="text-lg font-medium mb-4">Antrian Aktif</h3>
             {currentTicket ? (
@@ -637,7 +610,6 @@ export const QueueManagement = ({ currentUser }: { currentUser: User | null }) =
             )}
           </div>
           
-          {/* Waiting Queue Panel */}
           <div>
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-medium">Daftar Tunggu</h3>

@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 import { useRegistrations } from '@/hooks/useRegistrations';
@@ -18,12 +19,11 @@ import { CheckCircle, Loader2, UserPlus } from 'lucide-react';
 
 interface ApplicantsTableProps {
   applicants: any[];
-  loading: boolean;
+  loading?: boolean; // Make loading optional with a default value
   onPromoteToHelpdesk: (userId: string) => Promise<void>;
 }
 
-// Fix: Add the loading prop to ApplicantsTable component
-const ApplicantsTable: React.FC<ApplicantsTableProps> = ({ applicants, loading, onPromoteToHelpdesk }) => {
+const ApplicantsTable: React.FC<ApplicantsTableProps> = ({ applicants, loading = false, onPromoteToHelpdesk }) => {
   return (
     <Card>
       <CardHeader>

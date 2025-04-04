@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useRegistrations } from '@/hooks/useRegistrations';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,8 +29,8 @@ const QueueDisplay = () => {
         event: '*',
         schema: 'public',
         table: 'queue_tickets'
-      }, (payload) => {
-        if (payload.new.status === 'called' || payload.new.status === 'serving') {
+      }, (payload: any) => {
+        if (payload.new && (payload.new.status === 'called' || payload.new.status === 'serving')) {
           fetchCurrentTicket();
         }
       })
@@ -69,18 +70,19 @@ const QueueDisplay = () => {
         throw error;
       }
     } else {
-      const operatorName = data.operator?.name || 'Operator';
+      // Safe type assertion or default value
+      const operatorName = data.operator ? data.operator.name || 'Operator' : 'Operator';
       
       setCurrentTicket({
-        counter: data.counter?.name || '',
+        counter: data.counter ? data.counter.name || '' : '',
         number: data.queue_number,
         status: data.status,
         operatorName,
-        categoryName: data.category?.name || ''
+        categoryName: data.category ? data.category.name || '' : ''
       });
 
       if (data.status === 'called') {
-        playAnnouncement(data.queue_number, data.counter?.name || '');
+        playAnnouncement(data.queue_number, data.counter ? data.counter.name || '' : '');
       }
     }
   } catch (error) {

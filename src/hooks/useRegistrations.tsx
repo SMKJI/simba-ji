@@ -41,31 +41,31 @@ export const DEMO_ACCOUNTS = [
     id: '1',
     name: 'Admin User',
     email: 'admin@example.com',
-    role: 'admin'
+    role: 'admin' as UserRole
   },
   {
     id: '2',
     name: 'Helpdesk Operator',
     email: 'helpdesk@example.com',
-    role: 'helpdesk'
+    role: 'helpdesk' as UserRole
   },
   {
     id: '3',
     name: 'Helpdesk Tatap Muka',
     email: 'offline@example.com',
-    role: 'helpdesk_offline'
+    role: 'helpdesk_offline' as UserRole
   },
   {
     id: '4',
     name: 'Content Manager',
     email: 'content@example.com',
-    role: 'content'
+    role: 'content' as UserRole
   },
   {
     id: '5',
     name: 'Calon Murid',
     email: 'murid@example.com',
-    role: 'applicant'
+    role: 'applicant' as UserRole
   }
 ];
 
@@ -1023,7 +1023,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         }
         
         // Make sure profiles data exists
-        const profileData = op.profiles || {};
+        const profileData = op.profiles || { name: 'Unknown', email: 'no-email' };
         
         operatorsWithTickets.push({
           id: op.id,
@@ -1159,7 +1159,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     addHelpdeskOperator,
     updateOperatorStatus,
     fetchStats,
-    fetchCategories
+    fetchCategories,
+    DEMO_ACCOUNTS
   };
 
   return (

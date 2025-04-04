@@ -1,10 +1,11 @@
+
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useRegistrations, DEMO_ACCOUNTS } from '@/hooks/useRegistrations';
+import { useRegistrations } from '@/hooks/useRegistrations';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, EyeIcon, EyeOffIcon } from 'lucide-react';
+import { Loader2, EyeIcon, EyeOffIcon, UserCheck, Info } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,6 +16,16 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { 
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { supabase } from '@/integrations/supabase/client';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Email tidak valid' }),
@@ -32,6 +43,7 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const { DEMO_ACCOUNTS } = useRegistrations();
   const emailFromState = location.state?.email || prefilledEmail || '';
   const [isSubmitting, setIsSubmitting] = useState(false);
 

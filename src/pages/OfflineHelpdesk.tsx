@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
@@ -114,13 +115,15 @@ const OfflineHelpdesk = () => {
         }
         setUserTicket(null);
       } else {
+        const ticketStatus = data.status as 'waiting' | 'called' | 'serving' | 'completed' | 'skipped';
+        
         setUserTicket({
           id: data.id,
           user_id: data.user_id,
           queue_number: data.queue_number,
           category_id: data.category_id,
           categoryName: data.category?.name,
-          status: data.status,
+          status: ticketStatus,
           counter_id: data.counter_id,
           operator_id: data.operator_id,
           created_at: data.created_at,
@@ -152,7 +155,7 @@ const OfflineHelpdesk = () => {
         .insert({
           user_id: currentUser.id,
           category_id: selectedCategory,
-          status: 'waiting' as 'waiting',
+          status: 'waiting',
           queue_number: 0 // This will be overridden by the trigger
         })
         .select()
@@ -161,12 +164,14 @@ const OfflineHelpdesk = () => {
       if (error) throw error;
     
       // Format the ticket data correctly
+      const ticketStatus = data.status as 'waiting' | 'called' | 'serving' | 'completed' | 'skipped';
+      
       const ticket: QueueTicket = {
         id: data.id,
         user_id: data.user_id,
         queue_number: data.queue_number,
         category_id: data.category_id,
-        status: data.status as 'waiting' | 'called' | 'serving' | 'completed' | 'skipped',
+        status: ticketStatus,
         counter_id: data.counter_id,
         operator_id: data.operator_id,
         created_at: data.created_at,
