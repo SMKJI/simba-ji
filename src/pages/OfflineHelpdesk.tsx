@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
@@ -77,7 +76,9 @@ const OfflineHelpdesk = () => {
         name: counter.name,
         is_active: counter.is_active,
         operator_id: counter.operator_id,
-        operatorName: counter.operators?.name || null
+        operatorName: counter.operators ? 
+          (typeof counter.operators === 'object' && 'name' in counter.operators ? 
+            counter.operators.name : null) : null
       }));
       
       setCounters(formattedCounters);
@@ -149,7 +150,6 @@ const OfflineHelpdesk = () => {
     setCreatingTicket(true);
     
     try {
-      // Queue number will be auto-generated via database trigger
       const { data, error } = await supabase
         .from('queue_tickets')
         .insert({
@@ -157,13 +157,12 @@ const OfflineHelpdesk = () => {
           category_id: selectedCategory,
           status: 'waiting',
           queue_number: 0 // This will be overridden by the trigger
-        })
+        } as any)
         .select()
         .single();
     
       if (error) throw error;
     
-      // Format the ticket data correctly
       const ticketStatus = data.status as 'waiting' | 'called' | 'serving' | 'completed' | 'skipped';
       
       const ticket: QueueTicket = {

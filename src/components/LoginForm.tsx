@@ -1,263 +1,268 @@
 
 import { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useRegistrations } from '@/hooks/useRegistrations';
-import { useToast } from '@/hooks/use-toast';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Loader2, EyeIcon, EyeOffIcon, UserCheck, Info, ChevronLeft } from 'lucide-react';
-import { z } from 'zod';
+import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import * as z from 'zod';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useRegistrations } from '@/hooks/useRegistrations';
+import { DEMO_ACCOUNTS } from '@/hooks/useRegistrations';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+  FormMessage
+} from '@/components/ui/form';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { 
+  Info,
+  UserCheck
+} from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
-const formSchema = z.object({
-  email: z.string().email({ message: 'Email tidak valid' }),
-  password: z.string().min(6, { message: 'Password minimal 6 karakter' }),
+const loginSchema = z.object({
+  email: z.string().email('Email tidak valid'),
+  password: z.string().min(6, 'Password minimal 6 karakter')
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type LoginFormValues = z.infer<typeof loginSchema>;
 
-interface LoginFormProps {
-  prefilledEmail?: string;
-  onLoginSuccess?: (role: string) => void;
-}
-
-const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
+const LoginForm = ({ onLoginSuccess }: { onLoginSuccess: (role: string) => void }) => {
+  const { login, DEMO_ACCOUNTS } = useRegistrations();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const location = useLocation();
-  const { DEMO_ACCOUNTS } = useRegistrations();
-  const emailFromState = location.state?.email || prefilledEmail || '';
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showDemoAccounts, setShowDemoAccounts] = useState(false);
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: emailFromState,
-      password: '',
-    },
+      email: '',
+      password: ''
+    }
   });
 
-  const loginWithSupabase = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      if (error.message.includes('Email not confirmed') || error.message.includes('Invalid login credentials')) {
-        return tryDemoLogin(email, password);
-      }
-      return { success: false, error: error.message };
-    }
-    
-    if (data.user) {
-      const demoUser = DEMO_ACCOUNTS.find(account => account.email === email);
-      
-      if (demoUser) {
-        return { 
-          success: true, 
-          user: demoUser 
-        };
-      }
-      
-      return { 
-        success: true, 
-        user: {
-          id: data.user.id,
-          name: data.user.email?.split('@')[0] || 'User',
-          email: data.user.email || '',
-          role: 'applicant',
-          avatarUrl: undefined
-        }
-      };
-    }
-    
-    return { success: false, error: 'Unknown error occurred' };
-  };
-
-  const tryDemoLogin = (email: string, password: string) => {
-    const demoUser = DEMO_ACCOUNTS.find(u => u.email === email);
-    
-    if (demoUser && password === 'password123') {
-      sessionStorage.setItem('currentUser', JSON.stringify(demoUser));
-      return { success: true, user: demoUser };
-    }
-    
-    return { success: false, error: 'Email atau password salah' };
-  };
-
-  const onSubmit = async (data: FormValues) => {
-    setIsSubmitting(true);
+  const handleSubmit = async (values: LoginFormValues) => {
+    setIsLoading(true);
+    setError(null);
     
     try {
-      const result = await loginWithSupabase(data.email, data.password);
+      const result = await login(values.email, values.password);
       
-      if (result.success) {
+      if (result.success && result.user) {
         toast({
-          title: 'Login Berhasil',
-          description: `Selamat datang, ${result.user?.name}`,
+          title: "Login berhasil",
+          description: `Selamat datang ${result.user.name || result.user.email}`,
         });
         
-        if (onLoginSuccess && result.user?.role) {
-          onLoginSuccess(result.user.role);
-        }
-        
-        switch (result.user?.role) {
-          case 'admin':
-            navigate('/admin');
-            break;
-          case 'helpdesk':
-            navigate('/helpdesk');
-            break;
-          case 'helpdesk_offline':
-            navigate('/offline-helpdesk');
-            break;
-          case 'content':
-            navigate('/content');
-            break;
-          default:
-            navigate('/dashboard');
-        }
+        onLoginSuccess(result.user.role);
       } else {
-        const errorMessage = 'error' in result ? result.error : 'Email atau password salah';
+        setError(result.error || 'Login gagal, periksa email dan password Anda');
         toast({
-          title: 'Login Gagal',
-          description: errorMessage,
-          variant: 'destructive',
+          title: "Login gagal",
+          description: result.error || "Periksa email dan password Anda",
+          variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (err: any) {
+      console.error('Login error:', err);
+      setError(err.message || 'Terjadi kesalahan saat login');
       toast({
-        title: 'Login Gagal',
-        description: 'Terjadi kesalahan saat login. Silakan coba lagi.',
-        variant: 'destructive',
+        title: "Terjadi kesalahan",
+        description: err.message || "Tidak dapat memproses login",
+        variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
-  const fillDemoAccount = (email: string) => {
+  const handleForgotPassword = async () => {
+    const email = form.getValues('email');
+    
+    if (!email) {
+      toast({
+        title: "Email diperlukan",
+        description: "Masukkan email Anda untuk reset password",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast({
+        title: "Email reset password terkirim",
+        description: "Silakan periksa email Anda untuk instruksi reset password",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Gagal mengirim reset password",
+        description: error.message || "Terjadi kesalahan saat mengirim email reset password",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDemoAccountClick = (email: string, role: string) => {
     form.setValue('email', email);
-    form.setValue('password', 'password123');
+    form.setValue('password', 'password123'); // Demo password
+    toast({
+      title: `Akun ${role}`,
+      description: "Detail akun telah diisi. Klik Login untuk masuk.",
+    });
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto border-0 shadow-lg rounded-xl overflow-hidden animate-scale-in">
+    <Card className="border-0 shadow-lg rounded-xl overflow-hidden">
       <CardHeader className="bg-primary/5 border-b p-6">
-        <div className="flex items-center mb-2">
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 mr-2" asChild>
-            <Link to="/">
-              <ChevronLeft className="h-4 w-4" />
-            </Link>
+        <div className="flex justify-between items-center mb-3">
+          <h1 className="text-xl font-semibold">Masuk</h1>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => navigate('/')}
+          >
+            Kembali ke Beranda
           </Button>
-          <CardTitle className="text-2xl font-bold text-primary">Login</CardTitle>
         </div>
-        <CardDescription>
-          Masuk ke sistem pendaftaran SMKN 1 Kendal
-        </CardDescription>
+        <p className="text-muted-foreground">
+          Masukkan email dan password Anda untuk masuk ke dalam sistem
+        </p>
       </CardHeader>
-      <CardContent className="p-6">
+      
+      <CardContent className="p-6 pt-4">
+        {error && (
+          <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md mb-4">
+            {error}
+          </div>
+        )}
+        
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel htmlFor="email">Email</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="Masukkan email" {...field} />
+                    <Input
+                      id="email"
+                      placeholder="nama@email.com"
+                      disabled={isLoading}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
+            
             <FormField
               control={form.control}
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel htmlFor="password">Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="Masukkan password" {...field} />
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="••••••••"
+                      disabled={isLoading}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
-            <Button 
-              type="submit" 
-              className="w-full bg-primary hover:bg-primary/90"
-              disabled={isSubmitting}
+            
+            <div className="flex justify-between">
+              <Button 
+                type="button" 
+                variant="link" 
+                size="sm" 
+                className="px-0 text-sm"
+                onClick={handleForgotPassword}
+                disabled={isLoading}
+              >
+                Lupa Password?
+              </Button>
+              
+              <Button 
+                type="button"
+                variant="link" 
+                size="sm"
+                className="px-0 text-sm"
+                onClick={() => setShowDemoAccounts(!showDemoAccounts)}
+              >
+                <UserCheck className="h-4 w-4 mr-1" />
+                {showDemoAccounts ? 'Sembunyikan Akun Demo' : 'Lihat Akun Demo'}
+              </Button>
+            </div>
+            
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading}
             >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Memproses...
-                </>
-              ) : (
-                <>
-                  <UserCheck className="mr-2 h-4 w-4" />
-                  Masuk
-                </>
-              )}
+              {isLoading ? 'Memproses...' : 'Masuk'}
             </Button>
+            
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground">
+                Belum punya akun?{' '}
+                <Button variant="link" className="p-0" onClick={() => navigate('/register')}>
+                  Daftar Sekarang
+                </Button>
+              </p>
+            </div>
           </form>
         </Form>
-      </CardContent>
-      
-      <CardFooter className="bg-muted/50 p-6 block">
-        <Accordion type="single" collapsible className="w-full">
-          <AccordionItem value="demo-accounts">
-            <AccordionTrigger className="text-sm">
-              <div className="flex items-center text-primary">
-                <Info className="w-4 h-4 mr-2" />
-                Akun Demo untuk Testing
-              </div>
-            </AccordionTrigger>
-            <AccordionContent>
-              <div className="space-y-3 text-sm mt-2">
-                <p className="font-medium text-muted-foreground mb-2">
-                  Klik pada akun untuk mengisi form otomatis (password: password123)
-                </p>
-                
-                {DEMO_ACCOUNTS.map((account) => (
-                  <div 
-                    key={account.id}
-                    className="p-2 border rounded-md hover:bg-muted cursor-pointer"
-                    onClick={() => fillDemoAccount(account.email)}
-                  >
-                    <p className="font-semibold">{account.name}</p>
-                    <p className="text-xs text-muted-foreground">Email: {account.email}</p>
-                    <p className="text-xs text-muted-foreground">Role: {account.role}</p>
+        
+        {showDemoAccounts && (
+          <div className="mt-6 border rounded-md p-4">
+            <div className="flex items-center mb-3 text-sm text-muted-foreground">
+              <Info className="h-4 w-4 mr-2" />
+              <span>Klik pada akun untuk mengisi formulir</span>
+            </div>
+            <div className="space-y-2">
+              {DEMO_ACCOUNTS.map((account) => (
+                <Button
+                  key={account.id}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start"
+                  onClick={() => handleDemoAccountClick(account.email, account.role)}
+                >
+                  <div className="flex flex-col items-start">
+                    <span>{account.name}</span>
+                    <span className="text-xs text-muted-foreground">{account.email} ({account.role})</span>
                   </div>
-                ))}
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </CardFooter>
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
     </Card>
   );
 };
