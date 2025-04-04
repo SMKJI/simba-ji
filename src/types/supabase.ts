@@ -61,6 +61,7 @@ export interface HelpdeskCounter {
   is_active: boolean;
   operator_id: string | null;
   operatorName?: string; // Computed
+  operators?: HelpdeskOperator[] | null; // Add operators property for relation queries
 }
 
 export interface HelpdeskTicket {

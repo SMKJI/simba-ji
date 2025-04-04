@@ -51,3 +51,4 @@ export interface PageContent {
   content: string;
   updated_at: string;
 }
+

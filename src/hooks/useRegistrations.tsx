@@ -113,14 +113,14 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           if (profileData) {
             // Create a custom user object with optional properties
             const user: User = {
-              id: profileData.id,
-              name: profileData.name,
-              email: profileData.email,
-              role: profileData.role as UserRole,
-              avatarUrl: profileData.avatar_url,
+              id: profile.id,
+              name: profile.name,
+              email: profile.email,
+              role: profile.role as UserRole,
+              avatarUrl: profile.avatar_url,
               // Provide default values for potentially missing properties
-              assignedGroupId: (profileData as any).assigned_group_id || undefined,
-              joinConfirmed: (profileData as any).join_confirmed || false
+              assignedGroupId: ((profile as any).assigned_group_id as string) || undefined,
+              joinConfirmed: Boolean((profile as any).join_confirmed) || false
             };
             
             setCurrentUser(user);
@@ -163,14 +163,14 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           if (profileData) {
             // Create a custom user object with optional properties
             const user: User = {
-              id: profileData.id,
-              name: profileData.name,
-              email: profileData.email,
-              role: profileData.role as UserRole,
-              avatarUrl: profileData.avatar_url,
+              id: profile.id,
+              name: profile.name,
+              email: profile.email,
+              role: profile.role as UserRole,
+              avatarUrl: profile.avatar_url,
               // Provide default values for potentially missing properties
-              assignedGroupId: (profileData as any).assigned_group_id || undefined,
-              joinConfirmed: (profileData as any).join_confirmed || false
+              assignedGroupId: ((profile as any).assigned_group_id as string) || undefined,
+              joinConfirmed: Boolean((profile as any).join_confirmed) || false
             };
             
             setCurrentUser(user);
@@ -301,8 +301,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           email: profile.email,
           role: profile.role as UserRole,
           avatarUrl: profile.avatar_url,
-          assignedGroupId: profile.assigned_group_id as string || undefined,
-          joinConfirmed: profile.join_confirmed as boolean || false
+          assignedGroupId: ((profile as any).assigned_group_id as string) || undefined,
+          joinConfirmed: Boolean((profile as any).join_confirmed) || false
         };
         
         setCurrentUser(user);
@@ -362,8 +362,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
             email: profile.email,
             role: profile.role as UserRole,
             avatarUrl: profile.avatar_url,
-            assignedGroupId: profile.assigned_group_id as string || undefined,
-            joinConfirmed: profile.join_confirmed as boolean || false
+            assignedGroupId: ((profile as any).assigned_group_id as string) || undefined,
+            joinConfirmed: Boolean((profile as any).join_confirmed) || false
           };
           
           setCurrentUser(user);
@@ -744,7 +744,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         .eq('id', ticketId);
       
       return { success: true };
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error in addTicketAttachment:', err);
       return { success: false, error: err.message || "Gagal menambahkan lampiran" };
     }

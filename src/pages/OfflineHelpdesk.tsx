@@ -198,7 +198,7 @@ const OfflineHelpdesk = () => {
                           </div>
                         </td>
                         <td className="p-2 border">
-                          {counter.operators && counter.operators.length > 0 ? (
+                          {counter.operators && Array.isArray(counter.operators) && counter.operators.length > 0 ? (
                             <div className="flex flex-col gap-1">
                               {counter.operators?.map((op) => (
                                 <div key={op.id} className="text-sm">
@@ -207,7 +207,7 @@ const OfflineHelpdesk = () => {
                               ))}
                             </div>
                           ) : (
-                            <span className="text-muted-foreground text-sm">No operator</span>
+                            <span className="text-muted-foreground text-sm">No operator assigned</span>
                           )}
                         </td>
                         <td className="p-2 border">
