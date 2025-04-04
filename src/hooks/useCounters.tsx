@@ -40,16 +40,19 @@ export const useCounters = () => {
 
         // Format the data to match our Counter interface
         const formattedCounters: Counter[] = data.map(counter => {
-          // Enhanced null checking with optional chaining
-          const operatorName = counter.operator_id?.profiles?.name ?? 'Unknown';
+          // Handle the case when operator_id is null or profiles is null
+          // Using optional chaining throughout with nullish coalescing
+          const operatorInfo = counter.operator_id;
+          const profilesInfo = operatorInfo?.profiles;
+          const operatorName = profilesInfo?.name ?? 'Unknown';
           
           return {
             id: counter.id,
             name: counter.name,
             description: counter.name, // Using name as description since description doesn't exist
             is_active: counter.is_active,
-            operators: counter.operator_id ? [{
-              id: counter.operator_id.id,
+            operators: operatorInfo ? [{
+              id: operatorInfo.id,
               name: operatorName
             }] : undefined
           };

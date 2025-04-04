@@ -426,7 +426,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
       const { data, error } = await supabase
         .rpc('confirm_group_join', { 
           user_id: currentUser.id as string 
-        });
+        } as any);
       
       if (error) {
         console.error('Error confirming group join:', error);
@@ -453,7 +453,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         .rpc('assign_user_to_group', { 
           user_id: userId as string,
           group_id: groupId as string 
-        });
+        } as any);
       
       if (error) {
         console.error('Error assigning user to group:', error);
@@ -484,7 +484,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         .rpc('update_user_role', { 
           user_id: userId as string,
           new_role: newRole as string 
-        });
+        } as any);
       
       if (error) {
         console.error('Error updating user role:', error);
@@ -1032,7 +1032,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         .rpc('update_user_role', { 
           user_id: userId as string, 
           new_role: (isOffline ? 'helpdesk_offline' : 'helpdesk') as string 
-        });
+        } as any);
       
       if (roleError) {
         console.error('Error updating user role:', roleError);

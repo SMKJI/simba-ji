@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -49,7 +50,9 @@ export const useQueue = () => {
       }
 
       if (data) {
-        const applicantName = data.profiles?.name ?? 'Unknown';
+        // Safely extract the name with proper null checking
+        const profileData = data.profiles;
+        const applicantName = profileData?.name ?? 'Unknown';
 
         setCurrentTicket({
           id: data.id,
@@ -121,7 +124,9 @@ export const useQueue = () => {
         throw updateError;
       }
 
-      const applicantName = nextTicket.profiles?.name ?? 'Unknown';
+      // Safely extract the name with proper null checking
+      const profileData = nextTicket.profiles;
+      const applicantName = profileData?.name ?? 'Unknown';
 
       setCurrentTicket({
         id: updatedTicket.id,
