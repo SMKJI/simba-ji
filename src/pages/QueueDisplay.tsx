@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useRegistrations } from '@/hooks/useRegistrations';
 import { supabase } from '@/integrations/supabase/client';
@@ -71,14 +70,20 @@ const QueueDisplay = () => {
       }
     } else {
       // Safe type assertion or default value
-      const operatorName = data.operator ? data.operator.name || 'Operator' : 'Operator';
+      const operatorName = data.operator && typeof data.operator === 'object' && 'name' in data.operator
+        ? data.operator.name || 'Operator'
+        : 'Operator';
       
       setCurrentTicket({
-        counter: data.counter ? data.counter.name || '' : '',
+        counter: data.counter && typeof data.counter === 'object' && 'name' in data.counter 
+          ? data.counter.name || '' 
+          : '',
         number: data.queue_number,
         status: data.status,
         operatorName,
-        categoryName: data.category ? data.category.name || '' : ''
+        categoryName: data.category && typeof data.category === 'object' && 'name' in data.category
+          ? data.category.name || '' 
+          : ''
       });
 
       if (data.status === 'called') {
