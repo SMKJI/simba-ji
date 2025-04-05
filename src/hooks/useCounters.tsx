@@ -13,12 +13,14 @@ export interface Counter {
   }[];
 }
 
-// Define types for the data returned from Supabase query
+// Define interfaces for the raw data returned from Supabase
+interface ProfileData {
+  name: string;
+}
+
 interface OperatorId {
   id: string;
-  profiles: {
-    name: string;
-  };
+  profiles: ProfileData;
 }
 
 interface CounterData {
@@ -54,7 +56,7 @@ export const useCounters = () => {
         }
 
         // Format the data to match our Counter interface
-        const formattedCounters: Counter[] = (data as CounterData[]).map(counter => {
+        const formattedCounters: Counter[] = (data || []).map((counter: any) => {
           // Handle the case when operator_id is null or profiles is null
           const operatorInfo = counter.operator_id;
           
