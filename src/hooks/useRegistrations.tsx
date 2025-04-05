@@ -932,6 +932,17 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
             senderName: senderName,
           };
         });
+
+        let categoryName: string | undefined = undefined;
+        if (ticket.ticket_categories) {
+          if (Array.isArray(ticket.ticket_categories)) {
+            if (ticket.ticket_categories.length > 0) {
+              categoryName = ticket.ticket_categories[0]?.name;
+            }
+          } else if (typeof ticket.ticket_categories === 'object' && ticket.ticket_categories !== null) {
+            categoryName = ticket.ticket_categories.name;
+          }
+        }
         
         ticketsWithMessages.push({
           id: ticket.id,
@@ -940,7 +951,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           status: ticket.status as 'open' | 'in-progress' | 'closed',
           priority: ticket.priority as 'low' | 'medium' | 'high' | undefined,
           category_id: ticket.category_id,
-          categoryName: ticket.ticket_categories?.name,
+          categoryName: categoryName,
           is_offline: ticket.is_offline,
           createdAt: ticket.created_at,
           lastUpdated: ticket.updated_at,
