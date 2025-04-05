@@ -1,3 +1,4 @@
+
 import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase, RPCParams } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -950,10 +951,14 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         const formattedMessages: TicketMessage[] = messages.map((msg: any) => {
           let senderName = 'Unknown';
           
+          // Fix the type issue with profiles property
           if (msg.profiles) {
+            // Check if profiles is an object (not an array) and has a name property
             if (typeof msg.profiles === 'object' && !Array.isArray(msg.profiles)) {
               senderName = msg.profiles.name || 'Unknown';
-            } else if (Array.isArray(msg.profiles) && msg.profiles.length > 0) {
+            } 
+            // Check if profiles is an array and has at least one element
+            else if (Array.isArray(msg.profiles) && msg.profiles.length > 0) {
               senderName = msg.profiles[0].name || 'Unknown';
             }
           }
