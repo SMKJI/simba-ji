@@ -1,14 +1,15 @@
 
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useRegistrations } from '@/hooks/useRegistrations';
+import { useRegistrations, RegistrationsProvider } from '@/hooks/useRegistrations';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
 import LoginForm from '@/components/LoginForm';
 
-const Login = () => {
+// This wrapper component uses the hook within the provider context
+const LoginContent = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -64,6 +65,15 @@ const Login = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+// The main component wraps the content with the provider
+const Login = () => {
+  return (
+    <RegistrationsProvider>
+      <LoginContent />
+    </RegistrationsProvider>
   );
 };
 
