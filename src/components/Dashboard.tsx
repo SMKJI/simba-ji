@@ -97,14 +97,14 @@ const Dashboard = ({ stats, loading = false }: DashboardProps) => {
                         <span className="font-medium">{group.name}</span>
                       </div>
                       <span className="text-sm font-medium">
-                        {group.count} / 1000
+                        {group.member_count} / 1000
                         {group.isFull && (
                           <span className="ml-2 text-secondary font-bold">(Penuh)</span>
                         )}
                       </span>
                     </div>
                     <Progress 
-                      value={group.count / 10} 
+                      value={group.member_count / 10} 
                       className={`h-2 ${group.isFull ? 'bg-secondary/20' : 'bg-primary/20'}`}
                     />
                   </div>
