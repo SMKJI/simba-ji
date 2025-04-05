@@ -1,39 +1,132 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase, RPCParams } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import {
-  User,
-  UserRole,
-  Group,
-  StatsData,
-  LoginResult,
-  RegistrationResult,
-  HelpdeskOperator,
-  HelpdeskTicket,
-  TicketMessage,
-  TicketCategory,
-  QueueTicket,
-  HelpdeskCounter,
-  DailyCapacity,
-  TicketAttachment
-} from '@/types/supabase';
 
-export type {
-  User,
-  UserRole,
-  Group,
-  StatsData,
-  LoginResult,
-  RegistrationResult,
-  HelpdeskOperator,
-  HelpdeskTicket,
-  TicketMessage,
-  TicketCategory,
-  QueueTicket,
-  HelpdeskCounter,
-  DailyCapacity,
-  TicketAttachment
-};
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  avatarUrl?: string;
+  assignedGroupId?: string;
+  joinConfirmed?: boolean;
+}
+
+export type UserRole = 'admin' | 'helpdesk' | 'helpdesk_offline' | 'content' | 'applicant';
+
+export interface Group {
+  id: string;
+  name: string;
+  description: string | null;
+  invite_link: string;
+  capacity: number;
+  member_count: number;
+  is_active: boolean;
+  isFull: boolean;
+}
+
+export interface StatsData {
+  total: number;
+  groups: Group[];
+}
+
+export interface LoginResult {
+  success: boolean;
+  user?: User;
+  error?: string;
+}
+
+export interface RegistrationResult {
+  success: boolean;
+  user?: User;
+  error?: string;
+  data?: any;
+}
+
+export interface HelpdeskOperator {
+  id: string;
+  user_id: string;
+  name: string;
+  email: string;
+  assignedTickets: number;
+  status: 'active' | 'inactive';
+  is_offline: boolean;
+  lastActive: string;
+}
+
+export interface HelpdeskCounter {
+  id: string;
+  name: string;
+  is_active: boolean;
+  operator_id: string | null;
+  operatorName?: string;
+}
+
+export interface TicketMessage {
+  id: string;
+  ticketId: string;
+  sender: string;
+  senderRole: UserRole;
+  message: string;
+  timestamp: string;
+  senderName?: string;
+}
+
+export interface TicketCategory {
+  id: string;
+  name: string;
+  description: string | null;
+  is_offline: boolean;
+}
+
+export interface HelpdeskTicket {
+  id: string;
+  userId: string;
+  subject: string;
+  status: 'open' | 'in-progress' | 'closed';
+  priority?: 'low' | 'medium' | 'high';
+  category_id?: string;
+  categoryName?: string;
+  is_offline: boolean;
+  createdAt: string;
+  lastUpdated: string;
+  assignedTo?: string | null;
+  messages: TicketMessage[];
+}
+
+export interface QueueTicket {
+  id: string;
+  user_id: string;
+  queue_number: number;
+  category_id: string;
+  categoryName?: string;
+  status: 'waiting' | 'called' | 'serving' | 'completed' | 'skipped';
+  counter_id: string | null;
+  counterName?: string;
+  operator_id: string | null;
+  operatorName?: string;
+  created_at: string;
+  served_at: string | null;
+  completed_at: string | null;
+  updated_at?: string;
+}
+
+export interface DailyCapacity {
+  id: string;
+  date: string;
+  online_capacity: number;
+  offline_capacity: number;
+}
+
+export interface TicketAttachment {
+  id: string;
+  ticket_id: string;
+  file_name: string;
+  file_path: string;
+  file_type: string;
+  uploaded_by: string;
+  created_at: string;
+}
 
 export const DEMO_ACCOUNTS = [
   {
@@ -135,6 +228,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session);
         if (event === 'SIGNED_IN' && session) {
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
@@ -246,18 +340,32 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
   };
 
   const login = async (email: string, password: string): Promise<LoginResult> => {
+    console.log("Login function called with:", email);
     setLoading(true);
     
     try {
+      const demoUser = DEMO_ACCOUNTS.find(u => u.email === email);
+      if (demoUser && password === 'password123') {
+        console.log("Demo login successful for:", email);
+        sessionStorage.setItem('currentUser', JSON.stringify(demoUser));
+        setCurrentUser(demoUser);
+        setAuthenticated(true);
+        setLoading(false);
+        return { success: true, user: demoUser };
+      }
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error("Supabase login error:", error);
         setLoading(false);
         return { success: false, error: error.message };
       }
+      
+      console.log("Supabase login successful, user:", data.user);
       
       if (data.user) {
         const { data: profile, error: profileError } = await supabase
@@ -267,6 +375,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           .single();
         
         if (profileError) {
+          console.error("Profile fetch error:", profileError);
           setLoading(false);
           return { success: false, error: 'Profil pengguna tidak ditemukan' };
         }
@@ -280,6 +389,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           assignedGroupId: (profile as any).assigned_group_id as string || undefined,
           joinConfirmed: (profile as any).join_confirmed as boolean || false
         };
+        
+        sessionStorage.setItem('currentUser', JSON.stringify(user));
         
         setCurrentUser(user);
         setAuthenticated(true);
@@ -296,7 +407,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
-  const register = async (email: string, password: string, name: string): Promise<LoginResult> => {
+  const register = async (email: string, password: string, name: string): Promise<RegistrationResult> => {
+    console.log("Register function called with:", email, name);
     setLoading(true);
     
     try {
@@ -311,9 +423,12 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
       });
 
       if (error) {
+        console.error("Registration error:", error);
         setLoading(false);
         return { success: false, error: error.message };
       }
+      
+      console.log("Registration successful, user:", data.user);
       
       if (data.user) {
         if (data.session) {
@@ -324,6 +439,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
             .single();
           
           if (profileError) {
+            console.error("Profile fetch error:", profileError);
             setLoading(false);
             return { success: false, error: 'Profil pengguna tidak ditemukan' };
           }
@@ -338,10 +454,12 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
             joinConfirmed: (profile as any).join_confirmed as boolean || false
           };
           
+          sessionStorage.setItem('currentUser', JSON.stringify(user));
+          
           setCurrentUser(user);
           setAuthenticated(true);
           setLoading(false);
-          return { success: true, user };
+          return { success: true, user, data: profile };
         }
         
         setLoading(false);
@@ -352,7 +470,12 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
             email: data.user.email || '',
             name: name,
             role: 'applicant' as UserRole
-          } as User
+          },
+          data: {
+            id: data.user.id,
+            email: data.user.email || '',
+            name: name,
+          }
         };
       }
       
@@ -365,14 +488,44 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
+  const submitRegistration = async (formData: any): Promise<{success: boolean, error?: string, data?: any}> => {
+    try {
+      const registrationData = {
+        ...formData,
+        timestamp: new Date().toISOString()
+      };
+      
+      console.log("Storing registration data:", registrationData);
+      
+      sessionStorage.setItem('registrationData', JSON.stringify(registrationData));
+      
+      return {
+        success: true,
+        data: registrationData
+      };
+    } catch (err: any) {
+      console.error("Error storing registration data:", err);
+      return {
+        success: false,
+        error: err.message || "Failed to store registration data"
+      };
+    }
+  };
+
   const logout = async () => {
-    const { error } = await supabase.auth.signOut();
-    
-    if (!error) {
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Logout error:', error);
+        throw error;
+      }
+      
+      sessionStorage.removeItem('currentUser');
       setCurrentUser(null);
       setAuthenticated(false);
-    } else {
-      console.error('Logout error:', error);
+    } catch (err) {
+      console.error('Error in logout:', err);
     }
   };
 
@@ -796,19 +949,12 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         
         const formattedMessages: TicketMessage[] = messages.map((msg: any) => {
           let senderName = 'Unknown';
-          const profilesData = msg.profiles;
           
-          if (profilesData) {
-            if (Array.isArray(profilesData)) {
-              if (profilesData.length > 0) {
-                const profile = profilesData[0];
-                if (profile && typeof profile === 'object' && 'name' in profile) {
-                  senderName = profile.name || 'Unknown';
-                }
-              }
-            } 
-            else if (typeof profilesData === 'object' && 'name' in profilesData) {
-              senderName = profilesData.name || 'Unknown';
+          if (msg.profiles) {
+            if (typeof msg.profiles === 'object' && !Array.isArray(msg.profiles)) {
+              senderName = msg.profiles.name || 'Unknown';
+            } else if (Array.isArray(msg.profiles) && msg.profiles.length > 0) {
+              senderName = msg.profiles[0].name || 'Unknown';
             }
           }
           
@@ -1074,8 +1220,10 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     queueTickets,
     dailyCapacities,
     error,
+    DEMO_ACCOUNTS,
     login,
     register,
+    submitRegistration,
     logout,
     fetchStats,
     hasRole,

@@ -17,7 +17,7 @@ interface StudentRegistrationFormProps {
 const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { register, loading } = useRegistrations();
+  const { register } = useRegistrations();
   
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -108,7 +108,6 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
     setError(null);
     setIsSubmitting(true);
     
-    // Validation
     if (!isFormValid()) {
       setError('Semua kolom harus diisi kecuali alasan memilih program keahlian');
       setIsSubmitting(false);
@@ -127,7 +126,6 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
       return;
     }
     
-    // Validate WhatsApp number format
     const phoneRegex = /^(\+62|62|0)8[1-9][0-9]{6,10}$/;
     if (!phoneRegex.test(whatsappNumber)) {
       setError('Format nomor WhatsApp tidak valid (contoh: 08123456789)');
@@ -142,7 +140,6 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
     }
     
     try {
-      // Try Supabase registration first
       const supabaseResult = await registerWithSupabase();
       
       if (supabaseResult.success) {
@@ -151,8 +148,7 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
           description: 'Akun Anda telah dibuat. Silakan periksa email Anda untuk konfirmasi.',
         });
         
-        // Store student data in session storage
-        sessionStorage.setItem('studentData', JSON.stringify({
+        const studentData = {
           previousSchool,
           whatsappNumber,
           parentName,
@@ -163,26 +159,29 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
           address,
           preferredProgram,
           programReason
-        }));
+        };
+        
+        sessionStorage.setItem('studentData', JSON.stringify(studentData));
         
         if (onSuccess) {
           onSuccess();
         } else if (supabaseResult.user && supabaseResult.session) {
-          // If user is automatically logged in, redirect after 3 seconds
           setTimeout(() => {
             navigate('/dashboard');
+          }, 3000);
+        } else {
+          setTimeout(() => {
+            navigate('/login', { state: { email } });
           }, 3000);
         }
         return;
       }
       
-      // If Supabase registration fails, fall back to the original register function
       console.log("Falling back to register function");
       const result = await register(email, password, name);
       console.log("Registration result:", result);
       
       if (result.success) {
-        // Store additional information to be used in the profile
         sessionStorage.setItem('studentData', JSON.stringify({
           previousSchool,
           whatsappNumber,
@@ -204,10 +203,13 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
         if (onSuccess) {
           onSuccess();
         } else {
-          // If user is automatically logged in, redirect after 3 seconds
           if (result.user) {
             setTimeout(() => {
               navigate('/dashboard');
+            }, 3000);
+          } else {
+            setTimeout(() => {
+              navigate('/login', { state: { email } });
             }, 3000);
           }
         }
@@ -453,7 +455,7 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
       <Button
         type="submit"
         className="w-full"
-        disabled={isSubmitting || loading}
+        disabled={isSubmitting}
       >
         {isSubmitting ? (
           <>

@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useRegistrations } from '@/hooks/useRegistrations';
 import { useToast } from '@/hooks/use-toast';
@@ -43,10 +43,11 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  const { DEMO_ACCOUNTS = [] } = useRegistrations();
+  const { DEMO_ACCOUNTS = [], login } = useRegistrations();
   const emailFromState = location.state?.email || prefilledEmail || '';
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -56,117 +57,43 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
     },
   });
 
-  const loginWithSupabase = async (email: string, password: string) => {
-    try {
-      console.log("Attempting login with:", email, password);
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        console.error("Login error:", error.message);
-        
-        // Try demo login if Supabase auth fails
-        if (error.message.includes('Email not confirmed') || error.message.includes('Invalid login credentials')) {
-          return tryDemoLogin(email, password);
-        }
-        
-        return { success: false, error: error.message };
-      }
-      
-      if (data?.user) {
-        // Check for demo account first
-        const demoUser = DEMO_ACCOUNTS.find(account => account.email === email);
-        
-        if (demoUser) {
-          sessionStorage.setItem('currentUser', JSON.stringify(demoUser));
-          return { 
-            success: true, 
-            user: demoUser 
-          };
-        }
-        
-        // Fetch the user profile
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
-        
-        if (profileError) {
-          console.error("Profile fetch error:", profileError.message);
-          return { 
-            success: false, 
-            error: 'Gagal mengambil profil. Silakan coba lagi.' 
-          };
-        }
-        
-        if (!profileData) {
-          return { 
-            success: false, 
-            error: 'Profil pengguna tidak ditemukan.' 
-          };
-        }
-        
-        // Cast the profileData to include the additional properties
-        const profile = profileData as {
-          id: string;
-          name: string;
-          email: string;
-          role: string;
-          avatar_url?: string;
-          assigned_group_id?: string;
-          join_confirmed?: boolean;
-          created_at: string;
-          updated_at: string;
-        };
-        
-        const user = {
-          id: profile.id,
-          name: profile.name || data.user.email?.split('@')[0] || 'User',
-          email: profile.email || data.user.email || '',
-          role: profile.role || 'applicant',
-          avatarUrl: profile.avatar_url,
-          assignedGroupId: profile.assigned_group_id,
-          joinConfirmed: profile.join_confirmed
-        };
-        
-        // Store user data in session storage
-        sessionStorage.setItem('currentUser', JSON.stringify(user));
-        
-        return { 
-          success: true, 
-          user
-        };
-      }
-      
-      return { success: false, error: 'Unknown error occurred' };
-    } catch (error) {
-      console.error("Login exception:", error);
-      return { success: false, error: 'Terjadi kesalahan saat login. Silakan coba lagi.' };
-    }
-  };
-
-  const tryDemoLogin = (email: string, password: string) => {
-    console.log("Trying demo login for:", email);
-    const demoUser = DEMO_ACCOUNTS.find(u => u.email === email);
-    
-    if (demoUser && password === 'password123') {
-      sessionStorage.setItem('currentUser', JSON.stringify(demoUser));
-      return { success: true, user: demoUser };
-    }
-    
-    return { success: false, error: 'Email atau password salah' };
-  };
+  // Debug on component mount
+  useEffect(() => {
+    console.log("LoginForm mounted. Email from state:", emailFromState);
+  }, [emailFromState]);
 
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
+    setLoginError(null);
     
     try {
       console.log("Attempting login with:", data.email);
-      const result = await loginWithSupabase(data.email, data.password);
+      
+      // First try demo accounts
+      const demoUser = DEMO_ACCOUNTS.find(account => account.email === data.email);
+      if (demoUser && data.password === 'password123') {
+        console.log("Demo login successful");
+        
+        // Save user in session storage
+        sessionStorage.setItem('currentUser', JSON.stringify(demoUser));
+        
+        toast({
+          title: 'Login Berhasil',
+          description: `Selamat datang, ${demoUser.name}`,
+        });
+        
+        // Handle redirect based on role
+        if (onLoginSuccess) {
+          onLoginSuccess(demoUser.role);
+        } else {
+          handleRoleBasedRedirect(demoUser.role);
+        }
+        
+        return;
+      }
+      
+      // Try regular login through the login function from context
+      const result = await login(data.email, data.password);
       
       if (result.success && result.user) {
         console.log("Login successful:", result.user);
@@ -176,40 +103,24 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
           description: `Selamat datang, ${result.user?.name}`,
         });
         
-        // Save user in session storage for client-side persistence
-        sessionStorage.setItem('currentUser', JSON.stringify(result.user));
-        
+        // Handle redirect based on role
         if (onLoginSuccess && result.user?.role) {
           onLoginSuccess(result.user.role);
-        }
-        
-        switch (result.user?.role) {
-          case 'admin':
-            navigate('/admin');
-            break;
-          case 'helpdesk':
-            navigate('/helpdesk');
-            break;
-          case 'helpdesk_offline':
-            navigate('/offline-helpdesk');
-            break;
-          case 'content':
-            navigate('/content');
-            break;
-          default:
-            navigate('/dashboard');
+        } else if (result.user?.role) {
+          handleRoleBasedRedirect(result.user.role);
         }
       } else {
         console.error("Login failed:", result.error);
-        const errorMessage = result.error || 'Email atau password salah';
+        setLoginError(result.error || 'Email atau password salah');
         toast({
           title: 'Login Gagal',
-          description: errorMessage,
+          description: result.error || 'Email atau password salah',
           variant: 'destructive',
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login exception:", error);
+      setLoginError(error.message || 'Terjadi kesalahan saat login');
       toast({
         title: 'Login Gagal',
         description: 'Terjadi kesalahan saat login. Silakan coba lagi.',
@@ -217,6 +128,25 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleRoleBasedRedirect = (role: string) => {
+    switch (role) {
+      case 'admin':
+        navigate('/admin');
+        break;
+      case 'helpdesk':
+        navigate('/helpdesk');
+        break;
+      case 'helpdesk_offline':
+        navigate('/offline-helpdesk');
+        break;
+      case 'content':
+        navigate('/content');
+        break;
+      default:
+        navigate('/dashboard');
     }
   };
 
@@ -247,6 +177,12 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
       <CardContent className="p-6">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {loginError && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
+                {loginError}
+              </div>
+            )}
+            
             <FormField
               control={form.control}
               name="email"
