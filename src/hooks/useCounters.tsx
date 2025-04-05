@@ -41,13 +41,29 @@ export const useCounters = () => {
         // Format the data to match our Counter interface
         const formattedCounters: Counter[] = data.map(counter => {
           // Handle the case when operator_id is null or profiles is null
-          // Using optional chaining throughout with nullish coalescing
           const operatorInfo = counter.operator_id;
-          const profilesInfo = operatorInfo?.profiles;
-          // Add type checking to ensure we're not accessing properties on an error object
-          const operatorName = typeof profilesInfo === 'object' && profilesInfo 
-            ? (profilesInfo as any)?.name ?? 'Unknown' 
-            : 'Unknown';
+          
+          // Check if operatorInfo exists and is an object (not null/undefined)
+          let operatorName = 'Unknown';
+          let operatorId = '';
+          
+          if (operatorInfo && typeof operatorInfo === 'object') {
+            // Access the profiles property safely
+            const profilesData = operatorInfo.profiles;
+            
+            if (profilesData && typeof profilesData === 'object') {
+              // If it's a single object with name property
+              if ('name' in profilesData) {
+                operatorName = profilesData.name || 'Unknown';
+              } 
+              // If it's an array of objects with name property
+              else if (Array.isArray(profilesData) && profilesData.length > 0 && 'name' in profilesData[0]) {
+                operatorName = profilesData[0].name || 'Unknown';
+              }
+            }
+            
+            operatorId = operatorInfo.id || '';
+          }
           
           return {
             id: counter.id,
@@ -55,7 +71,7 @@ export const useCounters = () => {
             description: counter.name, // Using name as description since description doesn't exist
             is_active: counter.is_active,
             operators: operatorInfo ? [{
-              id: operatorInfo.id,
+              id: operatorId,
               name: operatorName
             }] : undefined
           };
