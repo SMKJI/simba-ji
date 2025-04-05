@@ -85,6 +85,7 @@ export interface TicketMessage {
   senderRole: UserRole;
   message: string;
   timestamp: string;
+  senderName?: string; // Added senderName property
 }
 
 export interface TicketCategory {

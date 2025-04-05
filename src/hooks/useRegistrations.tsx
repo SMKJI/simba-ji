@@ -800,8 +800,11 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           
           if (profilesData) {
             if (Array.isArray(profilesData)) {
-              if (profilesData.length > 0 && profilesData[0] && 'name' in profilesData[0]) {
-                senderName = profilesData[0].name || 'Unknown';
+              if (profilesData.length > 0) {
+                const profile = profilesData[0];
+                if (profile && typeof profile === 'object' && 'name' in profile) {
+                  senderName = profile.name || 'Unknown';
+                }
               }
             } 
             else if (typeof profilesData === 'object' && 'name' in profilesData) {
@@ -815,7 +818,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
             sender: msg.sender,
             senderRole: msg.sender_role as UserRole,
             message: msg.message,
-            timestamp: msg.created_at
+            timestamp: msg.created_at,
+            senderName: senderName,
           };
         });
         
