@@ -1,4 +1,3 @@
-
 import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase, RPCParams } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -1089,30 +1088,3 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     getApplicants,
     createTicket,
     addTicketMessage,
-    addTicketAttachment,
-    getTicketAttachments,
-    getFileUrl,
-    fetchUserTickets: fetchUserTickets,
-    getUserTickets: () => tickets,
-    updateTicketStatus,
-    updateTicketPriority,
-    assignTicket,
-    fetchHelpdeskOperators,
-    addHelpdeskOperator,
-    toggleOperatorType
-  };
-
-  return (
-    <RegistrationsContext.Provider value={value}>
-      {children}
-    </RegistrationsContext.Provider>
-  );
-};
-
-export const useRegistrations = () => {
-  const context = useContext(RegistrationsContext);
-  if (context === null) {
-    throw new Error('useRegistrations must be used within a RegistrationsProvider');
-  }
-  return context;
-};
