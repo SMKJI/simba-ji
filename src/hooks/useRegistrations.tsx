@@ -1,4 +1,3 @@
-
 import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase, RPCParams } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -909,18 +908,14 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           let senderName = 'Unknown';
           
           if (msg.profiles) {
-            // Handle both array and object cases for profiles
             if (Array.isArray(msg.profiles)) {
-              // If profiles is an array, try to get name from the first item
               if (msg.profiles.length > 0 && msg.profiles[0]) {
-                // Access name property safely
                 const firstProfile = msg.profiles[0];
                 if (typeof firstProfile === 'object' && firstProfile !== null && 'name' in firstProfile) {
                   senderName = firstProfile.name;
                 }
               }
             } else if (typeof msg.profiles === 'object' && msg.profiles !== null) {
-              // If profiles is an object, try to access name directly
               if ('name' in msg.profiles && typeof msg.profiles.name === 'string') {
                 senderName = msg.profiles.name;
               }
