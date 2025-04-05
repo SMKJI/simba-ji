@@ -25,10 +25,12 @@ interface AccountUser {
 const DemoAccounts = ({ onSelectAccount }: DemoAccountsProps) => {
   const [accounts, setAccounts] = useState<AccountUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAccounts = async () => {
       try {
+        console.log('Fetching demo accounts...');
         const { data, error } = await supabase
           .from('profiles')
           .select('id, name, email, role')
@@ -37,15 +39,18 @@ const DemoAccounts = ({ onSelectAccount }: DemoAccountsProps) => {
 
         if (error) {
           console.error('Error fetching accounts:', error);
+          setError(error.message);
           setLoading(false);
           return;
         }
         
         if (data) {
+          console.log('Demo accounts fetched:', data);
           setAccounts(data);
         }
       } catch (err) {
         console.error('Error in fetchAccounts:', err);
+        setError('Failed to load accounts');
       } finally {
         setLoading(false);
       }
@@ -74,6 +79,8 @@ const DemoAccounts = ({ onSelectAccount }: DemoAccountsProps) => {
                 <div className="flex justify-center py-4">
                   <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                 </div>
+              ) : error ? (
+                <p className="text-center text-red-500">{error}</p>
               ) : accounts.length === 0 ? (
                 <p className="text-center text-muted-foreground">Tidak ada akun ditemukan</p>
               ) : (

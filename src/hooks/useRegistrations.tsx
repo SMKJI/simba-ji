@@ -1,4 +1,3 @@
-
 import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase, RPCParams } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -1101,10 +1100,3 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
 
 export const useRegistrations = () => {
   const context = useContext(RegistrationsContext);
-  
-  if (!context) {
-    throw new Error('useRegistrations must be used within a RegistrationsProvider');
-  }
-  
-  return context;
-};
