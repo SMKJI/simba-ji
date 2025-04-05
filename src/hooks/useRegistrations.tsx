@@ -794,14 +794,23 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           continue;
         }
         
-        const formattedMessages: TicketMessage[] = messages.map(msg => ({
-          id: msg.id,
-          ticketId: ticket.id,
-          sender: msg.sender,
-          senderRole: msg.sender_role as UserRole,
-          message: msg.message,
-          timestamp: msg.created_at
-        }));
+        const formattedMessages: TicketMessage[] = messages.map((msg: any) => {
+          let senderName = 'Unknown';
+          const profilesData = msg.profiles;
+          
+          if (profilesData && typeof profilesData === 'object') {
+            senderName = profilesData.name || 'Unknown';
+          }
+          
+          return {
+            id: msg.id,
+            ticketId: ticket.id,
+            sender: msg.sender,
+            senderRole: msg.sender_role as UserRole,
+            message: msg.message,
+            timestamp: msg.created_at
+          };
+        });
         
         ticketsWithMessages.push({
           id: ticket.id,
