@@ -5,27 +5,21 @@ import { useRegistrations } from '@/hooks/useRegistrations';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, EyeIcon, EyeOffIcon, UserCheck, Info, ChevronLeft } from 'lucide-react';
+import { Loader2, EyeIcon, EyeOffIcon, UserCheck, ChevronLeft } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { 
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { supabase } from '@/integrations/supabase/client';
+import DemoAccounts from './DemoAccounts';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Email tidak valid' }),
@@ -43,7 +37,7 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  const { DEMO_ACCOUNTS = [], login } = useRegistrations();
+  const { login } = useRegistrations();
   const emailFromState = location.state?.email || prefilledEmail || '';
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -57,7 +51,6 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
     },
   });
 
-  // Debug on component mount
   useEffect(() => {
     console.log("LoginForm mounted. Email from state:", emailFromState);
   }, [emailFromState]);
@@ -68,29 +61,6 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
     
     try {
       console.log("Attempting login with:", data.email);
-      
-      // First try demo accounts
-      const demoUser = DEMO_ACCOUNTS.find(account => account.email === data.email);
-      if (demoUser && data.password === 'password123') {
-        console.log("Demo login successful");
-        
-        // Save user in session storage
-        sessionStorage.setItem('currentUser', JSON.stringify(demoUser));
-        
-        toast({
-          title: 'Login Berhasil',
-          description: `Selamat datang, ${demoUser.name}`,
-        });
-        
-        // Handle redirect based on role
-        if (onLoginSuccess) {
-          onLoginSuccess(demoUser.role);
-        } else {
-          handleRoleBasedRedirect(demoUser.role);
-        }
-        
-        return;
-      }
       
       // Try regular login through the login function from context
       const result = await login(data.email, data.password);
@@ -261,39 +231,7 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
       </CardContent>
       
       <CardFooter className="bg-muted/50 p-6 block">
-        <Accordion type="single" collapsible className="w-full">
-          <AccordionItem value="demo-accounts">
-            <AccordionTrigger className="text-sm">
-              <div className="flex items-center text-primary">
-                <Info className="w-4 h-4 mr-2" />
-                Akun Demo untuk Testing
-              </div>
-            </AccordionTrigger>
-            <AccordionContent>
-              <div className="space-y-3 text-sm mt-2">
-                <p className="font-medium text-muted-foreground mb-2">
-                  Klik pada akun untuk mengisi form otomatis (password: password123)
-                </p>
-                
-                {DEMO_ACCOUNTS && DEMO_ACCOUNTS.length > 0 ? (
-                  DEMO_ACCOUNTS.map((account) => (
-                    <div 
-                      key={account.id}
-                      className="p-2 border rounded-md hover:bg-muted cursor-pointer"
-                      onClick={() => fillDemoAccount(account.email)}
-                    >
-                      <p className="font-semibold">{account.name}</p>
-                      <p className="text-xs text-muted-foreground">Email: {account.email}</p>
-                      <p className="text-xs text-muted-foreground">Role: {account.role}</p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-muted-foreground">No demo accounts available</p>
-                )}
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+        <DemoAccounts onSelectAccount={fillDemoAccount} />
       </CardFooter>
     </Card>
   );

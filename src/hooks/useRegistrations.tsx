@@ -128,39 +128,6 @@ export interface TicketAttachment {
   created_at: string;
 }
 
-export const DEMO_ACCOUNTS = [
-  {
-    id: '1',
-    name: 'Admin User',
-    email: 'admin@example.com',
-    role: 'admin' as UserRole
-  },
-  {
-    id: '2',
-    name: 'Helpdesk Operator',
-    email: 'helpdesk@example.com',
-    role: 'helpdesk' as UserRole
-  },
-  {
-    id: '3',
-    name: 'Helpdesk Tatap Muka',
-    email: 'offline@example.com',
-    role: 'helpdesk_offline' as UserRole
-  },
-  {
-    id: '4',
-    name: 'Content Manager',
-    email: 'content@example.com',
-    role: 'content' as UserRole
-  },
-  {
-    id: '5',
-    name: 'Calon Murid',
-    email: 'murid@example.com',
-    role: 'applicant' as UserRole
-  }
-];
-
 const RegistrationsContext = createContext<any>(null);
 
 export const RegistrationsProvider = ({ children }: { children: React.ReactNode }) => {
@@ -344,16 +311,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     setLoading(true);
     
     try {
-      const demoUser = DEMO_ACCOUNTS.find(u => u.email === email);
-      if (demoUser && password === 'password123') {
-        console.log("Demo login successful for:", email);
-        sessionStorage.setItem('currentUser', JSON.stringify(demoUser));
-        setCurrentUser(demoUser);
-        setAuthenticated(true);
-        setLoading(false);
-        return { success: true, user: demoUser };
-      }
-      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -1104,7 +1061,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         counters,
         queueTickets,
         dailyCapacities,
-        DEMO_ACCOUNTS,
         login,
         register,
         submitRegistration,
