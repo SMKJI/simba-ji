@@ -800,7 +800,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           
           if (profilesData) {
             if (Array.isArray(profilesData)) {
-              // Handle case when profiles is an array
               if (profilesData.length > 0) {
                 const profile = profilesData[0];
                 if (profile && typeof profile === 'object' && 'name' in profile) {
@@ -809,7 +808,6 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
               }
             } 
             else if (typeof profilesData === 'object' && 'name' in profilesData) {
-              // Handle case when profiles is a single object
               senderName = profilesData.name || 'Unknown';
             }
           }

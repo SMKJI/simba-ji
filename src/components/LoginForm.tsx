@@ -58,6 +58,8 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
 
   const loginWithSupabase = async (email: string, password: string) => {
     try {
+      console.log("Attempting login with:", email, password);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -66,8 +68,8 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
       if (error) {
         console.error("Login error:", error.message);
         
+        // Try demo login if Supabase auth fails
         if (error.message.includes('Email not confirmed') || error.message.includes('Invalid login credentials')) {
-          // Try demo login if Supabase auth fails
           return tryDemoLogin(email, password);
         }
         
@@ -121,17 +123,22 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
           updated_at: string;
         };
         
+        const user = {
+          id: profile.id,
+          name: profile.name || data.user.email?.split('@')[0] || 'User',
+          email: profile.email || data.user.email || '',
+          role: profile.role || 'applicant',
+          avatarUrl: profile.avatar_url,
+          assignedGroupId: profile.assigned_group_id,
+          joinConfirmed: profile.join_confirmed
+        };
+        
+        // Store user data in session storage
+        sessionStorage.setItem('currentUser', JSON.stringify(user));
+        
         return { 
           success: true, 
-          user: {
-            id: profile.id,
-            name: profile.name || data.user.email?.split('@')[0] || 'User',
-            email: profile.email || data.user.email || '',
-            role: profile.role || 'applicant',
-            avatarUrl: profile.avatar_url,
-            assignedGroupId: profile.assigned_group_id,
-            joinConfirmed: profile.join_confirmed
-          }
+          user
         };
       }
       

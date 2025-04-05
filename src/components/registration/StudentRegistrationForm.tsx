@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRegistrations } from '@/hooks/useRegistrations';
@@ -9,6 +8,7 @@ import { Loader2, EyeIcon, EyeOffIcon } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { programData } from '@/data/programData';
+import { supabase } from '@/integrations/supabase/client';
 
 interface StudentRegistrationFormProps {
   onSuccess?: () => void;
@@ -59,6 +59,49 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
       preferredProgram.trim() !== ''
     );
   };
+
+  const registerWithSupabase = async () => {
+    try {
+      console.log("Registering with Supabase:", email, password, name);
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+            whatsappNumber,
+            parentName,
+            parentWhatsapp,
+            birthPlace,
+            birthDate,
+            gender,
+            address,
+            previousSchool,
+            preferredProgram,
+            programReason
+          }
+        }
+      });
+
+      if (error) {
+        console.error("Registration error:", error);
+        return { success: false, error: error.message };
+      }
+      
+      return { 
+        success: true, 
+        user: data.user,
+        session: data.session
+      };
+    } catch (error: any) {
+      console.error("Registration exception:", error);
+      return { 
+        success: false, 
+        error: error.message || "Terjadi kesalahan saat pendaftaran" 
+      };
+    }
+  };
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,7 +142,42 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
     }
     
     try {
-      console.log("Registering with:", email, password, name);
+      // Try Supabase registration first
+      const supabaseResult = await registerWithSupabase();
+      
+      if (supabaseResult.success) {
+        toast({
+          title: 'Pendaftaran Berhasil',
+          description: 'Akun Anda telah dibuat. Silakan periksa email Anda untuk konfirmasi.',
+        });
+        
+        // Store student data in session storage
+        sessionStorage.setItem('studentData', JSON.stringify({
+          previousSchool,
+          whatsappNumber,
+          parentName,
+          parentWhatsapp,
+          birthPlace,
+          birthDate,
+          gender,
+          address,
+          preferredProgram,
+          programReason
+        }));
+        
+        if (onSuccess) {
+          onSuccess();
+        } else if (supabaseResult.user && supabaseResult.session) {
+          // If user is automatically logged in, redirect after 3 seconds
+          setTimeout(() => {
+            navigate('/dashboard');
+          }, 3000);
+        }
+        return;
+      }
+      
+      // If Supabase registration fails, fall back to the original register function
+      console.log("Falling back to register function");
       const result = await register(email, password, name);
       console.log("Registration result:", result);
       
