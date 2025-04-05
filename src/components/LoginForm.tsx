@@ -108,16 +108,29 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
           };
         }
         
+        // Cast the profileData to include the additional properties
+        const profile = profileData as {
+          id: string;
+          name: string;
+          email: string;
+          role: string;
+          avatar_url?: string;
+          assigned_group_id?: string;
+          join_confirmed?: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        
         return { 
           success: true, 
           user: {
-            id: profileData.id,
-            name: profileData.name || data.user.email?.split('@')[0] || 'User',
-            email: profileData.email || data.user.email || '',
-            role: profileData.role || 'applicant',
-            avatarUrl: profileData.avatar_url,
-            assignedGroupId: profileData.assigned_group_id,
-            joinConfirmed: profileData.join_confirmed
+            id: profile.id,
+            name: profile.name || data.user.email?.split('@')[0] || 'User',
+            email: profile.email || data.user.email || '',
+            role: profile.role || 'applicant',
+            avatarUrl: profile.avatar_url,
+            assignedGroupId: profile.assigned_group_id,
+            joinConfirmed: profile.join_confirmed
           }
         };
       }
