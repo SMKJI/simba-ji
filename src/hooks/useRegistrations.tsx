@@ -311,6 +311,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     setLoading(true);
     
     try {
+      await supabase.auth.signOut();
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -331,7 +333,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           .eq('id', data.user.id)
           .single();
         
-        if (profileError) {
+        if (profileError || !profile) {
           console.error("Profile fetch error:", profileError);
           setLoading(false);
           return { success: false, error: 'Profil pengguna tidak ditemukan' };
@@ -937,7 +939,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         if (ticket.ticket_categories) {
           if (Array.isArray(ticket.ticket_categories)) {
             if (ticket.ticket_categories.length > 0 && ticket.ticket_categories[0]) {
-              categoryName = ticket.ticket_categories[0].name;
+              const firstCategory = ticket.ticket_categories[0];
+              categoryName = typeof firstCategory === 'object' && firstCategory !== null ? firstCategory.name : undefined;
             }
           } else if (typeof ticket.ticket_categories === 'object' && ticket.ticket_categories !== null) {
             const category = ticket.ticket_categories as { name?: string };

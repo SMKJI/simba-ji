@@ -5,7 +5,7 @@ import { useRegistrations } from '@/hooks/useRegistrations';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, EyeIcon, EyeOffIcon, UserCheck, ChevronLeft } from 'lucide-react';
+import { Loader2, EyeIcon, EyeOffIcon, UserCheck, ChevronLeft, AlertCircle } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,12 +18,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from '@/integrations/supabase/client';
 import DemoAccounts from './DemoAccounts';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Email tidak valid' }),
-  password: z.string().min(6, { message: 'Password minimal 6 karakter' }),
+  password: z.string().min(1, { message: 'Password harus diisi' }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -53,6 +54,16 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
 
   useEffect(() => {
     console.log("LoginForm mounted. Email from state:", emailFromState);
+    
+    // Check for any existing session on component load
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        console.log("Existing session found:", data.session);
+      }
+    };
+    
+    checkSession();
   }, [emailFromState]);
 
   const onSubmit = async (data: FormValues) => {
@@ -62,7 +73,7 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
     try {
       console.log("Attempting login with:", data.email);
       
-      // Try regular login through the login function from context
+      // Try login through the login function from context
       const result = await login(data.email, data.password);
       
       if (result.success && result.user) {
@@ -148,9 +159,12 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {loginError && (
-              <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
-                {loginError}
-              </div>
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {loginError}
+                </AlertDescription>
+              </Alert>
             )}
             
             <FormField
@@ -160,7 +174,7 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="Masukkan email" {...field} />
+                    <Input type="email" placeholder="Masukkan email" autoComplete="email" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -178,6 +192,7 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
                       <Input 
                         type={showPassword ? "text" : "password"} 
                         placeholder="Masukkan password" 
+                        autoComplete="current-password"
                         {...field} 
                       />
                       <Button
