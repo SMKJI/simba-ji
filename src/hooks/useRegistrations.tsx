@@ -1,3 +1,4 @@
+
 import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase, RPCParams } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -908,12 +909,13 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           let senderName = 'Unknown';
           
           if (msg.profiles) {
-            if (typeof msg.profiles === 'object' && !Array.isArray(msg.profiles)) {
-              senderName = msg.profiles.name || 'Unknown';
-            } else if (Array.isArray(msg.profiles) && msg.profiles.length > 0) {
-              if (typeof msg.profiles[0] === 'object' && msg.profiles[0] !== null) {
-                senderName = msg.profiles[0].name || 'Unknown';
+            // Fix for line 938 - Handle both array and object cases for profiles
+            if (Array.isArray(msg.profiles)) {
+              if (msg.profiles.length > 0 && msg.profiles[0] && typeof msg.profiles[0].name === 'string') {
+                senderName = msg.profiles[0].name;
               }
+            } else if (typeof msg.profiles === 'object' && msg.profiles !== null && typeof msg.profiles.name === 'string') {
+              senderName = msg.profiles.name;
             }
           }
           
