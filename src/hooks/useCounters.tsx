@@ -13,6 +13,21 @@ export interface Counter {
   }[];
 }
 
+// Define types for the data returned from Supabase query
+interface OperatorId {
+  id: string;
+  profiles: {
+    name: string;
+  };
+}
+
+interface CounterData {
+  id: string;
+  name: string;
+  is_active: boolean;
+  operator_id: OperatorId | null;
+}
+
 export const useCounters = () => {
   const [counters, setCounters] = useState<Counter[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,7 +54,7 @@ export const useCounters = () => {
         }
 
         // Format the data to match our Counter interface
-        const formattedCounters: Counter[] = data.map(counter => {
+        const formattedCounters: Counter[] = (data as CounterData[]).map(counter => {
           // Handle the case when operator_id is null or profiles is null
           const operatorInfo = counter.operator_id;
           
@@ -56,10 +71,6 @@ export const useCounters = () => {
               if ('name' in profilesData) {
                 operatorName = profilesData.name || 'Unknown';
               } 
-              // If it's an array of objects with name property
-              else if (Array.isArray(profilesData) && profilesData.length > 0 && 'name' in profilesData[0]) {
-                operatorName = profilesData[0].name || 'Unknown';
-              }
             }
             
             operatorId = operatorInfo.id || '';

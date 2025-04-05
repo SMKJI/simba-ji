@@ -706,7 +706,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         return [];
       }
       
-      return data.map(att => ({
+      return data.map((att: any) => ({
         id: att.id,
         ticket_id: att.ticket_id,
         file_name: att.file_name,
