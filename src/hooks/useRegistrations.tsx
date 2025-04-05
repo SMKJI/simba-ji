@@ -959,7 +959,10 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
             } 
             // Check if profiles is an array and has at least one element
             else if (Array.isArray(msg.profiles) && msg.profiles.length > 0) {
-              senderName = msg.profiles[0].name || 'Unknown';
+              // Access the name property from the first array element
+              if (typeof msg.profiles[0] === 'object' && msg.profiles[0] !== null) {
+                senderName = msg.profiles[0].name || 'Unknown';
+              }
             }
           }
           
