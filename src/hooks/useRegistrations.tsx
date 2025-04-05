@@ -936,11 +936,12 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         let categoryName: string | undefined = undefined;
         if (ticket.ticket_categories) {
           if (Array.isArray(ticket.ticket_categories)) {
-            if (ticket.ticket_categories.length > 0) {
-              categoryName = ticket.ticket_categories[0]?.name;
+            if (ticket.ticket_categories.length > 0 && ticket.ticket_categories[0]) {
+              categoryName = ticket.ticket_categories[0].name;
             }
           } else if (typeof ticket.ticket_categories === 'object' && ticket.ticket_categories !== null) {
-            categoryName = ticket.ticket_categories.name;
+            const category = ticket.ticket_categories as { name?: string };
+            categoryName = category.name;
           }
         }
         
