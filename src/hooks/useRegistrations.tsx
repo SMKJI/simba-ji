@@ -798,8 +798,15 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           let senderName = 'Unknown';
           const profilesData = msg.profiles;
           
-          if (profilesData && typeof profilesData === 'object') {
-            senderName = profilesData.name || 'Unknown';
+          if (profilesData) {
+            if (Array.isArray(profilesData)) {
+              if (profilesData.length > 0 && profilesData[0] && 'name' in profilesData[0]) {
+                senderName = profilesData[0].name || 'Unknown';
+              }
+            } 
+            else if (typeof profilesData === 'object' && 'name' in profilesData) {
+              senderName = profilesData.name || 'Unknown';
+            }
           }
           
           return {
