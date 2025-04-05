@@ -1088,6 +1088,49 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
+  return (
+    <RegistrationsContext.Provider
+      value={{
+        loading,
+        stats,
+        error,
+        currentUser,
+        authenticated,
+        tickets,
+        categories,
+        operators,
+        counters,
+        queueTickets,
+        dailyCapacities,
+        DEMO_ACCOUNTS,
+        login,
+        register,
+        submitRegistration,
+        logout,
+        hasRole,
+        getUserAssignedGroup,
+        confirmGroupJoin,
+        assignUserToGroup,
+        updateUserRole,
+        getApplicants,
+        createTicket,
+        addTicketMessage,
+        addTicketAttachment,
+        getTicketAttachments,
+        getFileUrl,
+        fetchUserTickets,
+        updateTicketStatus,
+        updateTicketPriority,
+        assignTicket,
+        fetchStats,
+        fetchCategories,
+      }}
+    >
+      {children}
+    </RegistrationsContext.Provider>
+  );
+};
+
 export const useRegistrations = () => {
   const context = useContext(RegistrationsContext);
   
