@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useRegistrations, RegistrationsProvider } from '@/hooks/useRegistrations';
 import { useToast } from '@/hooks/use-toast';
@@ -13,9 +13,39 @@ const LoginContent = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { authenticated, currentUser } = useRegistrations();
   
   // Get redirect path from location state
   const from = location.state?.from || '/dashboard';
+  
+  // Check if user is already authenticated
+  useEffect(() => {
+    if (authenticated && currentUser) {
+      toast({
+        title: 'Sudah Masuk',
+        description: `Anda sudah masuk sebagai ${currentUser.name}`,
+      });
+      
+      // Redirect based on role
+      let redirectPath = from;
+      
+      switch (currentUser.role) {
+        case 'admin':
+          redirectPath = '/admin';
+          break;
+        case 'helpdesk':
+          redirectPath = '/helpdesk';
+          break;
+        case 'content':
+          redirectPath = '/content';
+          break;
+        default:
+          redirectPath = '/dashboard';
+      }
+      
+      navigate(redirectPath);
+    }
+  }, [authenticated, currentUser, navigate, from, toast]);
   
   const handleLoginSuccess = (role: string) => {
     // Handle redirect based on role if needed
@@ -56,7 +86,17 @@ const LoginContent = () => {
           </p>
         </div>
         
-        <LoginForm onLoginSuccess={handleLoginSuccess} />
+        <Card className="border-0 shadow-lg rounded-xl overflow-hidden">
+          <CardHeader className="bg-primary/5 border-b p-6">
+            <CardTitle className="text-xl font-semibold text-primary">
+              Masuk
+            </CardTitle>
+            <CardDescription>Masuk ke akun Anda untuk akses sistem PMB</CardDescription>
+          </CardHeader>
+          <CardContent className="p-6">
+            <LoginForm onLoginSuccess={handleLoginSuccess} />
+          </CardContent>
+        </Card>
         
         <div className="text-center text-sm text-gray-500">
           <p>

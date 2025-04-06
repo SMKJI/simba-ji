@@ -1,4 +1,3 @@
-
 import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase, RPCParams } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -172,8 +171,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
               email: profileData.email,
               role: profileData.role as UserRole,
               avatarUrl: profileData.avatar_url,
-              assignedGroupId: (profileData as any).assigned_group_id as string || undefined,
-              joinConfirmed: (profileData as any).join_confirmed as boolean || false
+              assignedGroupId: profileData.assigned_group_id || undefined,
+              joinConfirmed: profileData.join_confirmed || false
             };
             
             setCurrentUser(user);
@@ -218,8 +217,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
               email: profileData.email,
               role: profileData.role as UserRole,
               avatarUrl: profileData.avatar_url,
-              assignedGroupId: (profileData as any).assigned_group_id as string || undefined,
-              joinConfirmed: (profileData as any).join_confirmed as boolean || false
+              assignedGroupId: profileData.assigned_group_id || undefined,
+              joinConfirmed: profileData.join_confirmed || false
             };
             
             setCurrentUser(user);
@@ -346,11 +345,9 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           email: profile.email,
           role: profile.role as UserRole,
           avatarUrl: profile.avatar_url,
-          assignedGroupId: (profile as any).assigned_group_id as string || undefined,
-          joinConfirmed: (profile as any).join_confirmed as boolean || false
+          assignedGroupId: profile.assigned_group_id || undefined,
+          joinConfirmed: profile.join_confirmed || false
         };
-        
-        sessionStorage.setItem('currentUser', JSON.stringify(user));
         
         setCurrentUser(user);
         setAuthenticated(true);
@@ -410,11 +407,9 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
             email: profile.email,
             role: profile.role as UserRole,
             avatarUrl: profile.avatar_url,
-            assignedGroupId: (profile as any).assigned_group_id as string || undefined,
-            joinConfirmed: (profile as any).join_confirmed as boolean || false
+            assignedGroupId: profile.assigned_group_id || undefined,
+            joinConfirmed: profile.join_confirmed || false
           };
-          
-          sessionStorage.setItem('currentUser', JSON.stringify(user));
           
           setCurrentUser(user);
           setAuthenticated(true);
@@ -627,6 +622,7 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
+        .eq('role', 'applicant')
         .order('created_at', { ascending: false });
       
       if (error) {
@@ -1002,35 +998,14 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
       }
       
       const formattedOperators: HelpdeskOperator[] = data.map((op: any) => {
-        // Variabel untuk menyimpan nama operator dan email
         let operatorName = 'Unknown';
         let operatorEmail = '';
         
-        // Penanganan profiles yang lebih aman dengan type checking
         if (op.profiles) {
-          // Log untuk debugging
-          console.log('Operator profiles type:', typeof op.profiles, 'Value:', op.profiles);
-          
-          // Case 1: profiles adalah array
-          if (Array.isArray(op.profiles)) {
-            if (op.profiles.length > 0) {
-              const profile = op.profiles[0];
-              if (profile && typeof profile === 'object') {
-                operatorName = profile.name || 'Unknown';
-                operatorEmail = profile.email || '';
-              }
-            }
-          } 
-          // Case 2: profiles adalah object
-          else if (typeof op.profiles === 'object' && op.profiles !== null) {
-            // Type guard untuk memastikan objek memiliki property name dan email
-            if ('name' in op.profiles && typeof op.profiles.name === 'string') {
-              operatorName = op.profiles.name;
-            }
-            
-            if ('email' in op.profiles && typeof op.profiles.email === 'string') {
-              operatorEmail = op.profiles.email;
-            }
+          const profileData = op.profiles as { name?: string; email?: string } | null;
+          if (profileData) {
+            operatorName = profileData.name || 'Unknown';
+            operatorEmail = profileData.email || '';
           }
         }
         
@@ -1039,16 +1014,15 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           user_id: op.user_id,
           name: operatorName,
           email: operatorEmail,
-          assignedTickets: 0, // Akan dihitung nanti
+          assignedTickets: 0,
           status: op.is_active ? 'active' : 'inactive',
           is_offline: op.is_offline,
           lastActive: op.updated_at
         };
       });
       
-      // Menghitung jumlah tiket yang ditugaskan untuk setiap operator
       const operatorsWithTicketCounts = formattedOperators.map(operator => {
-        const assignedTickets = tickets.filter(ticket => ticket.assignedTo === operator.id).length;
+        const assignedTickets = tickets.filter(ticket => ticket.assignedTo === operator.user_id).length;
         return { ...operator, assignedTickets };
       });
       
@@ -1066,8 +1040,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     status: 'open' | 'in-progress' | 'closed'
   ): Promise<boolean> => {
     if (!currentUser || (currentUser.role !== 'helpdesk' && 
-                          currentUser.role !== 'helpdesk_offline' && 
-                          currentUser.role !== 'admin')) {
+                         currentUser.role !== 'helpdesk_offline' && 
+                         currentUser.role !== 'admin')) {
       return false;
     }
     
@@ -1099,8 +1073,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     priority: 'low' | 'medium' | 'high'
   ): Promise<boolean> => {
     if (!currentUser || (currentUser.role !== 'helpdesk' && 
-                          currentUser.role !== 'helpdesk_offline' && 
-                          currentUser.role !== 'admin')) {
+                         currentUser.role !== 'helpdesk_offline' && 
+                         currentUser.role !== 'admin')) {
       return false;
     }
     

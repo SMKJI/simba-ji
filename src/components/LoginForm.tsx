@@ -1,263 +1,136 @@
 
-import { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useRegistrations } from '@/hooks/useRegistrations';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { EyeIcon, EyeOffIcon, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, EyeIcon, EyeOffIcon, UserCheck, ChevronLeft, AlertCircle } from 'lucide-react';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { 
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { supabase } from '@/integrations/supabase/client';
+import { useRegistrations } from '@/hooks/useRegistrations';
+import { useToast } from '@/hooks/use-toast';
 import DemoAccounts from './DemoAccounts';
 
-const formSchema = z.object({
-  email: z.string().email({ message: 'Email tidak valid' }),
-  password: z.string().min(1, { message: 'Password harus diisi' }),
-});
-
-type FormValues = z.infer<typeof formSchema>;
-
 interface LoginFormProps {
-  prefilledEmail?: string;
   onLoginSuccess?: (role: string) => void;
+  showDemoAccounts?: boolean;
 }
 
-const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { login } = useRegistrations();
-  const emailFromState = location.state?.email || prefilledEmail || '';
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const LoginForm = ({ onLoginSuccess, showDemoAccounts = true }: LoginFormProps) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [loginError, setLoginError] = useState<string | null>(null);
+  const { login } = useRegistrations();
+  const { toast } = useToast();
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: emailFromState,
-      password: '',
-    },
-  });
-
-  useEffect(() => {
-    console.log("LoginForm mounted. Email from state:", emailFromState);
-    
-    // Check for any existing session on component load and clear it
-    const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        console.log("Existing session found:", data.session);
-      }
-    };
-    
-    checkSession();
-  }, [emailFromState]);
-
-  const onSubmit = async (data: FormValues) => {
-    setIsSubmitting(true);
-    setLoginError(null);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
     
     try {
-      console.log("Attempting login with:", data.email);
-      
-      // First, sign out any existing session to prevent conflicts
-      await supabase.auth.signOut();
-      
-      // Wait a moment to ensure the signout is complete
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      // Try login through the login function from context
-      const result = await login(data.email, data.password);
+      const result = await login(email, password);
       
       if (result.success && result.user) {
-        console.log("Login successful:", result.user);
-        
         toast({
-          title: 'Login Berhasil',
-          description: `Selamat datang, ${result.user?.name}`,
+          title: "Login Berhasil",
+          description: `Selamat datang kembali, ${result.user.name}!`,
         });
         
-        // Add a small delay before redirection to ensure state is updated
-        setTimeout(() => {
-          // Handle redirect based on role
-          if (onLoginSuccess && result.user?.role) {
-            onLoginSuccess(result.user.role);
-          } else if (result.user?.role) {
-            handleRoleBasedRedirect(result.user.role);
-          }
-        }, 500);
+        if (onLoginSuccess) {
+          onLoginSuccess(result.user.role);
+        }
       } else {
-        console.error("Login failed:", result.error);
-        setLoginError(result.error || 'Email atau password salah');
         toast({
-          title: 'Login Gagal',
-          description: result.error || 'Email atau password salah',
-          variant: 'destructive',
+          title: "Login Gagal",
+          description: result.error || "Email atau password salah",
+          variant: "destructive",
         });
-        setIsSubmitting(false);
       }
     } catch (error: any) {
-      console.error("Login exception:", error);
-      setLoginError(error.message || 'Terjadi kesalahan saat login');
       toast({
-        title: 'Login Gagal',
-        description: 'Terjadi kesalahan saat login. Silakan coba lagi.',
-        variant: 'destructive',
+        title: "Error",
+        description: error.message || "Terjadi kesalahan saat login",
+        variant: "destructive",
       });
-      setIsSubmitting(false);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleRoleBasedRedirect = (role: string) => {
-    switch (role) {
-      case 'admin':
-        navigate('/admin');
-        break;
-      case 'helpdesk':
-        navigate('/helpdesk');
-        break;
-      case 'helpdesk_offline':
-        navigate('/offline-helpdesk');
-        break;
-      case 'content':
-        navigate('/content');
-        break;
-      default:
-        navigate('/dashboard');
-    }
-  };
-
-  const fillDemoAccount = (email: string) => {
-    form.setValue('email', email);
-    form.setValue('password', 'password123');
-  };
-  
-  const togglePasswordVisibility = () => {
-    setShowPassword(prev => !prev);
+  const handleDemoAccountSelect = (demoEmail: string) => {
+    setEmail(demoEmail);
+    setPassword('password123');
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto border-0 shadow-lg rounded-xl overflow-hidden animate-scale-in">
-      <CardHeader className="bg-primary/5 border-b p-6">
-        <div className="flex items-center mb-2">
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 mr-2" asChild>
-            <Link to="/">
-              <ChevronLeft className="h-4 w-4" />
-            </Link>
-          </Button>
-          <CardTitle className="text-2xl font-bold text-primary">Login</CardTitle>
-        </div>
-        <CardDescription>
-          Masuk ke sistem pendaftaran SMKN 1 Kendal
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="p-6">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {loginError && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  {loginError}
-                </AlertDescription>
-              </Alert>
-            )}
-            
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" placeholder="Masukkan email" autoComplete="email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Input 
-                        type={showPassword ? "text" : "password"} 
-                        placeholder="Masukkan password" 
-                        autoComplete="current-password"
-                        {...field} 
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-0 top-0 h-full px-3"
-                        onClick={togglePasswordVisibility}
-                      >
-                        {showPassword ? (
-                          <EyeOffIcon className="h-4 w-4 text-muted-foreground" />
-                        ) : (
-                          <EyeIcon className="h-4 w-4 text-muted-foreground" />
-                        )}
-                      </Button>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <Button 
-              type="submit" 
-              className="w-full bg-primary hover:bg-primary/90"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Memproses...
-                </>
-              ) : (
-                <>
-                  <UserCheck className="mr-2 h-4 w-4" />
-                  Masuk
-                </>
-              )}
-            </Button>
-            
-            <div className="text-center text-sm mt-4">
-              <p className="text-muted-foreground">
-                Belum memiliki akun?{' '}
-                <Link to="/register" className="text-primary font-medium hover:underline">
-                  Daftar
-                </Link>
-              </p>
-            </div>
-          </form>
-        </Form>
-      </CardContent>
+    <div className="space-y-4">
+      {showDemoAccounts && <DemoAccounts onSelectAccount={handleDemoAccountSelect} />}
       
-      <CardFooter className="bg-muted/50 p-6 block">
-        <DemoAccounts onSelectAccount={fillDemoAccount} />
-      </CardFooter>
-    </Card>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <label htmlFor="email" className="block text-sm font-medium">
+            Email
+          </label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="Masukkan email Anda"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <label htmlFor="password" className="block text-sm font-medium">
+            Password
+          </label>
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Masukkan password Anda"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? (
+                <EyeOffIcon className="h-4 w-4" />
+              ) : (
+                <EyeIcon className="h-4 w-4" />
+              )}
+            </button>
+          </div>
+        </div>
+        
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Masuk...
+            </>
+          ) : (
+            'Masuk'
+          )}
+        </Button>
+      </form>
+      
+      <div className="text-center text-sm">
+        <p className="text-gray-600">
+          Belum punya akun?{' '}
+          <Link to="/register" className="text-primary font-medium hover:underline">
+            Daftar
+          </Link>
+        </p>
+      </div>
+    </div>
   );
 };
 

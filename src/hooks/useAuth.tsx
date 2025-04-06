@@ -32,7 +32,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
       
-      console.log("Auth refresh completed, session:", data.session ? "exists" : "none");
+      if (!data.session) {
+        console.log("No active session found during refresh");
+        return;
+      }
+      
+      // Refresh user profile data
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', data.session.user.id)
+        .single();
+      
+      if (profileError) {
+        console.error("Error fetching profile during refresh:", profileError);
+        return;
+      }
+      
+      console.log("Auth refresh completed, user profile updated");
     } catch (err) {
       console.error("Error refreshing auth state:", err);
     }

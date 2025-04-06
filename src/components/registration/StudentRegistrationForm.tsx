@@ -62,51 +62,6 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
     );
   };
 
-  const registerWithSupabase = async () => {
-    try {
-      console.log("Registering with Supabase:", email, password, name);
-      
-      await supabase.auth.signOut();
-      
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-            whatsappNumber,
-            parentName,
-            parentWhatsapp,
-            birthPlace,
-            birthDate,
-            gender,
-            address,
-            previousSchool,
-            preferredProgram,
-            programReason
-          }
-        }
-      });
-
-      if (error) {
-        console.error("Registration error:", error);
-        return { success: false, error: error.message };
-      }
-      
-      return { 
-        success: true, 
-        user: data.user,
-        session: data.session
-      };
-    } catch (error: any) {
-      console.error("Registration exception:", error);
-      return { 
-        success: false, 
-        error: error.message || "Terjadi kesalahan saat pendaftaran" 
-      };
-    }
-  };
-  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -144,34 +99,85 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
     }
     
     try {
-      const supabaseResult = await registerWithSupabase();
+      await supabase.auth.signOut();
       
-      if (supabaseResult.success) {
-        toast({
-          title: 'Pendaftaran Berhasil',
-          description: 'Akun Anda telah dibuat. Silakan periksa email Anda untuk konfirmasi.',
-        });
-        
-        const studentData = {
-          previousSchool,
-          whatsappNumber,
-          parentName,
-          parentWhatsapp,
-          birthPlace,
-          birthDate,
-          gender,
-          address,
-          preferredProgram,
-          programReason
-        };
-        
-        sessionStorage.setItem('studentData', JSON.stringify(studentData));
-        
-        if (onSuccess) {
-          onSuccess();
-        } else if (supabaseResult.user && supabaseResult.session) {
-          await refreshUser();
-          
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+            whatsappNumber,
+            parentName,
+            parentWhatsapp,
+            birthPlace,
+            birthDate,
+            gender,
+            address,
+            previousSchool,
+            preferredProgram,
+            programReason
+          }
+        }
+      });
+
+      if (error) {
+        console.error("Registration error:", error);
+        setError(error.message || "Pendaftaran gagal. Silakan coba lagi.");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      if (!data.user) {
+        setError("Pendaftaran gagal. Silakan coba lagi.");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      const { error: profileUpdateError } = await supabase
+        .from('profiles')
+        .update({
+          previous_school: previousSchool,
+          whatsapp_number: whatsappNumber,
+          parent_name: parentName,
+          parent_whatsapp: parentWhatsapp,
+          birth_place: birthPlace,
+          birth_date: birthDate,
+          gender: gender,
+          address: address,
+          preferred_program: preferredProgram,
+          program_reason: programReason
+        })
+        .eq('id', data.user.id);
+      
+      if (profileUpdateError) {
+        console.error("Profile update error:", profileUpdateError);
+      }
+      
+      toast({
+        title: 'Pendaftaran Berhasil',
+        description: 'Akun Anda telah dibuat. Silakan periksa email Anda untuk konfirmasi.',
+      });
+      
+      sessionStorage.setItem('studentData', JSON.stringify({
+        previousSchool,
+        whatsappNumber,
+        parentName,
+        parentWhatsapp,
+        birthPlace,
+        birthDate,
+        gender,
+        address,
+        preferredProgram,
+        programReason
+      }));
+      
+      await refreshUser();
+      
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        if (data.session) {
           setTimeout(() => {
             navigate('/dashboard');
           }, 1000);
@@ -180,54 +186,10 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
             navigate('/login', { state: { email } });
           }, 1000);
         }
-        return;
-      }
-      
-      console.log("Falling back to register function");
-      const result = await register(email, password, name);
-      console.log("Registration result:", result);
-      
-      if (result.success) {
-        sessionStorage.setItem('studentData', JSON.stringify({
-          previousSchool,
-          whatsappNumber,
-          parentName,
-          parentWhatsapp,
-          birthPlace,
-          birthDate,
-          gender,
-          address,
-          preferredProgram,
-          programReason
-        }));
-        
-        toast({
-          title: 'Pendaftaran Berhasil',
-          description: 'Akun Anda telah dibuat. Silakan periksa email Anda untuk konfirmasi.',
-        });
-        
-        await refreshUser();
-        
-        if (onSuccess) {
-          onSuccess();
-        } else {
-          if (result.user) {
-            setTimeout(() => {
-              navigate('/dashboard');
-            }, 1000);
-          } else {
-            setTimeout(() => {
-              navigate('/login', { state: { email } });
-            }, 1000);
-          }
-        }
-      } else {
-        setError(result.error || 'Pendaftaran gagal. Silakan coba lagi.');
       }
     } catch (err: any) {
       console.error("Registration error:", err);
       setError(err.message || 'Terjadi kesalahan saat mendaftar');
-    } finally {
       setIsSubmitting(false);
     }
   };
