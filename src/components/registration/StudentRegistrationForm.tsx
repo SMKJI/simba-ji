@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { programData } from '@/data/programData';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 interface StudentRegistrationFormProps {
   onSuccess?: () => void;
@@ -18,6 +19,7 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
   const navigate = useNavigate();
   const { toast } = useToast();
   const { register } = useRegistrations();
+  const { refreshUser } = useAuth();
   
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -63,6 +65,8 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
   const registerWithSupabase = async () => {
     try {
       console.log("Registering with Supabase:", email, password, name);
+      
+      await supabase.auth.signOut();
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -166,13 +170,15 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
         if (onSuccess) {
           onSuccess();
         } else if (supabaseResult.user && supabaseResult.session) {
+          await refreshUser();
+          
           setTimeout(() => {
             navigate('/dashboard');
-          }, 3000);
+          }, 1000);
         } else {
           setTimeout(() => {
             navigate('/login', { state: { email } });
-          }, 3000);
+          }, 1000);
         }
         return;
       }
@@ -200,17 +206,19 @@ const StudentRegistrationForm = ({ onSuccess }: StudentRegistrationFormProps) =>
           description: 'Akun Anda telah dibuat. Silakan periksa email Anda untuk konfirmasi.',
         });
         
+        await refreshUser();
+        
         if (onSuccess) {
           onSuccess();
         } else {
           if (result.user) {
             setTimeout(() => {
               navigate('/dashboard');
-            }, 3000);
+            }, 1000);
           } else {
             setTimeout(() => {
               navigate('/login', { state: { email } });
-            }, 3000);
+            }, 1000);
           }
         }
       } else {

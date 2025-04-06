@@ -1002,22 +1002,35 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
       }
       
       const formattedOperators: HelpdeskOperator[] = data.map((op: any) => {
-        // Safely handle profiles data which might be null or an array
+        // Variabel untuk menyimpan nama operator dan email
         let operatorName = 'Unknown';
         let operatorEmail = '';
         
+        // Penanganan profiles yang lebih aman dengan type checking
         if (op.profiles) {
-          // Handle case where profiles could be an array
+          // Log untuk debugging
+          console.log('Operator profiles type:', typeof op.profiles, 'Value:', op.profiles);
+          
+          // Case 1: profiles adalah array
           if (Array.isArray(op.profiles)) {
-            if (op.profiles.length > 0 && op.profiles[0]) {
-              operatorName = op.profiles[0].name || 'Unknown';
-              operatorEmail = op.profiles[0].email || '';
+            if (op.profiles.length > 0) {
+              const profile = op.profiles[0];
+              if (profile && typeof profile === 'object') {
+                operatorName = profile.name || 'Unknown';
+                operatorEmail = profile.email || '';
+              }
             }
           } 
-          // Handle case where profiles is an object
+          // Case 2: profiles adalah object
           else if (typeof op.profiles === 'object' && op.profiles !== null) {
-            operatorName = op.profiles.name || 'Unknown';
-            operatorEmail = op.profiles.email || '';
+            // Type guard untuk memastikan objek memiliki property name dan email
+            if ('name' in op.profiles && typeof op.profiles.name === 'string') {
+              operatorName = op.profiles.name;
+            }
+            
+            if ('email' in op.profiles && typeof op.profiles.email === 'string') {
+              operatorEmail = op.profiles.email;
+            }
           }
         }
         
@@ -1026,13 +1039,14 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
           user_id: op.user_id,
           name: operatorName,
           email: operatorEmail,
-          assignedTickets: 0, // To be computed later
+          assignedTickets: 0, // Akan dihitung nanti
           status: op.is_active ? 'active' : 'inactive',
           is_offline: op.is_offline,
           lastActive: op.updated_at
         };
       });
       
+      // Menghitung jumlah tiket yang ditugaskan untuk setiap operator
       const operatorsWithTicketCounts = formattedOperators.map(operator => {
         const assignedTickets = tickets.filter(ticket => ticket.assignedTo === operator.id).length;
         return { ...operator, assignedTickets };
@@ -1187,7 +1201,8 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
       fetchHelpdeskOperators,
       getHelpdeskOperators,
       fetchUserTickets,
-      getUserTickets
+      getUserTickets,
+      fetchStats
     }}>
       {children}
     </RegistrationsContext.Provider>
