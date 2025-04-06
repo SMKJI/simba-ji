@@ -976,6 +976,76 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
     }
   };
 
+  const fetchHelpdeskOperators = async () => {
+    if (!currentUser) {
+      setOperators([]);
+      return [];
+    }
+    
+    try {
+      const { data, error } = await supabase
+        .from('helpdesk_operators')
+        .select(`
+          id,
+          user_id,
+          is_active,
+          is_offline,
+          updated_at,
+          profiles:user_id (name, email)
+        `);
+      
+      if (error) {
+        console.error('Error fetching operators:', error);
+        setOperators([]);
+        return [];
+      }
+      
+      const formattedOperators: HelpdeskOperator[] = data.map((op: any) => {
+        // Safely handle profiles data which might be null or an array
+        let operatorName = 'Unknown';
+        let operatorEmail = '';
+        
+        if (op.profiles) {
+          // Handle case where profiles could be an array
+          if (Array.isArray(op.profiles)) {
+            if (op.profiles.length > 0 && op.profiles[0]) {
+              operatorName = op.profiles[0].name || 'Unknown';
+              operatorEmail = op.profiles[0].email || '';
+            }
+          } 
+          // Handle case where profiles is an object
+          else if (typeof op.profiles === 'object' && op.profiles !== null) {
+            operatorName = op.profiles.name || 'Unknown';
+            operatorEmail = op.profiles.email || '';
+          }
+        }
+        
+        return {
+          id: op.id,
+          user_id: op.user_id,
+          name: operatorName,
+          email: operatorEmail,
+          assignedTickets: 0, // To be computed later
+          status: op.is_active ? 'active' : 'inactive',
+          is_offline: op.is_offline,
+          lastActive: op.updated_at
+        };
+      });
+      
+      const operatorsWithTicketCounts = formattedOperators.map(operator => {
+        const assignedTickets = tickets.filter(ticket => ticket.assignedTo === operator.id).length;
+        return { ...operator, assignedTickets };
+      });
+      
+      setOperators(operatorsWithTicketCounts);
+      return operatorsWithTicketCounts;
+    } catch (err) {
+      console.error('Error in fetchHelpdeskOperators:', err);
+      setOperators([]);
+      return [];
+    }
+  };
+
   const updateTicketStatus = async (
     ticketId: string, 
     status: 'open' | 'in-progress' | 'closed'
@@ -998,126 +1068,3 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
       if (error) {
         console.error('Error updating ticket status:', error);
         return false;
-      }
-      
-      await fetchUserTickets();
-      return true;
-    } catch (err) {
-      console.error('Error in updateTicketStatus:', err);
-      return false;
-    }
-  };
-
-  const updateTicketPriority = async (
-    ticketId: string, 
-    priority: 'low' | 'medium' | 'high'
-  ): Promise<boolean> => {
-    if (!currentUser || (currentUser.role !== 'helpdesk' && 
-                          currentUser.role !== 'helpdesk_offline' && 
-                          currentUser.role !== 'admin')) {
-      return false;
-    }
-    
-    try {
-      const { error } = await supabase
-        .from('tickets')
-        .update({ 
-          priority, 
-          updated_at: new Date().toISOString() 
-        })
-        .eq('id', ticketId);
-      
-      if (error) {
-        console.error('Error updating ticket priority:', error);
-        return false;
-      }
-      
-      await fetchUserTickets();
-      return true;
-    } catch (err) {
-      console.error('Error in updateTicketPriority:', err);
-      return false;
-    }
-  };
-
-  const assignTicket = async (
-    ticketId: string, 
-    operatorId: string
-  ): Promise<boolean> => {
-    if (!currentUser || currentUser.role !== 'admin') {
-      return false;
-    }
-    
-    try {
-      const { error } = await supabase
-        .from('tickets')
-        .update({ 
-          assigned_to: operatorId, 
-          updated_at: new Date().toISOString() 
-        })
-        .eq('id', ticketId);
-      
-      if (error) {
-        console.error('Error assigning ticket:', error);
-        return false;
-      }
-      
-      await fetchUserTickets();
-      return true;
-    } catch (err) {
-      console.error('Error in assignTicket:', err);
-      return false;
-    }
-  };
-
-  return (
-    <RegistrationsContext.Provider
-      value={{
-        loading,
-        stats,
-        error,
-        currentUser,
-        authenticated,
-        tickets,
-        categories,
-        operators,
-        counters,
-        queueTickets,
-        dailyCapacities,
-        login,
-        register,
-        submitRegistration,
-        logout,
-        hasRole,
-        getUserAssignedGroup,
-        confirmGroupJoin,
-        assignUserToGroup,
-        updateUserRole,
-        getApplicants,
-        createTicket,
-        addTicketMessage,
-        addTicketAttachment,
-        getTicketAttachments,
-        getFileUrl,
-        fetchUserTickets,
-        updateTicketStatus,
-        updateTicketPriority,
-        assignTicket,
-        fetchStats,
-        fetchCategories,
-      }}
-    >
-      {children}
-    </RegistrationsContext.Provider>
-  );
-};
-
-export const useRegistrations = () => {
-  const context = useContext(RegistrationsContext);
-  
-  if (!context) {
-    throw new Error('useRegistrations must be used within a RegistrationsProvider');
-  }
-  
-  return context;
-};
