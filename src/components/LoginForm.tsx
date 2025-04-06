@@ -55,7 +55,7 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
   useEffect(() => {
     console.log("LoginForm mounted. Email from state:", emailFromState);
     
-    // Check for any existing session on component load
+    // Check for any existing session on component load and clear it
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
@@ -73,6 +73,12 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
     try {
       console.log("Attempting login with:", data.email);
       
+      // First, sign out any existing session to prevent conflicts
+      await supabase.auth.signOut();
+      
+      // Wait a moment to ensure the signout is complete
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
       // Try login through the login function from context
       const result = await login(data.email, data.password);
       
@@ -84,12 +90,15 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
           description: `Selamat datang, ${result.user?.name}`,
         });
         
-        // Handle redirect based on role
-        if (onLoginSuccess && result.user?.role) {
-          onLoginSuccess(result.user.role);
-        } else if (result.user?.role) {
-          handleRoleBasedRedirect(result.user.role);
-        }
+        // Add a small delay before redirection to ensure state is updated
+        setTimeout(() => {
+          // Handle redirect based on role
+          if (onLoginSuccess && result.user?.role) {
+            onLoginSuccess(result.user.role);
+          } else if (result.user?.role) {
+            handleRoleBasedRedirect(result.user.role);
+          }
+        }, 500);
       } else {
         console.error("Login failed:", result.error);
         setLoginError(result.error || 'Email atau password salah');
@@ -98,6 +107,7 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
           description: result.error || 'Email atau password salah',
           variant: 'destructive',
         });
+        setIsSubmitting(false);
       }
     } catch (error: any) {
       console.error("Login exception:", error);
@@ -107,7 +117,6 @@ const LoginForm = ({ prefilledEmail, onLoginSuccess }: LoginFormProps) => {
         description: 'Terjadi kesalahan saat login. Silakan coba lagi.',
         variant: 'destructive',
       });
-    } finally {
       setIsSubmitting(false);
     }
   };

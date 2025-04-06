@@ -938,13 +938,16 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         let categoryName: string | undefined = undefined;
         if (ticket.ticket_categories) {
           if (Array.isArray(ticket.ticket_categories)) {
-            if (ticket.ticket_categories.length > 0 && ticket.ticket_categories[0]) {
+            if (ticket.ticket_categories.length > 0) {
               const firstCategory = ticket.ticket_categories[0];
-              categoryName = typeof firstCategory === 'object' && firstCategory !== null ? firstCategory.name : undefined;
+              if (typeof firstCategory === 'object' && firstCategory !== null && 'name' in firstCategory) {
+                categoryName = firstCategory.name;
+              }
             }
-          } else if (typeof ticket.ticket_categories === 'object' && ticket.ticket_categories !== null) {
-            const category = ticket.ticket_categories as { name?: string };
-            categoryName = category.name;
+          } else if (typeof ticket.ticket_categories === 'object' && 
+                  ticket.ticket_categories !== null && 
+                  'name' in ticket.ticket_categories) {
+            categoryName = ticket.ticket_categories.name as string;
           }
         }
         
