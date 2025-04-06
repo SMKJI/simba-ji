@@ -78,7 +78,7 @@ const DemoAccounts = ({ onSelectAccount }: DemoAccountsProps) => {
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
             <div className="space-y-3 text-sm mt-2">
-              <Alert variant="outline" className="mb-4">
+              <Alert variant="default" className="mb-4">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Informasi Login</AlertTitle>
                 <AlertDescription>
