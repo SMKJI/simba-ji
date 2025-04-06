@@ -13,14 +13,14 @@ const LoginContent = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { authenticated, currentUser } = useRegistrations();
+  const { authenticated, currentUser, loading } = useRegistrations();
   
   // Get redirect path from location state
   const from = location.state?.from || '/dashboard';
   
   // Check if user is already authenticated
   useEffect(() => {
-    if (authenticated && currentUser) {
+    if (!loading && authenticated && currentUser) {
       toast({
         title: 'Sudah Masuk',
         description: `Anda sudah masuk sebagai ${currentUser.name}`,
@@ -45,7 +45,7 @@ const LoginContent = () => {
       
       navigate(redirectPath);
     }
-  }, [authenticated, currentUser, navigate, from, toast]);
+  }, [authenticated, currentUser, navigate, from, toast, loading]);
   
   const handleLoginSuccess = (role: string) => {
     // Handle redirect based on role if needed

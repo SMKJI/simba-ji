@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
       
-      console.log("Auth refresh completed, user profile updated");
+      console.log("Auth refresh completed, user profile updated:", profileData);
     } catch (err) {
       console.error("Error refreshing auth state:", err);
     }
@@ -60,6 +60,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
     }
   }, [registrationsLoading]);
+
+  // Listen for auth changes
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed in useAuth:", event);
+      // We don't need to set user state here as it's handled in useRegistrations
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   return (
     <AuthContext.Provider value={{ 

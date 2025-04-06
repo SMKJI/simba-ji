@@ -1,132 +1,9 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase, RPCParams } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  avatarUrl?: string;
-  assignedGroupId?: string;
-  joinConfirmed?: boolean;
-}
-
-export type UserRole = 'admin' | 'helpdesk' | 'helpdesk_offline' | 'content' | 'applicant';
-
-export interface Group {
-  id: string;
-  name: string;
-  description: string | null;
-  invite_link: string;
-  capacity: number;
-  member_count: number;
-  is_active: boolean;
-  isFull: boolean;
-}
-
-export interface StatsData {
-  total: number;
-  groups: Group[];
-}
-
-export interface LoginResult {
-  success: boolean;
-  user?: User;
-  error?: string;
-}
-
-export interface RegistrationResult {
-  success: boolean;
-  user?: User;
-  error?: string;
-  data?: any;
-}
-
-export interface HelpdeskOperator {
-  id: string;
-  user_id: string;
-  name: string;
-  email: string;
-  assignedTickets: number;
-  status: 'active' | 'inactive';
-  is_offline: boolean;
-  lastActive: string;
-}
-
-export interface HelpdeskCounter {
-  id: string;
-  name: string;
-  is_active: boolean;
-  operator_id: string | null;
-  operatorName?: string;
-}
-
-export interface TicketMessage {
-  id: string;
-  ticketId: string;
-  sender: string;
-  senderRole: UserRole;
-  message: string;
-  timestamp: string;
-  senderName?: string;
-}
-
-export interface TicketCategory {
-  id: string;
-  name: string;
-  description: string | null;
-  is_offline: boolean;
-}
-
-export interface HelpdeskTicket {
-  id: string;
-  userId: string;
-  subject: string;
-  status: 'open' | 'in-progress' | 'closed';
-  priority?: 'low' | 'medium' | 'high';
-  category_id?: string;
-  categoryName?: string;
-  is_offline: boolean;
-  createdAt: string;
-  lastUpdated: string;
-  assignedTo?: string | null;
-  messages: TicketMessage[];
-}
-
-export interface QueueTicket {
-  id: string;
-  user_id: string;
-  queue_number: number;
-  category_id: string;
-  categoryName?: string;
-  status: 'waiting' | 'called' | 'serving' | 'completed' | 'skipped';
-  counter_id: string | null;
-  counterName?: string;
-  operator_id: string | null;
-  operatorName?: string;
-  created_at: string;
-  served_at: string | null;
-  completed_at: string | null;
-  updated_at?: string;
-}
-
-export interface DailyCapacity {
-  id: string;
-  date: string;
-  online_capacity: number;
-  offline_capacity: number;
-}
-
-export interface TicketAttachment {
-  id: string;
-  ticket_id: string;
-  file_name: string;
-  file_path: string;
-  file_type: string;
-  uploaded_by: string;
-  created_at: string;
-}
+import { User, UserRole, Group, StatsData, LoginResult, RegistrationResult, HelpdeskOperator, 
+  HelpdeskCounter, TicketMessage, TicketCategory, HelpdeskTicket, QueueTicket, 
+  DailyCapacity, TicketAttachment } from '@/types/supabase';
 
 const RegistrationsContext = createContext<any>(null);
 
@@ -1002,10 +879,9 @@ export const RegistrationsProvider = ({ children }: { children: React.ReactNode 
         let operatorEmail = '';
         
         if (op.profiles) {
-          const profileData = op.profiles as { name?: string; email?: string } | null;
-          if (profileData) {
-            operatorName = profileData.name || 'Unknown';
-            operatorEmail = profileData.email || '';
+          if (typeof op.profiles === 'object' && op.profiles !== null) {
+            operatorName = op.profiles.name || 'Unknown';
+            operatorEmail = op.profiles.email || '';
           }
         }
         

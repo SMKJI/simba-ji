@@ -1,28 +1,39 @@
 
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { EyeIcon, EyeOffIcon, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useRegistrations } from '@/hooks/useRegistrations';
 import { useToast } from '@/hooks/use-toast';
-import DemoAccounts from './DemoAccounts';
+import { useAuth } from '@/hooks/useAuth';
 
 interface LoginFormProps {
   onLoginSuccess?: (role: string) => void;
   showDemoAccounts?: boolean;
 }
 
-const LoginForm = ({ onLoginSuccess, showDemoAccounts = true }: LoginFormProps) => {
+const LoginForm = ({ onLoginSuccess, showDemoAccounts = false }: LoginFormProps) => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { login } = useRegistrations();
+  const { refreshUser } = useAuth();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email || !password) {
+      toast({
+        title: "Form tidak lengkap",
+        description: "Silakan masukkan email dan password",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     
     try {
@@ -33,6 +44,9 @@ const LoginForm = ({ onLoginSuccess, showDemoAccounts = true }: LoginFormProps) 
           title: "Login Berhasil",
           description: `Selamat datang kembali, ${result.user.name}!`,
         });
+
+        // Refresh user data
+        await refreshUser();
         
         if (onLoginSuccess) {
           onLoginSuccess(result.user.role);
@@ -55,15 +69,8 @@ const LoginForm = ({ onLoginSuccess, showDemoAccounts = true }: LoginFormProps) 
     }
   };
 
-  const handleDemoAccountSelect = (demoEmail: string) => {
-    setEmail(demoEmail);
-    setPassword('password123');
-  };
-
   return (
-    <div className="space-y-4">
-      {showDemoAccounts && <DemoAccounts onSelectAccount={handleDemoAccountSelect} />}
-      
+    <div className="space-y-4">      
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <label htmlFor="email" className="block text-sm font-medium">
