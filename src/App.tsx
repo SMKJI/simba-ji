@@ -2,8 +2,8 @@
 import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
-import { RegistrationsProvider } from '@/hooks/useRegistrations';
 import { AuthProvider } from '@/hooks/useAuth';
+import { RegistrationsProvider } from '@/hooks/useRegistrations';
 import { supabase } from '@/integrations/supabase/client';
 import Index from '@/pages/Index';
 import About from '@/pages/About';
@@ -34,7 +34,7 @@ const App = () => {
           .from('profiles')
           .select('*')
           .eq('role', 'admin')
-          .single();
+          .maybeSingle();
 
         if (adminError && adminError.code !== 'PGRST116') {
           console.error('Error checking for admin user:', adminError);

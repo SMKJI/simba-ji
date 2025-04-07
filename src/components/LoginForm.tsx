@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { EyeIcon, EyeOffIcon, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,6 @@ interface LoginFormProps {
 }
 
 const LoginForm = ({ onLoginSuccess, showDemoAccounts = false }: LoginFormProps) => {
-  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -54,37 +53,38 @@ const LoginForm = ({ onLoginSuccess, showDemoAccounts = false }: LoginFormProps)
       }
       
       if (data && data.user) {
-        // Fetch user profile to get role and other information
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
-          
-        if (profileError) {
-          console.error("Profile fetch error:", profileError);
-          toast({
-            title: "Login Gagal",
-            description: "Tidak dapat menemukan profil pengguna",
-            variant: "destructive",
-          });
-          setIsLoading(false);
-          return;
-        }
+        console.log("User authenticated successfully:", data.user);
         
         // Refresh user data in context
         await refreshUser();
         
         toast({
           title: "Login Berhasil",
-          description: `Selamat datang kembali, ${profileData.name}!`,
+          description: `Selamat datang kembali!`,
         });
         
-        if (onLoginSuccess) {
-          onLoginSuccess(profileData.role);
+        if (onLoginSuccess && data.session) {
+          // Get profile data to determine role
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', data.user.id)
+            .single();
+          
+          if (profileError) {
+            console.error("Error fetching role:", profileError);
+            // Default to applicant role if profile fetch fails
+            onLoginSuccess('applicant');
+          } else if (profileData) {
+            onLoginSuccess(profileData.role);
+          } else {
+            // Default to applicant role if no profile data
+            onLoginSuccess('applicant');
+          }
         }
       }
     } catch (error: any) {
+      console.error("Unexpected error during login:", error);
       toast({
         title: "Error",
         description: error.message || "Terjadi kesalahan saat login",
