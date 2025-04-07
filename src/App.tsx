@@ -63,8 +63,12 @@ const App = () => {
             if (data.user) {
               await supabase
                 .from('profiles')
-                .update({ role: 'admin' })
-                .eq('id', data.user.id);
+                .upsert({ 
+                  id: data.user.id,
+                  name: 'Administrator',
+                  email: 'admin@smkn1kendal.sch.id',
+                  role: 'admin' 
+                });
             }
           }
         }

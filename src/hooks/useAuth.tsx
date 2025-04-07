@@ -24,6 +24,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const refreshUser = async () => {
     try {
+      console.log("Refreshing user...");
       // Force a refresh of the session
       const { data, error } = await supabase.auth.getSession();
       
@@ -45,10 +46,60 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .eq('id', data.session.user.id)
         .maybeSingle();
       
-      if (profileError) {
+      if (profileError && profileError.code !== 'PGRST116') {
         console.error("Error fetching profile during refresh:", profileError);
-        setError("Error fetching profile data");
-        setUser(null);
+        
+        // Try to create a profile if it doesn't exist
+        try {
+          const userEmail = data.session.user.email || '';
+          const userName = data.session.user.user_metadata.name || userEmail.split('@')[0] || 'User';
+          
+          // Create a fallback user object
+          const fallbackUser: User = {
+            id: data.session.user.id,
+            name: userName,
+            email: userEmail,
+            role: 'applicant',
+            avatarUrl: null,
+            assignedGroupId: null,
+            joinConfirmed: false
+          };
+          
+          setUser(fallbackUser);
+          
+          // Create the profile in database
+          const { data: newProfile, error: insertError } = await supabase
+            .from('profiles')
+            .upsert({
+              id: data.session.user.id,
+              name: userName,
+              email: userEmail,
+              role: 'applicant'
+            })
+            .select('*')
+            .single();
+            
+          if (insertError) {
+            console.error("Error creating profile:", insertError);
+          } else {
+            console.log("Created profile for user:", newProfile);
+            
+            // Update user with fresh profile data
+            setUser({
+              id: newProfile.id,
+              name: newProfile.name,
+              email: newProfile.email,
+              role: newProfile.role,
+              avatarUrl: newProfile.avatar_url,
+              assignedGroupId: newProfile.assigned_group_id,
+              joinConfirmed: newProfile.join_confirmed || false
+            });
+          }
+        } catch (err) {
+          console.error("Failed to create profile:", err);
+          setError("Error fetching profile data");
+          setUser(null);
+        }
         return;
       }
       
@@ -66,7 +117,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // If no profile exists yet, create a basic one with data from auth
         const userId = data.session.user.id;
         const userEmail = data.session.user.email || '';
-        const userName = data.session.user.user_metadata.name || userEmail.split('@')[0];
+        const userName = data.session.user.user_metadata.name || userEmail.split('@')[0] || 'User';
         
         // Create a fallback user object
         const fallbackUser: User = {
@@ -83,13 +134,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         // Try to create the profile
         try {
-          await supabase.from('profiles').upsert({
-            id: userId,
-            name: userName,
-            email: userEmail,
-            role: 'applicant'
-          });
-          console.log("Created profile for user", userId);
+          const { data: newProfile, error: insertError } = await supabase
+            .from('profiles')
+            .upsert({
+              id: userId,
+              name: userName,
+              email: userEmail,
+              role: 'applicant'
+            })
+            .select('*')
+            .single();
+            
+          if (insertError) {
+            console.error("Failed to create profile:", insertError);
+          } else {
+            console.log("Created profile for user", userId, newProfile);
+            
+            // Update user with fresh profile data
+            setUser({
+              id: newProfile.id,
+              name: newProfile.name,
+              email: newProfile.email,
+              role: newProfile.role,
+              avatarUrl: newProfile.avatar_url,
+              assignedGroupId: newProfile.assigned_group_id,
+              joinConfirmed: newProfile.join_confirmed || false
+            });
+          }
         } catch (err) {
           console.error("Failed to create profile:", err);
         }
@@ -106,6 +177,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const fetchUserSession = async () => {
       try {
         setLoading(true);
+        console.log("Fetching user session...");
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session) {
@@ -118,13 +190,45 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           
           if (profileError && profileError.code !== 'PGRST116') {
             console.error('Profile fetch error:', profileError);
-            setError("Failed to fetch profile data");
-            setUser(null);
-            setLoading(false);
-            return;
-          }
-          
-          if (profileData) {
+            
+            // Try to create a profile if it doesn't exist
+            try {
+              const userEmail = session.user.email || '';
+              const userName = session.user.user_metadata.name || userEmail.split('@')[0] || 'User';
+              
+              const { data: newProfile, error: insertError } = await supabase
+                .from('profiles')
+                .upsert({
+                  id: session.user.id,
+                  name: userName,
+                  email: userEmail,
+                  role: 'applicant'
+                })
+                .select('*')
+                .single();
+                
+              if (insertError) {
+                console.error("Failed to create profile:", insertError);
+                setError("Failed to create profile");
+                setUser(null);
+              } else {
+                console.log("Created profile for user", session.user.id, newProfile);
+                setUser({
+                  id: newProfile.id,
+                  name: newProfile.name,
+                  email: newProfile.email,
+                  role: newProfile.role,
+                  avatarUrl: newProfile.avatar_url,
+                  assignedGroupId: newProfile.assigned_group_id,
+                  joinConfirmed: newProfile.join_confirmed || false
+                });
+              }
+            } catch (err) {
+              console.error("Failed to create profile:", err);
+              setError("Failed to fetch profile data");
+              setUser(null);
+            }
+          } else if (profileData) {
             console.log("Found existing profile:", profileData);
             setUser({
               id: profileData.id,
@@ -140,8 +244,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             // Create a basic profile for the user if none exists
             const userId = session.user.id;
             const userEmail = session.user.email || '';
-            const userName = session.user.user_metadata.name || userEmail.split('@')[0];
+            const userName = session.user.user_metadata.name || userEmail.split('@')[0] || 'User';
             
+            // Create a fallback user object and attempt to create profile
             const fallbackUser: User = {
               id: userId,
               name: userName,
@@ -155,13 +260,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setUser(fallbackUser);
             
             try {
-              await supabase.from('profiles').upsert({
-                id: userId,
-                name: userName,
-                email: userEmail,
-                role: 'applicant'
-              });
-              console.log("Created profile for user", userId);
+              const { data: newProfile, error: insertError } = await supabase
+                .from('profiles')
+                .upsert({
+                  id: userId,
+                  name: userName,
+                  email: userEmail,
+                  role: 'applicant'
+                })
+                .select('*')
+                .single();
+                
+              if (insertError) {
+                console.error("Failed to create profile:", insertError);
+              } else {
+                console.log("Created profile for user", userId, newProfile);
+                setUser({
+                  id: newProfile.id,
+                  name: newProfile.name,
+                  email: newProfile.email,
+                  role: newProfile.role,
+                  avatarUrl: newProfile.avatar_url,
+                  assignedGroupId: newProfile.assigned_group_id,
+                  joinConfirmed: newProfile.join_confirmed || false
+                });
+              }
             } catch (err) {
               console.error("Failed to create profile:", err);
             }
@@ -185,6 +308,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (event === 'SIGNED_IN' && session) {
         try {
+          console.log("User signed in:", session.user.id);
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -193,11 +317,59 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           
           if (profileError && profileError.code !== 'PGRST116') {
             console.error('Profile fetch error:', profileError);
-            setUser(null);
+            
+            // Try to create a profile if it doesn't exist
+            const userEmail = session.user.email || '';
+            const userName = session.user.user_metadata.name || userEmail.split('@')[0] || 'User';
+            
+            // Create a fallback user object
+            const fallbackUser: User = {
+              id: session.user.id,
+              name: userName,
+              email: userEmail,
+              role: 'applicant',
+              avatarUrl: null,
+              assignedGroupId: null,
+              joinConfirmed: false
+            };
+            
+            setUser(fallbackUser);
+            
+            // Create profile in database
+            try {
+              const { data: newProfile, error: insertError } = await supabase
+                .from('profiles')
+                .upsert({
+                  id: session.user.id,
+                  name: userName,
+                  email: userEmail,
+                  role: 'applicant'
+                })
+                .select('*')
+                .single();
+                
+              if (insertError) {
+                console.error("Failed to create profile:", insertError);
+              } else {
+                console.log("Created profile for user", session.user.id, newProfile);
+                setUser({
+                  id: newProfile.id,
+                  name: newProfile.name,
+                  email: newProfile.email,
+                  role: newProfile.role,
+                  avatarUrl: newProfile.avatar_url,
+                  assignedGroupId: newProfile.assigned_group_id,
+                  joinConfirmed: newProfile.join_confirmed || false
+                });
+              }
+            } catch (err) {
+              console.error("Failed to create profile:", err);
+            }
             return;
           }
           
           if (profileData) {
+            console.log("Found profile for signed-in user:", profileData);
             setUser({
               id: profileData.id,
               name: profileData.name,
@@ -228,13 +400,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             
             // Create profile in database
             try {
-              await supabase.from('profiles').upsert({
-                id: userId,
-                name: userName,
-                email: userEmail,
-                role: 'applicant'
-              });
-              console.log("Created profile for user", userId);
+              const { data: newProfile, error: insertError } = await supabase
+                .from('profiles')
+                .upsert({
+                  id: userId,
+                  name: userName,
+                  email: userEmail,
+                  role: 'applicant'
+                })
+                .select('*')
+                .single();
+                
+              if (insertError) {
+                console.error("Failed to create profile:", insertError);
+              } else {
+                console.log("Created profile for user", userId, newProfile);
+                setUser({
+                  id: newProfile.id,
+                  name: newProfile.name,
+                  email: newProfile.email,
+                  role: newProfile.role,
+                  avatarUrl: newProfile.avatar_url,
+                  assignedGroupId: newProfile.assigned_group_id,
+                  joinConfirmed: newProfile.join_confirmed || false
+                });
+              }
             } catch (err) {
               console.error("Failed to create profile:", err);
             }
@@ -244,6 +434,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setUser(null);
         }
       } else if (event === 'SIGNED_OUT') {
+        console.log("User signed out");
         setUser(null);
       }
     });

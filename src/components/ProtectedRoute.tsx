@@ -24,17 +24,21 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
 
   // Check if user is authenticated
   if (!user) {
+    console.log("User not authenticated, redirecting to login");
     // Redirect to login page with a state parameter containing the current path
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
   // Check if user has the required role
   if (!allowedRoles.includes(user.role)) {
+    console.log(`User role ${user.role} not allowed, required: ${allowedRoles.join(', ')}`);
+    
     // If not authorized, redirect to appropriate page based on role
     switch (user.role) {
       case 'admin':
         return <Navigate to="/admin" replace />;
       case 'helpdesk':
+      case 'helpdesk_offline':
         return <Navigate to="/helpdesk" replace />;
       case 'content':
         return <Navigate to="/content" replace />;

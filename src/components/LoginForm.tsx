@@ -56,31 +56,56 @@ const LoginForm = ({ onLoginSuccess, showDemoAccounts = false }: LoginFormProps)
         console.log("User authenticated successfully:", data.user);
         
         // Refresh user data in context
-        await refreshUser();
-        
-        toast({
-          title: "Login Berhasil",
-          description: `Selamat datang kembali!`,
-        });
-        
-        if (onLoginSuccess && data.session) {
-          // Get profile data to determine role
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', data.user.id)
-            .single();
+        try {
+          await refreshUser();
+          console.log("User refreshed successfully");
           
-          if (profileError) {
-            console.error("Error fetching role:", profileError);
-            // Default to applicant role if profile fetch fails
-            onLoginSuccess('applicant');
-          } else if (profileData) {
-            onLoginSuccess(profileData.role);
-          } else {
-            // Default to applicant role if no profile data
-            onLoginSuccess('applicant');
+          toast({
+            title: "Login Berhasil",
+            description: `Selamat datang kembali!`,
+          });
+          
+          if (onLoginSuccess && data.session) {
+            // Get profile data to determine role
+            const { data: profileData, error: profileError } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', data.user.id)
+              .single();
+            
+            if (profileError) {
+              console.error("Error fetching role:", profileError);
+              
+              // Try to create a profile if it doesn't exist
+              const { data: newProfile, error: createError } = await supabase
+                .from('profiles')
+                .insert({
+                  id: data.user.id,
+                  email: data.user.email,
+                  name: data.user.email?.split('@')[0] || 'User',
+                  role: 'applicant'
+                })
+                .select('role')
+                .single();
+              
+              if (createError) {
+                console.error("Failed to create profile:", createError);
+                onLoginSuccess('applicant');
+              } else if (newProfile) {
+                console.log("Created new profile:", newProfile);
+                onLoginSuccess(newProfile.role);
+              } else {
+                onLoginSuccess('applicant');
+              }
+            } else if (profileData) {
+              onLoginSuccess(profileData.role);
+            } else {
+              // Default to applicant role if no profile data
+              onLoginSuccess('applicant');
+            }
           }
+        } catch (refreshError) {
+          console.error("Error refreshing user:", refreshError);
         }
       }
     } catch (error: any) {

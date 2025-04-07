@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
 import LoginForm from '@/components/LoginForm';
+import DemoAccounts from '@/components/DemoAccounts';
 
 // This wrapper component uses the hook within the provider context
 const LoginContent = () => {
@@ -14,17 +15,24 @@ const LoginContent = () => {
   const location = useLocation();
   const { toast } = useToast();
   const { user, loading } = useAuth();
+  const [selectedEmail, setSelectedEmail] = useState('');
   
   // Get redirect path from location state
   const from = location.state?.from || '/dashboard';
   
+  // Handle demo account selection
+  const handleSelectAccount = (email: string) => {
+    setSelectedEmail(email);
+    toast({
+      title: "Akun Demo Dipilih",
+      description: `Email: ${email}, Password: password123`,
+    });
+  };
+  
   // Check if user is already authenticated
   useEffect(() => {
     if (!loading && user) {
-      toast({
-        title: 'Sudah Masuk',
-        description: `Anda sudah masuk sebagai ${user.name}`,
-      });
+      console.log("User already authenticated:", user);
       
       // Redirect based on role
       let redirectPath = from;
@@ -34,6 +42,7 @@ const LoginContent = () => {
           redirectPath = '/admin';
           break;
         case 'helpdesk':
+        case 'helpdesk_offline':
           redirectPath = '/helpdesk';
           break;
         case 'content':
@@ -43,12 +52,15 @@ const LoginContent = () => {
           redirectPath = '/dashboard';
       }
       
-      navigate(redirectPath);
+      console.log("Redirecting to:", redirectPath);
+      navigate(redirectPath, { replace: true });
     }
   }, [user, navigate, from, toast, loading]);
   
   const handleLoginSuccess = (role: string) => {
-    // Handle redirect based on role if needed
+    console.log("Login successful, role:", role);
+    
+    // Handle redirect based on role
     let redirectPath = from;
     
     switch (role) {
@@ -56,6 +68,7 @@ const LoginContent = () => {
         redirectPath = '/admin';
         break;
       case 'helpdesk':
+      case 'helpdesk_offline':
         redirectPath = '/helpdesk';
         break;
       case 'content':
@@ -65,7 +78,8 @@ const LoginContent = () => {
         redirectPath = '/dashboard';
     }
     
-    navigate(redirectPath);
+    console.log("Redirecting to:", redirectPath);
+    navigate(redirectPath, { replace: true });
   };
   
   return (
@@ -86,6 +100,9 @@ const LoginContent = () => {
           </p>
         </div>
         
+        {/* Demo Accounts */}
+        <DemoAccounts onSelectAccount={handleSelectAccount} />
+        
         <Card className="border-0 shadow-lg rounded-xl overflow-hidden">
           <CardHeader className="bg-primary/5 border-b p-6">
             <CardTitle className="text-xl font-semibold text-primary">
@@ -94,7 +111,10 @@ const LoginContent = () => {
             <CardDescription>Masuk ke akun Anda untuk akses sistem PMB</CardDescription>
           </CardHeader>
           <CardContent className="p-6">
-            <LoginForm onLoginSuccess={handleLoginSuccess} />
+            <LoginForm 
+              onLoginSuccess={handleLoginSuccess} 
+              showDemoAccounts={true}
+            />
           </CardContent>
         </Card>
         
