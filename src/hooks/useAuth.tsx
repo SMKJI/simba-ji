@@ -1,8 +1,7 @@
 
 import { useState, useEffect, createContext, useContext } from 'react';
-import { useRegistrations } from './useRegistrations';
 import { supabase } from '@/integrations/supabase/client';
-import { User } from './useRegistrations';
+import { User } from '@/types/supabase';
 
 interface AuthContextType {
   user: User | null;
@@ -19,7 +18,7 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const { currentUser, loading: registrationsLoading } = useRegistrations();
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,16 +56,78 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    if (!registrationsLoading) {
-      setLoading(false);
-    }
-  }, [registrationsLoading]);
+    const fetchUserSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session) {
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (profileError) {
+            console.error('Profile fetch error:', profileError);
+            setUser(null);
+            setLoading(false);
+            return;
+          }
+          
+          if (profileData) {
+            setUser({
+              id: profileData.id,
+              name: profileData.name,
+              email: profileData.email,
+              role: profileData.role,
+              avatarUrl: profileData.avatar_url,
+              assignedGroupId: profileData.assigned_group_id,
+              joinConfirmed: profileData.join_confirmed || false
+            });
+          }
+        }
+        
+        setLoading(false);
+      } catch (err) {
+        console.error('Failed to load user data:', err);
+        setError('Gagal memuat data pengguna');
+        setLoading(false);
+      }
+    };
 
-  // Listen for auth changes
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    fetchUserSession();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed in useAuth:", event);
-      // We don't need to set user state here as it's handled in useRegistrations
+      
+      if (event === 'SIGNED_IN' && session) {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (profileError) {
+          console.error('Profile fetch error:', profileError);
+          setUser(null);
+          return;
+        }
+        
+        if (profileData) {
+          setUser({
+            id: profileData.id,
+            name: profileData.name,
+            email: profileData.email,
+            role: profileData.role,
+            avatarUrl: profileData.avatar_url,
+            assignedGroupId: profileData.assigned_group_id,
+            joinConfirmed: profileData.join_confirmed || false
+          });
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+      }
     });
 
     return () => {
@@ -76,8 +137,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <AuthContext.Provider value={{ 
-      user: currentUser, 
-      loading: loading || registrationsLoading, 
+      user, 
+      loading, 
       error, 
       refreshUser 
     }}>

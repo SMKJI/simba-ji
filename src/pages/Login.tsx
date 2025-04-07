@@ -1,7 +1,8 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useRegistrations, RegistrationsProvider } from '@/hooks/useRegistrations';
+import { useRegistrations } from '@/hooks/useRegistrations';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,23 +14,24 @@ const LoginContent = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { authenticated, currentUser, loading } = useRegistrations();
+  const { authenticated } = useRegistrations();
+  const { user, loading } = useAuth();
   
   // Get redirect path from location state
   const from = location.state?.from || '/dashboard';
   
   // Check if user is already authenticated
   useEffect(() => {
-    if (!loading && authenticated && currentUser) {
+    if (!loading && authenticated && user) {
       toast({
         title: 'Sudah Masuk',
-        description: `Anda sudah masuk sebagai ${currentUser.name}`,
+        description: `Anda sudah masuk sebagai ${user.name}`,
       });
       
       // Redirect based on role
       let redirectPath = from;
       
-      switch (currentUser.role) {
+      switch (user.role) {
         case 'admin':
           redirectPath = '/admin';
           break;
@@ -45,7 +47,7 @@ const LoginContent = () => {
       
       navigate(redirectPath);
     }
-  }, [authenticated, currentUser, navigate, from, toast, loading]);
+  }, [authenticated, user, navigate, from, toast, loading]);
   
   const handleLoginSuccess = (role: string) => {
     // Handle redirect based on role if needed
@@ -108,12 +110,10 @@ const LoginContent = () => {
   );
 };
 
-// The main component wraps the content with the provider
+// The main component
 const Login = () => {
   return (
-    <RegistrationsProvider>
-      <LoginContent />
-    </RegistrationsProvider>
+    <LoginContent />
   );
 };
 

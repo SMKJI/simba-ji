@@ -2,6 +2,7 @@
 import { Link } from 'react-router-dom';
 import { LogOut, Settings, User, Users, HelpCircle, MessageCircle, FileText } from 'lucide-react';
 import { useRegistrations, UserRole } from '@/hooks/useRegistrations';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { 
   DropdownMenu, 
@@ -41,7 +42,8 @@ const getRoleMenuItems = (role: UserRole) => {
 };
 
 const UserMenu = () => {
-  const { currentUser, authenticated, logout } = useRegistrations();
+  const { authenticated, logout } = useRegistrations();
+  const { user } = useAuth();
   const { toast } = useToast();
   
   const handleLogout = () => {
@@ -52,7 +54,7 @@ const UserMenu = () => {
     });
   };
   
-  if (!authenticated || !currentUser) {
+  if (!authenticated || !user) {
     return (
       <div className="flex gap-2">
         <Button asChild variant="outline" size="sm">
@@ -65,8 +67,8 @@ const UserMenu = () => {
     );
   }
   
-  const roleMenuItems = getRoleMenuItems(currentUser.role);
-  const initials = currentUser.name
+  const roleMenuItems = getRoleMenuItems(user.role);
+  const initials = user.name
     .split(' ')
     .map(name => name[0])
     .join('')
@@ -87,9 +89,9 @@ const UserMenu = () => {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{currentUser.name}</p>
-            <p className="text-xs leading-none text-muted-foreground">{currentUser.email}</p>
-            <p className="text-xs leading-none text-muted-foreground capitalize">{currentUser.role}</p>
+            <p className="text-sm font-medium leading-none">{user.name}</p>
+            <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+            <p className="text-xs leading-none text-muted-foreground capitalize">{user.role}</p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />

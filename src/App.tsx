@@ -78,8 +78,8 @@ const App = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <AuthProvider>
-        <RegistrationsProvider>
+      <RegistrationsProvider>
+        <AuthProvider>
           <Router>
             <Routes>
               {/* Public routes */}
@@ -122,8 +122,8 @@ const App = () => {
             </Routes>
             <Toaster />
           </Router>
-        </RegistrationsProvider>
-      </AuthProvider>
+        </AuthProvider>
+      </RegistrationsProvider>
     </div>
   );
 };
