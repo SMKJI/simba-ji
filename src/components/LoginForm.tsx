@@ -10,10 +10,9 @@ import { useAuth } from '@/hooks/useAuth';
 
 interface LoginFormProps {
   onLoginSuccess?: (role: string) => void;
-  showDemoAccounts?: boolean;
 }
 
-const LoginForm = ({ onLoginSuccess, showDemoAccounts = false }: LoginFormProps) => {
+const LoginForm = ({ onLoginSuccess }: LoginFormProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -35,6 +34,8 @@ const LoginForm = ({ onLoginSuccess, showDemoAccounts = false }: LoginFormProps)
     setIsLoading(true);
     
     try {
+      console.log("Attempting to sign in with:", email);
+      
       // Try to sign in with the provided credentials
       const { data, error } = await supabase.auth.signInWithPassword({
         email,

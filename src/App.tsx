@@ -1,10 +1,8 @@
 
-import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/hooks/useAuth';
 import { RegistrationsProvider } from '@/hooks/useRegistrations';
-import { supabase } from '@/integrations/supabase/client';
 import Index from '@/pages/Index';
 import About from '@/pages/About';
 import Programs from '@/pages/Programs';
@@ -25,61 +23,6 @@ import NotFound from '@/pages/NotFound';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
 const App = () => {
-  // Ensure we have an admin user in dev environment
-  useEffect(() => {
-    const createAdminUser = async () => {
-      try {
-        // Check if the admin user exists
-        const { data: adminData, error: adminError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('role', 'admin')
-          .maybeSingle();
-
-        if (adminError && adminError.code !== 'PGRST116') {
-          console.error('Error checking for admin user:', adminError);
-        }
-
-        if (!adminData) {
-          console.log('Creating admin user...');
-          // Create an admin user if one doesn't exist
-          const { data, error } = await supabase.auth.signUp({
-            email: 'admin@smkn1kendal.sch.id',
-            password: 'admin123456',
-            options: {
-              data: {
-                name: 'Administrator',
-                role: 'admin'
-              }
-            }
-          });
-
-          if (error) {
-            console.error('Error creating admin user:', error);
-          } else {
-            console.log('Admin user created successfully:', data);
-
-            // Update the user's role directly in the profiles table
-            if (data.user) {
-              await supabase
-                .from('profiles')
-                .upsert({ 
-                  id: data.user.id,
-                  name: 'Administrator',
-                  email: 'admin@smkn1kendal.sch.id',
-                  role: 'admin' 
-                });
-            }
-          }
-        }
-      } catch (err) {
-        console.error('Error in createAdminUser:', err);
-      }
-    };
-
-    createAdminUser();
-  }, []);
-
   return (
     <div className="min-h-screen flex flex-col">
       <AuthProvider>

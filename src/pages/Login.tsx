@@ -7,7 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
 import LoginForm from '@/components/LoginForm';
-import DemoAccounts from '@/components/DemoAccounts';
 
 // This wrapper component uses the hook within the provider context
 const LoginContent = () => {
@@ -15,19 +14,9 @@ const LoginContent = () => {
   const location = useLocation();
   const { toast } = useToast();
   const { user, loading } = useAuth();
-  const [selectedEmail, setSelectedEmail] = useState('');
   
   // Get redirect path from location state
   const from = location.state?.from || '/dashboard';
-  
-  // Handle demo account selection
-  const handleSelectAccount = (email: string) => {
-    setSelectedEmail(email);
-    toast({
-      title: "Akun Demo Dipilih",
-      description: `Email: ${email}, Password: password123`,
-    });
-  };
   
   // Check if user is already authenticated
   useEffect(() => {
@@ -100,9 +89,6 @@ const LoginContent = () => {
           </p>
         </div>
         
-        {/* Demo Accounts */}
-        <DemoAccounts onSelectAccount={handleSelectAccount} />
-        
         <Card className="border-0 shadow-lg rounded-xl overflow-hidden">
           <CardHeader className="bg-primary/5 border-b p-6">
             <CardTitle className="text-xl font-semibold text-primary">
@@ -113,7 +99,6 @@ const LoginContent = () => {
           <CardContent className="p-6">
             <LoginForm 
               onLoginSuccess={handleLoginSuccess} 
-              showDemoAccounts={true}
             />
           </CardContent>
         </Card>

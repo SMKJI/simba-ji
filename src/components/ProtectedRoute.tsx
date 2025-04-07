@@ -13,6 +13,10 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
   const location = useLocation();
   const { user, loading } = useAuth();
 
+  console.log("ProtectedRoute - Current user:", user);
+  console.log("ProtectedRoute - Loading state:", loading);
+  console.log("ProtectedRoute - Allowed roles:", allowedRoles);
+
   // Don't render anything while loading to prevent flashing
   if (loading) {
     return (
