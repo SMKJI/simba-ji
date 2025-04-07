@@ -2,9 +2,10 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { useRegistrations } from './useRegistrations';
 import { supabase } from '@/integrations/supabase/client';
+import { User } from './useRegistrations';
 
 interface AuthContextType {
-  user: any | null;
+  user: User | null;
   loading: boolean;
   error: string | null;
   refreshUser: () => Promise<void>;
