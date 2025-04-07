@@ -34,6 +34,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (!data.session) {
         console.log("No active session found during refresh");
+        setUser(null);
         return;
       }
       
@@ -46,7 +47,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (profileError) {
         console.error("Error fetching profile during refresh:", profileError);
+        setUser(null);
         return;
+      }
+      
+      if (profileData) {
+        setUser({
+          id: profileData.id,
+          name: profileData.name,
+          email: profileData.email,
+          role: profileData.role,
+          avatarUrl: profileData.avatar_url,
+          assignedGroupId: profileData.assigned_group_id,
+          joinConfirmed: profileData.join_confirmed || false
+        });
       }
       
       console.log("Auth refresh completed, user profile updated:", profileData);
@@ -58,6 +72,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const fetchUserSession = async () => {
       try {
+        setLoading(true);
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session) {
@@ -95,40 +110,45 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     };
 
-    fetchUserSession();
-
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed in useAuth:", event);
       
       if (event === 'SIGNED_IN' && session) {
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (profileError) {
-          console.error('Profile fetch error:', profileError);
+        try {
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (profileError) {
+            console.error('Profile fetch error:', profileError);
+            setUser(null);
+            return;
+          }
+          
+          if (profileData) {
+            setUser({
+              id: profileData.id,
+              name: profileData.name,
+              email: profileData.email,
+              role: profileData.role,
+              avatarUrl: profileData.avatar_url,
+              assignedGroupId: profileData.assigned_group_id,
+              joinConfirmed: profileData.join_confirmed || false
+            });
+          }
+        } catch (err) {
+          console.error('Error fetching profile:', err);
           setUser(null);
-          return;
-        }
-        
-        if (profileData) {
-          setUser({
-            id: profileData.id,
-            name: profileData.name,
-            email: profileData.email,
-            role: profileData.role,
-            avatarUrl: profileData.avatar_url,
-            assignedGroupId: profileData.assigned_group_id,
-            joinConfirmed: profileData.join_confirmed || false
-          });
         }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
       }
     });
+
+    fetchUserSession();
 
     return () => {
       subscription.unsubscribe();

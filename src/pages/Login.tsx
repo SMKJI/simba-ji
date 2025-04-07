@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useRegistrations } from '@/hooks/useRegistrations';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +13,6 @@ const LoginContent = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { authenticated } = useRegistrations();
   const { user, loading } = useAuth();
   
   // Get redirect path from location state
@@ -22,7 +20,7 @@ const LoginContent = () => {
   
   // Check if user is already authenticated
   useEffect(() => {
-    if (!loading && authenticated && user) {
+    if (!loading && user) {
       toast({
         title: 'Sudah Masuk',
         description: `Anda sudah masuk sebagai ${user.name}`,
@@ -47,7 +45,7 @@ const LoginContent = () => {
       
       navigate(redirectPath);
     }
-  }, [authenticated, user, navigate, from, toast, loading]);
+  }, [user, navigate, from, toast, loading]);
   
   const handleLoginSuccess = (role: string) => {
     // Handle redirect based on role if needed

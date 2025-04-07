@@ -1,6 +1,6 @@
 
 import { Navigate, useLocation } from 'react-router-dom';
-import { useRegistrations, UserRole } from '@/hooks/useRegistrations';
+import { UserRole } from '@/types/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
 
@@ -11,10 +11,7 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
   const location = useLocation();
-  const { authenticated, loading: registrationsLoading } = useRegistrations();
-  const { user, loading: authLoading } = useAuth();
-  
-  const loading = authLoading || registrationsLoading;
+  const { user, loading } = useAuth();
 
   // Don't render anything while loading to prevent flashing
   if (loading) {
@@ -26,7 +23,7 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
   }
 
   // Check if user is authenticated
-  if (!authenticated || !user) {
+  if (!user) {
     // Redirect to login page with a state parameter containing the current path
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }

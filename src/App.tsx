@@ -3,8 +3,8 @@ import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import { RegistrationsProvider } from '@/hooks/useRegistrations';
-import { supabase } from '@/integrations/supabase/client';
 import { AuthProvider } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import Index from '@/pages/Index';
 import About from '@/pages/About';
 import Programs from '@/pages/Programs';
@@ -78,8 +78,8 @@ const App = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <RegistrationsProvider>
-        <AuthProvider>
+      <AuthProvider>
+        <RegistrationsProvider>
           <Router>
             <Routes>
               {/* Public routes */}
@@ -122,8 +122,8 @@ const App = () => {
             </Routes>
             <Toaster />
           </Router>
-        </AuthProvider>
-      </RegistrationsProvider>
+        </RegistrationsProvider>
+      </AuthProvider>
     </div>
   );
 };

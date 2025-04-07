@@ -1,9 +1,10 @@
 
 import { Link } from 'react-router-dom';
 import { LogOut, Settings, User, Users, HelpCircle, MessageCircle, FileText } from 'lucide-react';
-import { useRegistrations, UserRole } from '@/hooks/useRegistrations';
+import { useRegistrations } from '@/hooks/useRegistrations';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { UserRole } from '@/types/supabase';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -42,7 +43,7 @@ const getRoleMenuItems = (role: UserRole) => {
 };
 
 const UserMenu = () => {
-  const { authenticated, logout } = useRegistrations();
+  const { logout } = useRegistrations();
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -54,7 +55,7 @@ const UserMenu = () => {
     });
   };
   
-  if (!authenticated || !user) {
+  if (!user) {
     return (
       <div className="flex gap-2">
         <Button asChild variant="outline" size="sm">

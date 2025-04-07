@@ -1,10 +1,10 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { EyeIcon, EyeOffIcon, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useRegistrations } from '@/hooks/useRegistrations';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -19,9 +19,8 @@ const LoginForm = ({ onLoginSuccess, showDemoAccounts = false }: LoginFormProps)
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { login } = useRegistrations();
-  const { refreshUser } = useAuth();
   const { toast } = useToast();
+  const { refreshUser } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,26 +36,53 @@ const LoginForm = ({ onLoginSuccess, showDemoAccounts = false }: LoginFormProps)
     setIsLoading(true);
     
     try {
-      const result = await login(email, password);
+      // Try to sign in with the provided credentials
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
       
-      if (result.success && result.user) {
-        toast({
-          title: "Login Berhasil",
-          description: `Selamat datang kembali, ${result.user.name}!`,
-        });
-
-        // Refresh user data
-        await refreshUser();
-        
-        if (onLoginSuccess) {
-          onLoginSuccess(result.user.role);
-        }
-      } else {
+      if (error) {
+        console.error("Login error:", error);
         toast({
           title: "Login Gagal",
-          description: result.error || "Email atau password salah",
+          description: error.message || "Email atau password salah",
           variant: "destructive",
         });
+        setIsLoading(false);
+        return;
+      }
+      
+      if (data && data.user) {
+        // Fetch user profile to get role and other information
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+          
+        if (profileError) {
+          console.error("Profile fetch error:", profileError);
+          toast({
+            title: "Login Gagal",
+            description: "Tidak dapat menemukan profil pengguna",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+        
+        // Refresh user data in context
+        await refreshUser();
+        
+        toast({
+          title: "Login Berhasil",
+          description: `Selamat datang kembali, ${profileData.name}!`,
+        });
+        
+        if (onLoginSuccess) {
+          onLoginSuccess(profileData.role);
+        }
       }
     } catch (error: any) {
       toast({
